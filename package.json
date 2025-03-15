@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "-------------- INIT --------------": "",
-    "npm-install": "npm install",
+    "npm-install": "npm install --legacy-peer-deps",
     "pod-install": "cd ios && pod install",
     "-------------- DEV / DEBUG --------------": "",
     "start-android": "react-native run-android",
@@ -15,6 +15,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@react-native-community/netinfo": "^11.4.1",
     "@react-native-firebase/app": "^21.12.0",
     "@react-native-firebase/remote-config": "^21.12.0",
     "crypto-js": "^4.2.0",

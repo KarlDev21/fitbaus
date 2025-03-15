@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "569971142312",
+    "project_id": "stower-app-a414d",
+    "storage_bucket": "stower-app-a414d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:569971142312:android:220e6078fecbaaabbd9c9d",
+        "android_client_info": {
+          "package_name": "com.stowerapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCodcZ1ZPocDxcaqOPn8H04OzLs-nYWz9c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

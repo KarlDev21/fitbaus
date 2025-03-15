@@ -13,7 +13,7 @@ function App(): React.JSX.Element {
     async function init() {
       const isBluetoothEnabled = await requestBluetoothPermissions();
       if (isBluetoothEnabled) {
-        await initBootstrapper()
+        await initBootstrapper();
       }
     }
 
@@ -22,6 +22,7 @@ function App(): React.JSX.Element {
 
   useEffect(() => {
     bootstrap();
+
   }, [bootstrap]);
 
   return (

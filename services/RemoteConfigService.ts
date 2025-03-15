@@ -17,5 +17,5 @@ const defaults: {[key: string]: string | number | boolean} = {
 export const RemoteConfigKeys = {
   NODE_SERVICE_UUID: 'NODE_SERVICE_UUID',
   NODE_AUTHENTICATION_CHAR_UUID: 'NODE_AUTHENTICATION_CHAR_UUID',
-  SALT: 'StowerBatteryNode-Inventech',
+  SALT: 'SALT',
 };
