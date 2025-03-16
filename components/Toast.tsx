@@ -1,26 +1,28 @@
 import React from 'react';
-import Toast, { BaseToast, ErrorToast as ErrorToastBase } from 'react-native-toast-message';
+import Toast, { BaseToast, BaseToastProps, ErrorToast as ErrorToastBase, ToastConfig, ToastShowParams } from 'react-native-toast-message';
 
-
-const SuccessToast = (props: any) => (
+const SuccessToast = (props: BaseToastProps) => (
     <BaseToast
         {...props}
+
         style={{ borderLeftColor: 'green' }}
         text1Style={{ fontSize: 16, fontWeight: 'bold', color: 'green' }}
     />
 );
 
-const ErrorToast = (props: any) => (
+const ErrorToast = (props: BaseToastProps) => (
     <ErrorToastBase
         {...props}
+        style={{ borderLeftColor: 'red', backgroundColor: '#f8d7da' }}
         text1Style={{ fontSize: 16, fontWeight: 'bold', color: 'red' }}
     />
 );
 
-export const toastConfig = {
-    success: (props: any) => <SuccessToast {...props} />,
-    error: (props: any) => <ErrorToast {...props} />,
+export const toastConfig: ToastConfig = {
+    success: (props) => <SuccessToast {...props} />,
+    error: (props) => <ErrorToast {...props} />,
 };
+
 
 export enum ToastType {
     Success = 'success',
@@ -28,8 +30,10 @@ export enum ToastType {
 }
 
 export const showToast = (type: ToastType, message: string) => {
-    Toast.show({
+    const toastParams: ToastShowParams = {
         type,
         text1: message,
-    });
+    };
+
+    Toast.show(toastParams);
 };
