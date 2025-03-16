@@ -1,17 +1,18 @@
 import {ComponentType} from 'react';
+import {DrawerNavigationOptions} from '@react-navigation/drawer';
 import HomeScreen from '../screens/HomeScreen';
 
-type DrawerNavigationScreen<T> = {
-  name: keyof T;
+type DrawerNavigationScreen = {
+  name: string;
   component: ComponentType<any>;
-  options: any; //Should be imported from R Navigation
+  options: DrawerNavigationOptions;
 };
 
-type NavDrawerScreenRegistry<T> = {
-  [key: string]: DrawerNavigationScreen<T>;
+type NavDrawerScreenRegistry = {
+  [key: string]: DrawerNavigationScreen;
 };
 
-export const DrawerScreens: NavDrawerScreenRegistry<any> = {
+export const DrawerScreens: NavDrawerScreenRegistry = {
   Home: {
     name: 'HomeScreen',
     component: HomeScreen,
