@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { SafeAreaView } from 'react-native';
 import { LoadingIndicator } from './LoadingIndicator';
+import { ScreenBase } from '../styles';
 
 type ScreenComponentProps = {
     children: React.ReactNode;
@@ -15,8 +16,7 @@ export function AppScreen(props: ScreenComponentProps) {
     }, [props.isLoading]);
 
     return (
-        // TODO: Fix styling issues
-        <SafeAreaView style={{ width: '100%', height: '100%', flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <SafeAreaView style={ScreenBase.app_screen}>
             {isLoading && <LoadingIndicator />}
             {props.children}
         </SafeAreaView>

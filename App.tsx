@@ -20,7 +20,6 @@ function App(): React.JSX.Element {
 
   useEffect(() => {
     bootstrap();
-    showToast(ToastType.Error, 'Error scanning for devices');
 
   }, [bootstrap]);
 
