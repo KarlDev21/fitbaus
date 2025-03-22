@@ -1,7 +1,8 @@
 import React from 'react';
-import { GestureResponderEvent, StyleProp, StyleSheet, Text, TouchableOpacity, ViewStyle } from 'react-native';
+import { GestureResponderEvent, StyleProp, Text, TouchableOpacity, ViewStyle } from 'react-native';
 import { Button } from 'react-native-paper';
 import { Colours } from '../styles/properties/colours';
+import { buttonStyles } from '../styles/components/buttonStyles';
 
 type BaseButtonProps = {
     label: string;
@@ -18,8 +19,8 @@ export const ButtonPrimary: React.FC<BaseButtonProps> = ({ label, onPress, disab
             onPress={onPress}
             loading={loading}
             disabled={disabled}
-            style={[styles.primaryButton, style]}
-            labelStyle={styles.primaryText}
+            style={[buttonStyles.primaryButton, style]}
+            labelStyle={buttonStyles.primaryText}
             accessibilityLabel={label}
             buttonColor={Colours.primary}
         >
@@ -28,19 +29,15 @@ export const ButtonPrimary: React.FC<BaseButtonProps> = ({ label, onPress, disab
     )
 }
 
-export const ButtonLink: React.FC<BaseButtonProps> = ({ label, onPress, disabled = false, loading = false, style }) => {
+export const ButtonLink: React.FC<BaseButtonProps> = ({ label, onPress, disabled = false, style }) => {
     return (
         <TouchableOpacity
-            // mode={'text'}
             onPress={onPress}
             disabled={disabled}
-            style={[styles.linkButton, style]}
-            // labelStyle={styles.linkText}
-            // loading={loading}
+            style={[buttonStyles.linkButton, style]}
             accessibilityLabel={label}
-        // textColor={Colours.primary}
         >
-            <Text style={styles.linkText}>
+            <Text style={buttonStyles.linkText}>
                 {label}
             </Text>
         </TouchableOpacity>
@@ -48,20 +45,4 @@ export const ButtonLink: React.FC<BaseButtonProps> = ({ label, onPress, disabled
 };
 
 
-const styles = StyleSheet.create({
-    primaryButton: {
-        borderRadius: 8,
-        paddingVertical: 5,
-    },
-    primaryText: {
-        fontSize: 16,
-        color: 'white',
-    },
-    linkButton: {
-        marginVertical: 12,
-    },
-    linkText: {
-        fontSize: 12,
-        textDecorationLine: 'underline',
-    },
-});
+

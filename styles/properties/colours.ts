@@ -1,4 +1,4 @@
 export enum Colours {
   white = '#fff',
-  primary = '#03C03C',
+  primary = '#f2d15f',
 }

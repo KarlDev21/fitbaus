@@ -1,16 +1,20 @@
 import React from 'react';
 import { AppScreen } from '../components/AppScreen';
 import { Image, Text, View } from 'react-native';
-import { Spacer, Logo, ScreenBase } from '../styles';
+import { Logo, ScreenBase } from '../styles';
 import { ButtonLink, ButtonPrimary } from '../components/Button';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
+import DeviceInfo from 'react-native-device-info';
 
 const LandingScreen = () => {
-    async function navigateToLogin() {
-        console.debug('Login button pressed');
+    const navigation = useNavigation<NavigationProp<any>>();
+
+    function navigateToLogin() {
+        navigation.navigate('LoginScreen');
     }
 
     async function navigateToRegister() {
-        console.debug('Register button pressed');
+        navigation.navigate('RegistrationScreen');
     }
 
 
@@ -18,7 +22,6 @@ const LandingScreen = () => {
         <AppScreen>
             <View style={{ flex: 2, justifyContent: 'center', alignItems: 'center' }}>
                 <Image source={require('../assets/logo-placeholder.png')} style={Logo.logo_container} />
-                {/* <View style={Spacer.logo_spacer} /> */}
             </View>
 
             <View style={ScreenBase.landing_screen_container}>
@@ -31,7 +34,7 @@ const LandingScreen = () => {
             </View>
 
             <View style={{ padding: 32 }}>
-                <Text style={{ fontSize: 12, textAlign: 'center' }}>{"Version 1.0.1"}</Text>
+                <Text style={{ fontSize: 12, textAlign: 'center' }}>{`Version ${DeviceInfo.getVersion()}`}</Text>
             </View>
         </AppScreen >
     )

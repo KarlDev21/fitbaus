@@ -1,6 +1,6 @@
 import {StyleSheet} from 'react-native';
 import {Colours} from './properties/colours';
-import {Padding} from './properties/padding';
+import {Padding} from './properties/dimensions';
 
 export const layout = StyleSheet.create({
   app_screen: {
@@ -15,7 +15,7 @@ export const layout = StyleSheet.create({
   landing_screen_container: {
     // flex: 1,
     flexDirection: 'column',
-    padding: Padding.container,
+    padding: Padding.large,
     justifyContent: 'flex-start',
   },
   landing_screen_no_account_view: {
