@@ -5,6 +5,7 @@ export async function initRemoteConfig(): Promise<void> {
   await config().fetchAndActivate();
 }
 
+
 export function getConfigStringValue(key: string): string | undefined {
   return config().getValue(key).asString();
 }

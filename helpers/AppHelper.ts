@@ -1,6 +1,7 @@
 import {PermissionsAndroid, Platform} from 'react-native';
 
 export async function requestBluetoothPermissions(): Promise<boolean> {
+  //Need to come back and double check this is the case
   if (Platform.OS === 'android') {
     try {
       const granted = await PermissionsAndroid.requestMultiple([

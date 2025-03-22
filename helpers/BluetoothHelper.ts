@@ -1,4 +1,5 @@
 import {BleManager} from 'react-native-ble-plx';
+import {Buffer} from 'buffer';
 import CryptoJS from 'crypto-js';
 import {
   getConfigStringValue,

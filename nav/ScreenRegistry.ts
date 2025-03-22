@@ -1,6 +1,6 @@
 import {ComponentType} from 'react';
 import {DrawerNavigationOptions} from '@react-navigation/drawer';
-import HomeScreen from '../screens/HomeScreen';
+import StackNavigator from './CreateStackNavigation';
 
 type DrawerNavigationScreen = {
   name: string;
@@ -15,7 +15,8 @@ type NavDrawerScreenRegistry = {
 export const DrawerScreens: NavDrawerScreenRegistry = {
   Home: {
     name: 'HomeScreen',
-    component: HomeScreen,
+    component: StackNavigator,
     options: {title: 'Home', headerShown: true},
+  
   },
 };
