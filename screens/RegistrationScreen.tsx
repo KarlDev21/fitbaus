@@ -11,8 +11,10 @@ import { useForm } from '../validation/useForm';
 import { registerAsync } from '../services/UserProfileService';
 import { showToast, ToastType } from '../components/Toast';
 import { setItemAsync } from '../helpers/SecureStorageHelper';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
 
 const RegistrationScreen = () => {
+    const navigation = useNavigation<NavigationProp<any>>();
     const [isLoading, setIsLoading] = useState(false);
     const { formState, handleChange, validateForm } = useForm({
         name: '',
@@ -25,7 +27,6 @@ const RegistrationScreen = () => {
         setIsLoading(true);
 
         if (!validateForm()) {
-            console.log('Validation failed:', formState.errors);
             setIsLoading(false);
             return;
         }
@@ -37,13 +38,12 @@ const RegistrationScreen = () => {
             return;
         }
 
-        console.log('RESPONSE:: ', response);
         await setItemAsync('UserProfile', response.data);
         setIsLoading(false);
     };
 
     function navigateToLogin() {
-        console.debug('Login button pressed');
+        navigation.navigate('LoginScreen');
     }
 
     return (
@@ -51,22 +51,20 @@ const RegistrationScreen = () => {
             <ScrollView style={{ flex: 1, width: '100%', height: '100%' }}>
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                     <Image source={require('../assets/logo-placeholder.png')} style={Logo.logo_container} />
-                    {/* Registration Form */}
                     <Text style={{
                         fontSize: 24,
                         fontWeight: 'bold',
                         color: Colours.primary,
                         marginVertical: 8,
-                    }}>Register Now</Text>
+                    }}>{'Register Now'}</Text>
                     <Text style={{
                         fontSize: 12,
                         textAlign: 'center',
                         marginVertical: 4,
-                    }}>Please register to continue using our app</Text>
+                    }}>{'Please register to continue using our app'}</Text>
                 </View>
 
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: Padding.large, width: '100%' }}>
-                    {/* Registration Input Fields */}
                     <Input
                         label={'Name'}
                         value={formState.values.name}
@@ -100,12 +98,10 @@ const RegistrationScreen = () => {
                         errorText={formState.errors.password}
                     />
 
-                    {/* Register Button */}
                     <ButtonPrimary label="Register" onPress={handleRegister} loading={isLoading} style={{ width: '100%', marginTop: 16 }} />
 
-                    {/* Already have an account */}
                     <View style={ScreenBase.landing_screen_no_account_view}>
-                        <Text style={{ fontSize: 12, paddingRight: 8 }}>{"Already have an account?"}</Text>
+                        <Text style={{ fontSize: 12, paddingRight: 8 }}>{'Already have an account?'}</Text>
                         <ButtonLink label={'Login'} onPress={navigateToLogin} />
                     </View>
                 </View>

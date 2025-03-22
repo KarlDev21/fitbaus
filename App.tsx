@@ -10,9 +10,6 @@ import { getItemAsync } from './helpers/SecureStorageHelper';
 
 const theme = {
   ...DefaultTheme,
-  colors: {
-    ...DefaultTheme.colors,
-  },
 };
 
 function App(): React.JSX.Element {

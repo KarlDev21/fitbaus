@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text } from 'react-native';
+import { View, Text } from 'react-native';
 import { TextInput } from 'react-native-paper';
+import { inputStyles } from '../styles/components/inputStyles';
 
 interface TextInputProps {
     label: string;
@@ -20,7 +21,7 @@ export const Input: React.FC<TextInputProps> = ({
     errorText
 }) => {
     return (
-        <View style={styles.container}>
+        <View style={inputStyles.container}>
             <TextInput
                 label={label}
                 value={value}
@@ -28,9 +29,9 @@ export const Input: React.FC<TextInputProps> = ({
                 keyboardType={keyboardType}
                 mode="outlined"
                 error={error}
-                style={styles.input}
+                style={inputStyles.input}
             />
-            {error && errorText ? <Text style={styles.errorText} >{errorText}</Text> : null}
+            {error && errorText ? <Text style={inputStyles.errorText} >{errorText}</Text> : null}
         </View>
     );
 };
@@ -44,8 +45,9 @@ export const PasswordInput: React.FC<TextInputProps> = ({
     errorText
 }) => {
     const [showPassword, setShowPassword] = useState<boolean>(true);
+
     return (
-        <View style={styles.container}>
+        <View style={inputStyles.container}>
             <TextInput
                 label={label}
                 value={value}
@@ -53,26 +55,13 @@ export const PasswordInput: React.FC<TextInputProps> = ({
                 keyboardType={keyboardType}
                 mode="outlined"
                 error={error}
-                style={styles.input}
+                style={inputStyles.input}
                 secureTextEntry={showPassword}
                 right={<TextInput.Icon icon="account" onPress={() => { setShowPassword(!showPassword) }} />}
             />
-            {error && errorText ? <Text style={styles.errorText}>{errorText}</Text> : null}
+            {error && errorText ? <Text style={inputStyles.errorText}>{errorText}</Text> : null}
         </View>
     );
 };
 
-const styles = StyleSheet.create({
-    container: {
-        width: '100%',
-        marginVertical: 8,
-    },
-    input: {
-        backgroundColor: 'white',
-    },
-    errorText: {
-        color: 'red',
-        fontSize: 12,
-        marginTop: 4,
-    },
-});
+

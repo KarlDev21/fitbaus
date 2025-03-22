@@ -39,8 +39,6 @@ export async function loginAsync(
 
     const data = await response.json();
 
-    console.log('Response:', data);
-
     return {
       success: data.success,
       data: {
@@ -79,7 +77,6 @@ export async function registerAsync(
 
     const data = await response.json();
 
-    console.log('data: ', data);
     return {
       success: data.success,
       data: {
