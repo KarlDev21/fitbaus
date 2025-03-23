@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import React, {useEffect, useState} from 'react';
 import { View, StyleSheet, FlatList } from 'react-native';
@@ -24,8 +24,8 @@ export type Inverter = {
 
 export default function DevicesScreen({ navigation }: DevicesScreenProps) {
   const theme = useTheme();
-  const [isLoading, setIsLoading] = useState(true)
-  const [inverters, setInverters] = useState<Inverter[]>([])
+  const [isLoading, setIsLoading] = useState(true);
+  const [inverters, setInverters] = useState<Inverter[]>([]);
 
   useEffect(() => {
     // Get selected inverter from AsyncStorage
@@ -33,19 +33,19 @@ export default function DevicesScreen({ navigation }: DevicesScreenProps) {
       try {
         setIsLoading(true);
 
-        const invertersData = await AsyncStorage.getItem("Inverters")
+        const invertersData = await AsyncStorage.getItem('Inverters');
         if (invertersData) {
           setInverters(JSON.parse(invertersData));
         }
 
       } catch (error) {
-        showToast(ToastType.Error, "Error loading inverters, please try again")
+        showToast(ToastType.Error, 'Error loading inverters, please try again');
         setIsLoading(false);
       }
-    }
+    };
 
-    loadInverters()
-  }, [])
+    loadInverters();
+  }, []);
 
   const handleSelectInverter = async (inverter: Inverter) => {
     // Store selected inverter in AsyncStorage for the flow
@@ -53,19 +53,19 @@ export default function DevicesScreen({ navigation }: DevicesScreenProps) {
       await AsyncStorage.setItem('selectedInverter', JSON.stringify(inverter));
       navigation.navigate('Batteries');
     } catch (error) {
-      console.error("Failed to save selected inverter", error);
+      console.error('Failed to save selected inverter', error);
     }
-  }
+  };
 
   const renderInverterItem = ({ item }: { item: Inverter }) => (
     <Card style={styles.inverterCard} onPress={() => handleSelectInverter(item)}>
       <Card.Content style={styles.inverterContent}>
-        <View style={[styles.iconContainer, { backgroundColor: theme.colors.primary + "20" }]}>
+        <View style={[styles.iconContainer, { backgroundColor: theme.colors.primary + '20' }]}>
           <MaterialCommunityIcons name="lightning-bolt" size={20} color={theme.colors.primary} />
         </View>
         <View style={styles.inverterInfo}>
           <Text variant="bodyLarge" style={styles.inverterName}>
-            {item.name +' '+ item.id}
+            {item.name + ' ' + item.id}
           </Text>
           <Text variant="bodySmall" style={styles.inverterStatus}>
             Tap to select
@@ -73,7 +73,7 @@ export default function DevicesScreen({ navigation }: DevicesScreenProps) {
         </View>
       </Card.Content>
     </Card>
-  )
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -90,35 +90,35 @@ export default function DevicesScreen({ navigation }: DevicesScreenProps) {
           contentContainerStyle={styles.listContent}
         />
     </SafeAreaView>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 8,
   },
   headerTitle: {
-    fontWeight: "bold",
+    fontWeight: 'bold',
     marginLeft: 20,
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 16,
   },
   loader: {
     marginBottom: 16,
   },
   loadingText: {
-    color: "#666",
+    color: '#666',
   },
   listContent: {
     padding: 16,
@@ -128,8 +128,8 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   inverterContent: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 8,
   },
   iconContainer: {
@@ -141,21 +141,21 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   inverterName: {
-    fontWeight: "500",
+    fontWeight: '500',
   },
   inverterStatus: {
-    color: "#666",
+    color: '#666',
   },
   emptyContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 16,
   },
   emptyText: {
-    color: "#666",
-    textAlign: "center",
+    color: '#666',
+    textAlign: 'center',
     marginBottom: 16,
   },
-})
+});
 
