@@ -1,4 +1,4 @@
-import {PermissionsAndroid, Platform} from 'react-native';
+import {Linking, PermissionsAndroid, Platform} from 'react-native';
 
 export async function requestBluetoothPermissions(): Promise<boolean> {
   if (Platform.OS === 'android') {
@@ -35,3 +35,11 @@ export async function requestBluetoothPermissions(): Promise<boolean> {
     return false;
   }
 }
+
+export function addDeepLinking() {
+  Linking.addEventListener('url', handleDeepLink);
+}
+
+const handleDeepLink = (event: any) => {
+  console.log('Deep Link:', event);
+};
