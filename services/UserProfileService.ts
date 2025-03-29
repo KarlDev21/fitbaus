@@ -1,7 +1,7 @@
 //TODO: Fetch from remote config
-const API_BASE_URL = 'http://192.168.101.107:3000/api/v1';
+export const API_BASE_URL = 'http://192.168.101.107:3000/api/v1';
 
-type ApiResponse<T> = {
+export type ApiResponse<T> = {
   success: boolean;
   data?: T;
   error?: string;
