@@ -10,6 +10,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage"
 import { MaterialCommunityIcons } from "@expo/vector-icons"
 import type { RootStackParamList } from "../nav/CreateStackNavigation"
 import { getDashboardData, type DashboardData } from "../services/BluetoothLowEnergyService"
+import { Device } from "react-native-ble-plx"
+import { getConnectedInverter, getConnectedInverterDevice, getSelectedInverter } from "../services/storage"
+import { ChargeControllerState, InverterState } from "../types/bleTypes"
+import { getChargeControllerStatus, getInverterStatus } from "../services/InverterService"
+import { showToast, ToastType } from "../components/Toast"
 
 type DashboardScreenNavigationProp = DrawerNavigationProp<RootStackParamList, "Dashboard">
 type DashboardScreenRouteProp = RouteProp<RootStackParamList, "Dashboard">
@@ -19,41 +24,65 @@ interface DashboardScreenProps {
   route: DashboardScreenRouteProp
 }
 
-interface Inverter {
-  id: string
-  name: string
-}
-
 export default function DashboardScreen({ navigation, route }: DashboardScreenProps) {
-  const [inverter, setInverter] = useState<Inverter>();
-  const [systemData, setSystemData] = useState<DashboardData | null>(null);
+  const [systemData, setSystemData] = useState<DashboardData>({
+    batterySoC: 0,
+    inverterOutput: 0,
+    solarInput: 0,
+    temperature: 0,
+    kWhGenerated: 0,
+    kWhConsumed: 0,
+    co2Savings: 0,
+    leaseProgress: 0,
+    alerts: [],
+  })
+  const inverterId = route.params.inverter.id;
+  const inverter = getConnectedInverterDevice(inverterId);
   const [isLoading, setIsLoading] = useState(true);
-  const theme = useTheme()
+  const theme = useTheme();
+
 
   useEffect(() => {
-    // Get inverter data from AsyncStorage and fetch system data
     const loadData = async () => {
       try {
-        const inverterData = await AsyncStorage.getItem("connectedInverter")
-        if (inverterData) {
-          setInverter(JSON.parse(inverterData))
-        }
+        console.log( "inverter STUFF"+inverter);
+        setTimeout(async ()  =>  {
+        if(inverter)
+        {
+            const ChargeController = await getChargeControllerStatus( inverter );
+            const inverterState = await getInverterStatus(inverter);
 
-        // Fetch system overview data from BLE service
-        if (!inverter) {
-          throw new Error("No inverter data found")
-        }
-        const data = await getDashboardData(inverter.id);
-        setSystemData(data);
-        setIsLoading(false);
+            if (ChargeController && inverterState) {
+              console.log(ChargeController);
+              console.log(inverterState);
+              setSystemData({
+                batterySoC: ChargeController.BatteryStatus,
+                inverterOutput: inverterState.LoadOutputPower,
+                solarInput: inverterState.SolarVoltage,
+                temperature: ChargeController.DeviceTemperature / 100,
+                kWhGenerated: inverterState.LoadOutputVoltage,
+                kWhConsumed: inverterState.LoadInputVoltage,
+                co2Savings: 0,
+                leaseProgress: 0,
+                alerts: inverterState.LoadStatus > 0 ? ['Inverter Error'] : ['No Alerts'],
+              });
+
+            }
+            setIsLoading(false);
+
+          }
+          else{
+            showToast(ToastType.Error, 'Failed to load dashboard data. Please try again.');
+          }
+      }, 3000);
       } catch (error) {
-        console.error("Failed to load dashboard data", error);
+        console.error('Failed to load dashboard data', error);
         setIsLoading(false);
       }
-    }
+    };
 
     loadData();
-  },[inverter]);
+  });
 
   // Helper function to render a metric row with icon
   const renderMetricRow = (icon: string, iconColor: string, label: string, value: string | number, unit = "") => (

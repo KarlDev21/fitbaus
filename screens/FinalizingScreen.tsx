@@ -6,6 +6,8 @@ import { Text, ActivityIndicator, useTheme } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../nav/CreateStackNavigation"
+import { authenticateInverter } from "../services/InverterService"
+import { getSelectedInverter, getSelectedNodes, setConnectedInverter, setConnectedInverterDevice } from "../services/storage"
 
 type FinalizingScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "Finalizing">
 
@@ -20,6 +22,18 @@ export default function FinalizingScreen({ navigation }: FinalizingScreenProps) 
     // Simulate final authentication and setup process
     const timer = setTimeout(() => {
       // Navigate back to home page after completion
+
+      const selectedInverter = getSelectedInverter();
+      const selectedNodes = getSelectedNodes();
+
+      if (selectedInverter && selectedNodes) {
+        console.log('Authing');
+        authenticateInverter(selectedInverter, selectedNodes);
+        setConnectedInverterDevice(selectedInverter);//difference is that this one needs and id when getting
+        setConnectedInverter(selectedInverter); // this only saves one inverter currently
+      }
+
+
       navigation.reset({
         index: 0,
         routes: [{ name: "Home" }],

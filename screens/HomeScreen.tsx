@@ -5,11 +5,12 @@ import { View, StyleSheet } from 'react-native';
 import { Button, Card, Text, ActivityIndicator, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { RootStackParamList } from '../nav/CreateStackNavigation';
 import { showToast, ToastType } from '../components/Toast';
 import { scanDevices } from '../services/BluetoothLowEnergyService';
+import { getConnectedInverter, setDevices } from '../services/storage';
+import { Device } from 'react-native-ble-plx';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>
 
@@ -17,37 +18,31 @@ interface HomeScreenProps {
   navigation: HomeScreenNavigationProp
 }
 
-interface Inverter {
-  id: string
-  name: string
-}
-
 export default function HomeScreen({ navigation }: HomeScreenProps) {
   const [isScanning, setIsScanning] = useState(false);
-  const [connectedInverter, setConnectedInverter] = useState<Inverter | null>(null);
+  const savedInverter = getConnectedInverter();
   const theme = useTheme();
 
-  useEffect(() => {
-    // Check for connected inverter in AsyncStorage on component mount
-    const loadConnectedInverter = async () => {
-      try {
-        const savedInverter = await AsyncStorage.getItem('connectedInverter');
-        if (savedInverter) {
-          setConnectedInverter(JSON.parse(savedInverter));
-        }
-      } catch (error) {
-        console.error('Failed to load connected inverter', error);
-      }
-    };
+  // useEffect(() => {
+  //   // Check for connected inverter in AsyncStorage on component mount
+  //   const loadConnectedInverter = async () => {
+  //     console.log('Loading connected inverter...');
+  //     try {
+  //       if (savedInverter) {
+  //         setSavedInverter(savedInverter);
+  //       }
+  //     } catch (error) {
+  //       console.error('Failed to load connected inverter', error);
+  //     }
+  //   };
 
-    loadConnectedInverter();
-  }, []);
+  //   loadConnectedInverter();
+  // }, []);
 
   const handleScan = async ()  => {
       setIsScanning(true);
       const {inverters, nodes} = await scanDevices();
       console.log('check scan' + inverters.length + nodes.length);
-      setIsScanning(false);
       const batteriesScanned = nodes.length > 0;
       const invertersScanned = inverters.length > 0;
       var errorMessage = '';
@@ -60,22 +55,25 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         } else if (!invertersScanned) {
           errorMessage = 'No Inverters found. Please try scanning again.';
         }
+
         return errorMessage;
       };
 
+      setIsScanning(false);
       if(getErrorMessage() !== ''){
         showToast(ToastType.Error, errorMessage);
       }
       else{
-        await AsyncStorage.setItem('Inverters', JSON.stringify(inverters));
-        await AsyncStorage.setItem('Batteries', JSON.stringify(nodes));
-        navigation.navigate('Devices');
+        console.log('Inverters:', inverters);
+        console.log('Nodes:', nodes);
+        setDevices(Array.from(nodes.values()), Array.from(inverters.values()));
+        navigation.navigate('Inverters');
       }
   };
 
   const handleInverterClick = () => {
-    if (connectedInverter) {
-      navigation.navigate('Dashboard', { inverterId: connectedInverter.id })
+    if (savedInverter) {
+      navigation.navigate('Dashboard', { inverter: savedInverter })
     }
   };
 
@@ -110,10 +108,13 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
                 'Scan for Inverters'
               )}
             </Button>
+            {/* <Button onPress={async () => { await authenticate() }}>Authenticate</Button>
+            <Button onPress={async () => { await authenticateInverter() }}>Authenticate Inverter</Button> */}
+
           </Card.Content>
         </Card>
 
-        {connectedInverter && (
+        {savedInverter && (
           <Card style={styles.card} onPress={handleInverterClick}>
             <Card.Content>
               <Text variant="titleMedium" style={styles.cardTitle}>
@@ -125,8 +126,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
                 </View>
                 <View style={styles.inverterInfo}>
                   <Text variant="bodyLarge" style={styles.inverterName}>
-                    {/* must be a better way to do this, will look into just using this combo as the name */}
-                    {connectedInverter.name + ' ' + connectedInverter.id} 
+                    {savedInverter.name + " " + savedInverter.id }
                   </Text>
                   <Text variant="bodySmall" style={styles.inverterStatus}>
                     Connected

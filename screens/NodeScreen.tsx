@@ -8,30 +8,26 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { RootStackParamList } from '../nav/CreateStackNavigation';
-import { Inverter } from './DevicesScreen';
 import { showToast, ToastType } from '../components/Toast';
-import { authNode } from '../services/BluetoothLowEnergyService';
+import { Device } from 'react-native-ble-plx';
+import { getNodes, getSelectedInverter, setSelectedNode, setSelectedNodes } from '../services/storage';
+import { authenticateNode } from '../services/NodeService';
 
-interface BatteryType {
-  id: string
-  name: string
+type NodeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Nodes'>
+
+interface NodeScreenProps {
+  navigation: NodeScreenNavigationProp,
 }
 
-type BatteriesScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Batteries'>
-
-interface BatteriesScreenProps {
-  navigation: BatteriesScreenNavigationProp,
-}
-
-export default function BatteriesScreen({ navigation }: BatteriesScreenProps) {
+export default function NodeScreen({ navigation }: NodeScreenProps) {
 
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [selectedBatteries, setSelectedBatteries] = useState<string[]>([]);
   const [authenticatedBatteries, setAuthenticatedBatteries] = useState<Record<string, boolean>>({});
   const [showResults, setShowResults] = useState(false);
-  const [selectedInverter, setSelectedInverter] = useState<Inverter | null>(null);
-  const [batteries, setBatteries] = useState<BatteryType[]>([]);
+  const [selectedInverter, setSelectedInverter] = useState<Device | null>(null);
+  const [nodes, setNodes] = useState<Device[]>([]);
   const theme = useTheme();
 
   useEffect(() => {
@@ -39,32 +35,32 @@ export default function BatteriesScreen({ navigation }: BatteriesScreenProps) {
     const loadSelectedInverter = async () => {
       try {
 
-        const inverterData = await AsyncStorage.getItem('selectedInverter');
+        const inverterData = getSelectedInverter();
         if (inverterData) {
-          setSelectedInverter(JSON.parse(inverterData));
+          setSelectedInverter(inverterData);
         }
 
         // Simulate loading time for batteries
         setTimeout(() => {
           setIsLoading(false);
-        }, 2000);
+        }, 1000);
       } catch (error) {
         console.error('Failed to load selected inverter', error);
         setIsLoading(false);
       }
     };
 
-    const loadBatteries = async () => {
+    const loadNodes = async () => {
       try {
 
-        const BatteryData = await AsyncStorage.getItem('Batteries');
-        if (BatteryData) {
-          setBatteries(JSON.parse(BatteryData));
+        const NodeData = getNodes();
+        if (NodeData) {
+          setNodes(NodeData);
         }
 
         setTimeout(() => {
           setIsLoading(false);
-        }, 2000);
+        }, 1000);
       } catch (error) {
         showToast(ToastType.Error, 'Failed to load Batteries inverter');
         setIsLoading(false);
@@ -72,10 +68,10 @@ export default function BatteriesScreen({ navigation }: BatteriesScreenProps) {
     };
 
     loadSelectedInverter();
-    loadBatteries();
+    loadNodes();
   }, []);
 
-  const handleToggleBattery = (nodeId: string) => {
+  const handleToggleNode = (nodeId: string) => {
     setSelectedBatteries((prev) => {
       if (prev.includes(nodeId)) {
         return prev.filter((id) => id !== nodeId);
@@ -95,14 +91,34 @@ export default function BatteriesScreen({ navigation }: BatteriesScreenProps) {
       selectedBatteries.forEach( async (nodeId) => {
         if (selectedInverter) {
 
-          await authNode(nodeId);
+          const response = await authenticateNode(nodeId);
+          console.log('Authentication Response:', response);
+          if(response){
+            results[nodeId] = response;
+          }
+          console.log(results);
         }
       });
 
-      //still need to capture authenticated batteries
-      setAuthenticatedBatteries(results);
-      setIsAuthenticating(false);
-      setShowResults(true);
+      setTimeout(() => {
+        setAuthenticatedBatteries(results);
+        console.log('Authenticated Batteries:', results);
+        console.log(Object.keys(authenticatedBatteries).length);
+        console.log(selectedBatteries.length);
+
+        if(Object.keys(results).length === selectedBatteries.length){
+          showToast(ToastType.Success, 'All Batteries authenticated successfully!');
+        }
+        else if (Object.keys(results).length) {
+          showToast(ToastType.Error, 'No Batteries authenticated successfully!');
+        }
+        else{
+          showToast(ToastType.Error, 'Some Batteries failed authentication!');
+        }
+        setIsAuthenticating(false);
+        setShowResults(true);
+      }, 3000);
+
 
   };
 
@@ -112,31 +128,27 @@ export default function BatteriesScreen({ navigation }: BatteriesScreenProps) {
       .filter(([_, isAuthenticated]) => isAuthenticated)
       .map(([id]) => id);
 
-    if (authenticatednodeIds.length === 0) {
-      // No batteries authenticated successfully
-      return;
-    }
-
-    try {
-      // Store the authenticated batteries for the next step
-      await AsyncStorage.setItem(
-        'authenticatedBatteries',
-        JSON.stringify(batteries.filter((battery) => authenticatednodeIds.includes(battery.id))),
-      );
-
-      // Store the selected inverter in AsyncStorage to show on home page
-      if (selectedInverter) {
-        await AsyncStorage.setItem('connectedInverter', JSON.stringify(selectedInverter));
+      if(authenticatednodeIds.length !== selectedBatteries.length){
+        showToast(ToastType.Error, 'Please Authenticate All Batteries before continuing!');
+        return;
       }
 
-      // Navigate to final authentication screen
+    try {
+      setSelectedNodes(authenticatednodeIds.map((id) => nodes.find((node) => node.id === id)).filter((node): node is Device => node !== undefined));
+
+      if (selectedInverter) {
+        setSelectedInverter(selectedInverter);
+      }
+
+      // Navigate to final authentication screen for inverter auth and node enrollment
       navigation.navigate('Finalizing');
     } catch (error) {
       console.error('Failed to save authenticated batteries', error);
     }
   };
 
-  const renderBatteryItem = ({ item }: { item: BatteryType }) => {
+  const renderBatteryItem = ({ item }: { item: Device }) => {
+    console.log('Selected Battery:', item.id);
     const isSelected = selectedBatteries.includes(item.id);
     const isAuthenticated = authenticatedBatteries[item.id];
     const showAuthResult = showResults && isSelected;
@@ -177,7 +189,7 @@ export default function BatteriesScreen({ navigation }: BatteriesScreenProps) {
 
             <Checkbox
               status={isSelected ? 'checked' : 'unchecked'}
-              onPress={() => handleToggleBattery(item.id)}
+              onPress={() => handleToggleNode(item.id)}
               color={theme.colors.secondary}
             />
           </View>
@@ -221,7 +233,7 @@ export default function BatteriesScreen({ navigation }: BatteriesScreenProps) {
       ) : (
         <>
           <FlatList
-            data={batteries}
+            data={nodes}
             renderItem={renderBatteryItem}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.listContent}
@@ -245,7 +257,6 @@ export default function BatteriesScreen({ navigation }: BatteriesScreenProps) {
                   mode="outlined"
                   onPress={() => {
                     setShowResults(false);
-                    setAuthenticatedBatteries({});
                   }}
                   style={[styles.button, styles.outlineButton]}
                 >

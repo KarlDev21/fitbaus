@@ -1,17 +1,18 @@
 import React,{ComponentType} from "react";
 import { createStackNavigator, StackNavigationOptions } from '@react-navigation/stack';
 import HomeScreen from "../screens/HomeScreen";
-import DevicesScreen from "../screens/DevicesScreen";
-import BatteriesScreen from "../screens/BatteriesScreen";
+import InverterScreen from "../screens/InverterScreen";
+import NodeScreen from "../screens/NodeScreen";
 import FinalizingScreen from "../screens/FinalizingScreen";
 import DashboardScreen from "../screens/DashboardScreen";
+import { Device } from "react-native-ble-plx";
 
 export type RootStackParamList = {
   Home: undefined
-  Devices: undefined
-  Batteries: undefined
+  Inverters: undefined
+  Nodes: undefined
   Finalizing: undefined
-  Dashboard: { inverterId: string }
+  Dashboard: { inverter: Device }
 }
 
 type StackNavigationScreen = { 
@@ -31,13 +32,13 @@ export const StackScreens: NavStackScreenRegistry = {
       options: {headerShown: false},
     },
     Devices: {
-      name: 'Devices',
-      component: DevicesScreen,
+      name: 'Inverters',
+      component: InverterScreen,
       options: {headerShown: false},
     },
     Batteries: {
-      name: 'Batteries',
-      component: BatteriesScreen,
+      name: 'Nodes',
+      component: NodeScreen,
       options: {headerShown: false},
     },
     Finalizing: {

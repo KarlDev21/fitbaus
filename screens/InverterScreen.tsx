@@ -9,23 +9,19 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { RootStackParamList } from '../nav/CreateStackNavigation';
 import { showToast, ToastType } from '../components/Toast';
+import { getInverters, setSelectedInverter } from '../services/storage';
+import { Device } from 'react-native-ble-plx';
 
-type DevicesScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Devices'>
+type InverterScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Devices'>
 
-interface DevicesScreenProps {
-  navigation: DevicesScreenNavigationProp,
-  inverters: Inverter[]
+interface InverterScreenProps {
+  navigation: InverterScreenNavigationProp,
 }
 
-export type Inverter = {
-  id: string
-  name: string
-}
-
-export default function DevicesScreen({ navigation }: DevicesScreenProps) {
+export default function InverterScreen({ navigation }: InverterScreenProps) {
   const theme = useTheme();
   const [isLoading, setIsLoading] = useState(true);
-  const [inverters, setInverters] = useState<Inverter[]>([]);
+  const [inverters, setInverters] = useState<Device[]>([]);
 
   useEffect(() => {
     // Get selected inverter from AsyncStorage
@@ -33,9 +29,9 @@ export default function DevicesScreen({ navigation }: DevicesScreenProps) {
       try {
         setIsLoading(true);
 
-        const invertersData = await AsyncStorage.getItem('Inverters');
+        const invertersData = getInverters();
         if (invertersData) {
-          setInverters(JSON.parse(invertersData));
+          setInverters(invertersData);
         }
 
       } catch (error) {
@@ -47,17 +43,18 @@ export default function DevicesScreen({ navigation }: DevicesScreenProps) {
     loadInverters();
   }, []);
 
-  const handleSelectInverter = async (inverter: Inverter) => {
+  const handleSelectInverter = async (inverter: Device) => {
     // Store selected inverter in AsyncStorage for the flow
     try {
-      await AsyncStorage.setItem('selectedInverter', JSON.stringify(inverter));
-      navigation.navigate('Batteries');
+      setSelectedInverter(inverter);
+      showToast(ToastType.Success, 'Inverter selected successfully!');
+      navigation.navigate('Nodes');
     } catch (error) {
       console.error('Failed to save selected inverter', error);
     }
   };
 
-  const renderInverterItem = ({ item }: { item: Inverter }) => (
+  const renderInverterItem = ({ item }: { item: Device }) => (
     <Card style={styles.inverterCard} onPress={() => handleSelectInverter(item)}>
       <Card.Content style={styles.inverterContent}>
         <View style={[styles.iconContainer, { backgroundColor: theme.colors.primary + '20' }]}>
