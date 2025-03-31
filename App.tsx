@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect } from 'react';
 import Toast from 'react-native-toast-message';
-import { showToast, toastConfig, ToastType } from './components/Toast';
+import { toastConfig } from './components/Toast';
 import { initBootstrapper } from './bootstrap/bootstrapper';
 import { requestBluetoothPermissions } from './helpers/AppHelper';
 import { NavigationContainer } from '@react-navigation/native';

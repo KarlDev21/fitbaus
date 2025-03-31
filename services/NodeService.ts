@@ -1,8 +1,5 @@
 import {BleManagerInstance, generateNodeDigest} from '../helpers/BluetoothHelper';
 import {Buffer} from 'buffer';
-import BleManager from 'react-native-ble-manager';
-
-BleManager.start({showAlert: true});
 
 export const decodeManufacturerData = (base64Data: string): Uint8Array => {
   return new Uint8Array(Buffer.from(base64Data, 'base64'));
@@ -70,12 +67,6 @@ export async function authenticateNode(nodeId: string) {
       nodeId,
     );
     await connectedDevice.discoverAllServicesAndCharacteristics();
-
-    await BleManager.connect(nodeId);
-    console.log('Connected successfully!');
-
-    await BleManager.retrieveServices(nodeId);
-    console.log('Services retrieved successfully!');
 
     const digest = generateNodeDigest(nodeId);
     // console.log(`Authenticate ${digest}`);
