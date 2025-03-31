@@ -1,10 +1,8 @@
 import { MMKV } from 'react-native-mmkv';
 import {Device} from 'react-native-ble-plx';
-import { ChargeControllerState } from '../types/bleTypes';
 
 export const storage = new MMKV();
 
-// Save Device List
 export const setDevices = (nodes: Device[], inverters: Device[]) => {
   storage.set('nodes', JSON.stringify(nodes));
   storage.set('inverters', JSON.stringify(inverters));
@@ -20,7 +18,6 @@ export const getInverters = (): Device[] => {
     return data ? JSON.parse(data) : [];
   };
 
-// Save & Get Selected Inverter
 export const setSelectedInverter = (inverter: Device) => {
   storage.set('selectedInverter', JSON.stringify(inverter));
 };
@@ -30,7 +27,6 @@ export const getSelectedInverter = (): Device | null => {
   return data ? JSON.parse(data) : null;
 };
 
-// Save & Get Connected Inverter
 export const setConnectedInverter = (inverter: Device) => {
   storage.set('connectedInverter', JSON.stringify(inverter));
 };
@@ -40,7 +36,10 @@ export const getConnectedInverter = (): Device | null => {
   return data ? JSON.parse(data) : null;
 };
 
-// Save & Get Selected Node
+export const clearConnectedInverter = () => {
+  storage.delete('connectedInverter');
+};
+
 export const setSelectedNodes = (node: Device[]) => {
   storage.set('selectedNodes', JSON.stringify(node));
 };
@@ -58,7 +57,6 @@ export const getConnectedInverterDevice = (inverterId: string): Device | null =>
   const data = storage.getString('Device ' + inverterId);
   return data ? JSON.parse(data) : null;
 };
-
 
 export const clearScannedDevices = () => {
     storage.delete('inverters');

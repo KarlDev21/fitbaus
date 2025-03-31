@@ -1,6 +1,6 @@
-import {Device, ScanCallbackType} from 'react-native-ble-plx';
-import {showToast, ToastType} from '../components/Toast';
-import {BleManagerInstance, generateDigest} from '../helpers/BluetoothHelper';
+import { Device, ScanCallbackType } from 'react-native-ble-plx';
+import { showToast, ToastType } from '../components/Toast';
+import { BleManagerInstance } from '../helpers/BluetoothHelper';
 import { clearScannedDevices } from './storage';
 import { decodeManufacturerData, extractManufacturerData, parseNodeMetaV2 } from './NodeService';
 
@@ -29,13 +29,10 @@ export async function scanDevices(): Promise<{ inverters: Device[]; nodes: Devic
         inverters.set(device.name, device);
         // console.log('Scanned Inverter:', device);
       } else if (device?.name && device.name.includes('Node')) {
-        nodes.set(device.name, device);
+        nodes.set(device.name + device.id, device);
         // console.log('Scanned Node:', device);
       }
 
-      // if(inverters.size < 0 || nodes.size < 0){
-      //   console.log('Devices not found!');
-      // }
     });
 
     //NOTE: Parse in the node manufacturer data (Inverter has nothing to parse)

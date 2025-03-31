@@ -33,11 +33,7 @@ function App(): React.JSX.Element {
 
   useEffect(() => {
     bootstrap();
-    showToast(ToastType.Error, 'Error scanning for devices');
-
   }, [bootstrap]);
-
-  // Define the stack navigator param list
 
   return (
     <PaperProvider theme={theme}>

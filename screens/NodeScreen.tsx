@@ -5,12 +5,11 @@ import { View, StyleSheet, FlatList } from 'react-native';
 import { Card, Text, ActivityIndicator, IconButton, Checkbox, Button, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { RootStackParamList } from '../nav/CreateStackNavigation';
 import { showToast, ToastType } from '../components/Toast';
 import { Device } from 'react-native-ble-plx';
-import { getNodes, getSelectedInverter, setSelectedNode, setSelectedNodes } from '../services/storage';
+import { getNodes, getSelectedInverter, setSelectedNodes } from '../services/storage';
 import { authenticateNode } from '../services/NodeService';
 
 type NodeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Nodes'>
@@ -196,12 +195,12 @@ export default function NodeScreen({ navigation }: NodeScreenProps) {
         </Card.Content>
       </Card>
     )
-  }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <IconButton icon="arrow-lef" size={24} onPress={() => navigation.goBack()} />
+        <IconButton icon="account-arrow-left-outline" size={24} onPress={() => navigation.goBack()} />
         <Text variant="titleLarge" style={styles.headerTitle}>
           Select Batteries
         </Text>

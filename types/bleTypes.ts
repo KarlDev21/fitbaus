@@ -9,7 +9,6 @@ export interface InverterStatus {
     efficiency: number;
 }
 
-// Define the structure of `tBatteryData`
 export interface BatteryData {
     TotalVoltage: number;
     Current: number;
@@ -27,7 +26,6 @@ export interface BatteryData {
     N_NTC: number;
   }
 
-  // Define the structure of `tChargeControllerState`
 export interface ChargeControllerState {
   PV_Voltage: number;
   Batt_Voltage: number;
@@ -41,7 +39,6 @@ export interface ChargeControllerState {
   DeviceTemperature: number;
 }
 
-// Define the structure of `tInverterState`
 export interface InverterState {
   LoadInputVoltage: number;
   LoadInputCurrent: number;

@@ -5,7 +5,6 @@ import { View, StyleSheet, FlatList } from 'react-native';
 import { Card, Text, useTheme, IconButton } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { RootStackParamList } from '../nav/CreateStackNavigation';
 import { showToast, ToastType } from '../components/Toast';

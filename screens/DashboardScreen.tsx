@@ -1,20 +1,17 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { View, StyleSheet, ScrollView, ActivityIndicator } from "react-native"
 import { Card, Text, Appbar, useTheme } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import type { DrawerNavigationProp } from "@react-navigation/drawer"
 import type { RouteProp } from "@react-navigation/native"
-import AsyncStorage from "@react-native-async-storage/async-storage"
 import { MaterialCommunityIcons } from "@expo/vector-icons"
 import type { RootStackParamList } from "../nav/CreateStackNavigation"
-import { getDashboardData, type DashboardData } from "../services/BluetoothLowEnergyService"
-import { Device } from "react-native-ble-plx"
-import { getConnectedInverter, getConnectedInverterDevice, getSelectedInverter } from "../services/storage"
-import { ChargeControllerState, InverterState } from "../types/bleTypes"
+import { getConnectedInverterDevice } from "../services/storage"
 import { getChargeControllerStatus, getInverterStatus } from "../services/InverterService"
 import { showToast, ToastType } from "../components/Toast"
+import { DashboardData } from "../types/bleTypes"
 
 type DashboardScreenNavigationProp = DrawerNavigationProp<RootStackParamList, "Dashboard">
 type DashboardScreenRouteProp = RouteProp<RootStackParamList, "Dashboard">

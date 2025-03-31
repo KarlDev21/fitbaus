@@ -3,82 +3,8 @@ import {BleManagerInstance, concatBytes, packInt64LE, generateInverterDigest} fr
 import {Alert} from 'react-native';
 import { Characteristic, Device } from 'react-native-ble-plx';
 import { BatteryData, BatteryInfo, ChargeControllerState, InverterState } from '../types/bleTypes';
-import { showToast, ToastType } from '../components/Toast';
 
 const AUTHENTICATION_CHAR = '669a0c20-0008-d690-ec11-e214416ccb95';
-
-
-// authenticate writes the concatenation of the provided digest and packed extime to the peripheral.
-// export async function authenticateInverter(theInverter: Device, theDevice: Device): Promise<void> {
-//   if (!theInverter) {
-//     console.error('No device connected');
-//     return;
-//   }
-
-//   try {
-//     const connectedDevice = await BleManagerInstance.connectToDevice(
-//       theInverter.id,
-//     );
-//     await connectedDevice.discoverAllServicesAndCharacteristics();
-
-//     const extime = Date.now();
-//     const digest = generateInverterDigest(theInverter.id, extime);
-//     console.log(`Authenticate len digest ${digest.length}`);
-//     console.log(
-//       'digest in hex:',
-//       Array.from(digest)
-//         .map(b => b.toString(16).padStart(2, '0'))
-//         .join(' '),
-//     );
-
-//     const etime = packInt64LE(extime);
-//     const badigest = concatBytes(digest, etime);
-//     console.log(
-//       'Badigest in hex:',
-//       Array.from(badigest)
-//         .map(b => b.toString(16).padStart(2, '0'))
-//         .join(' '),
-//     );
-//     const response =
-//       await BleManagerInstance.writeCharacteristicWithResponseForDevice(
-//         theInverter.id,
-//         theInverter?.serviceUUIDs?.[0] ?? '',
-//         AUTHENTICATION_CHAR,
-//         Buffer.from(badigest).toString('base64'),
-//       );
-
-//     console.log('Authentication successful', response);
-//     //ENROLLING BATTERIES
-//     await enrollBatteries(theInverter, theDevice, 0);
-
-//     //READING INVERTER STATE
-//     const inverterStatus = await getInverterStatus(theInverter);
-//     if (inverterStatus) {
-//       console.log('Inverter Status:', inverterStatus);
-//     } else {
-//       console.error('Failed to fetch inverter status.');
-//     }
-
-//     //READING BATTERY CONTROLLER STATE
-//     const chargeControllerStatus = await getChargeControllerStatus(theInverter);
-//     if (chargeControllerStatus) {
-//       console.log('Charge Controller Status:', chargeControllerStatus);
-//     } else {
-//       console.error('Failed to fetch charge controller status.');
-//     }
-
-//     //READING BATTRIES STATE
-//     const batteryInfo = await retrieveBatteryInfo(theDevice, theInverter);
-//     if (batteryInfo) {
-//       console.log('Battery Info:', batteryInfo);
-//     } else {
-//       console.error('Failed to fetch battery info.');
-//     }
-//   } catch (error: any) {
-//     console.error('Error authenticating:', error);
-//     Alert.alert('Error', 'Auth failed..', error);
-//   }
-// }
 
 //THIS IS READING INVERTER STATE
 const INVERTER_STATE_CHAR = '669a0c20-0008-d690-ec11-e214406ccb95';
@@ -106,7 +32,7 @@ export async function authenticateInverter(selectedInverter: Device, Selectednod
     // await fetchAndLogInverterStatus(selectedInverter);
     // await fetchAndLogChargeControllerStatus(selectedInverter);
     console.log(Selectednodes.length + ' nodes found');
-    
+
     Selectednodes.forEach(async(node)=> {
 
       let response = await enrollBatteries(selectedInverter, node, 0);
@@ -115,10 +41,8 @@ export async function authenticateInverter(selectedInverter: Device, Selectednod
 
       console.log('Enrollment response for node', node.id, ':', responses[node.id]);
 
-      // response ? showToast(ToastType.Success, `Enrollment for node ${node.id} is successful`) :
-      // showToast(ToastType.Error, `Enrollment for node ${node.id} is unsuccessful`);
     });
-    
+
   } catch (error: any) {
     console.error('Error authenticating:', error);
     Alert.alert('Error', 'Auth failed.', error);
@@ -175,7 +99,6 @@ async function fetchAndLogInverterStatus(theInverter: Device): Promise<void> {
   }
 }
 
-
 async function fetchAndLogChargeControllerStatus(theInverter: Device): Promise<void> {
   const chargeControllerStatus = await getChargeControllerStatus(theInverter);
   if (chargeControllerStatus) {
@@ -195,7 +118,6 @@ async function fetchAndLogBatteryInfo(theDevice: Device, theInverter: Device): P
   }
 }
 
-// async function ReadNodeState (node: Device, inverter: Device)  {
 //   try {
 //     const batteryInfo = await retrieveBatteryInfo(node, inverter);
 //     if (batteryInfo) {

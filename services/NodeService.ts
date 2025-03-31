@@ -1,18 +1,9 @@
-import {Device, ScanCallbackType} from 'react-native-ble-plx';
-import {showToast, ToastType} from '../components/Toast';
 import {BleManagerInstance, generateNodeDigest} from '../helpers/BluetoothHelper';
 import {Buffer} from 'buffer';
 import BleManager from 'react-native-ble-manager';
-import { getConfigStringValue, RemoteConfigKeys } from './RemoteConfigService';
-
-// AUTHENTICATION STUFF
-// const AUTHENTICATION_CHAR = '669a0c20-0008-21b5-ec11-e214416c2e68';
-const AUTHENTICATION_CHAR = getConfigStringValue(RemoteConfigKeys.NODE_AUTHENTICATION_CHAR_UUID) ?? '';
-const AUTHENTICATION_SERVICE = getConfigStringValue(RemoteConfigKeys.NODE_AUTHENTICATION_SERVICE_UUID) ?? '';
 
 BleManager.start({showAlert: true});
 
-// Function to decode Base64 manufacturer data
 export const decodeManufacturerData = (base64Data: string): Uint8Array => {
   return new Uint8Array(Buffer.from(base64Data, 'base64'));
 };
@@ -61,7 +52,6 @@ export const parseBatteryData = (data: Uint8Array) => {
   };
 };
 
-// Parse tNodeMetaV2 (Flag + Battery Data)
 export const parseNodeMetaV2 = (data: Uint8Array) => {
   if (data.length < 24) {
     console.error('Invalid NodeMetaV2 length:', data.length);

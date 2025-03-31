@@ -1,11 +1,11 @@
-import React,{ComponentType} from "react";
+import React,{ComponentType} from 'react';
 import { createStackNavigator, StackNavigationOptions } from '@react-navigation/stack';
-import HomeScreen from "../screens/HomeScreen";
-import InverterScreen from "../screens/InverterScreen";
-import NodeScreen from "../screens/NodeScreen";
-import FinalizingScreen from "../screens/FinalizingScreen";
-import DashboardScreen from "../screens/DashboardScreen";
-import { Device } from "react-native-ble-plx";
+import HomeScreen from '../screens/HomeScreen';
+import InverterScreen from '../screens/InverterScreen';
+import NodeScreen from '../screens/NodeScreen';
+import FinalizingScreen from '../screens/FinalizingScreen';
+import DashboardScreen from '../screens/DashboardScreen';
+import { Device } from 'react-native-ble-plx';
 
 export type RootStackParamList = {
   Home: undefined
@@ -15,7 +15,7 @@ export type RootStackParamList = {
   Dashboard: { inverter: Device }
 }
 
-type StackNavigationScreen = { 
+type StackNavigationScreen = {
     name: string;
     component: ComponentType<any>;
     options: StackNavigationOptions;
@@ -49,8 +49,8 @@ export const StackScreens: NavStackScreenRegistry = {
     Dashboard: {
       name: 'Dashboard',
       component: DashboardScreen,
-      options: {headerShown: false}
-    }
+      options: {headerShown: false},
+    },
   };
 
 const Stack = createStackNavigator();

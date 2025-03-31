@@ -17,6 +17,6 @@ export const DrawerScreens: NavDrawerScreenRegistry = {
     name: 'HomeScreen',
     component: StackNavigator,
     options: {title: 'Home', headerShown: true},
-  
+
   },
 };

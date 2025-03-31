@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import React, { useEffect } from "react"
 import { View, StyleSheet } from "react-native"
 import { Text, ActivityIndicator, useTheme } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"

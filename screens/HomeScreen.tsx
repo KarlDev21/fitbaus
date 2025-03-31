@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Button, Card, Text, ActivityIndicator, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,7 +10,6 @@ import type { RootStackParamList } from '../nav/CreateStackNavigation';
 import { showToast, ToastType } from '../components/Toast';
 import { scanDevices } from '../services/BluetoothLowEnergyService';
 import { getConnectedInverter, setDevices } from '../services/storage';
-import { Device } from 'react-native-ble-plx';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>
 
@@ -23,25 +22,14 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   const savedInverter = getConnectedInverter();
   const theme = useTheme();
 
-  // useEffect(() => {
-  //   // Check for connected inverter in AsyncStorage on component mount
-  //   const loadConnectedInverter = async () => {
-  //     console.log('Loading connected inverter...');
-  //     try {
-  //       if (savedInverter) {
-  //         setSavedInverter(savedInverter);
-  //       }
-  //     } catch (error) {
-  //       console.error('Failed to load connected inverter', error);
-  //     }
-  //   };
-
-  //   loadConnectedInverter();
-  // }, []);
-
   const handleScan = async ()  => {
+      // clearConnectedInverter();
       setIsScanning(true);
       const {inverters, nodes} = await scanDevices();
+      nodes.forEach((node) => {
+        console.log('Node:', node.name, node.id);
+      });
+
       console.log('check scan' + inverters.length + nodes.length);
       const batteriesScanned = nodes.length > 0;
       const invertersScanned = inverters.length > 0;
@@ -108,9 +96,6 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
                 'Scan for Inverters'
               )}
             </Button>
-            {/* <Button onPress={async () => { await authenticate() }}>Authenticate</Button>
-            <Button onPress={async () => { await authenticateInverter() }}>Authenticate Inverter</Button> */}
-
           </Card.Content>
         </Card>
 
