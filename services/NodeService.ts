@@ -61,32 +61,36 @@ export const parseNodeMetaV2 = (data: Uint8Array) => {
   };
 };
 
+
 export async function authenticateNode(nodeId: string) {
   try {
-    const connectedDevice = await BleManagerInstance.connectToDevice(
-      nodeId,
-    );
-    await connectedDevice.discoverAllServicesAndCharacteristics();
 
-    const digest = generateNodeDigest(nodeId);
-    // console.log(`Authenticate ${digest}`);
-    console.log(`Byte Array ${Array.from(digest)}`);
-
-    const response =
-      await BleManagerInstance.writeCharacteristicWithResponseForDevice(
+      const connectedDevice = await BleManagerInstance.connectToDevice(
         nodeId,
-        'ffffffff-21b5-ec11-e214-000030452e68',
-        '669a0c20-0008-21b5-ec11-e214416c2e68',
-        Buffer.from(digest).toString('base64'),
       );
+      await connectedDevice.discoverAllServicesAndCharacteristics();
 
-    BleManagerInstance.cancelDeviceConnection(nodeId);
-    console.log('Disconnected successfully!');
+      const digest = generateNodeDigest(nodeId);
+      // console.log(`Authenticate ${digest}`);
+      console.log(`Byte Array ${Array.from(digest)}`);
 
-    console.log('Authentication Response:', response);
-    return true;
+      const response =
+        await BleManagerInstance.writeCharacteristicWithResponseForDevice(
+          nodeId,
+          'ffffffff-21b5-ec11-e214-000030452e68',
+          '669a0c20-0008-21b5-ec11-e214416c2e68',
+          Buffer.from(digest).toString('base64'),
+        );
+
+      // BleManagerInstance.cancelDeviceConnection(nodeId);
+      // console.log('Disconnected successfully!');
+
+      console.log('Authentication Response:', response);
+      return true;
+
   } catch (error) {
     console.error('Authentication Error:', error);
     return false;
   }
+
 }

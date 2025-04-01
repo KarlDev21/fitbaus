@@ -8,10 +8,10 @@ import type { DrawerNavigationProp } from "@react-navigation/drawer"
 import type { RouteProp } from "@react-navigation/native"
 import { MaterialCommunityIcons } from "@expo/vector-icons"
 import type { RootStackParamList } from "../nav/CreateStackNavigation"
-import { getConnectedInverterDevice } from "../services/storage"
-import { getChargeControllerStatus, getInverterStatus } from "../services/InverterService"
+import { getConnectedInverterDevice, getSelectedNodes } from "../services/storage"
+import { fetchAndLogBatteryInfo, fetchAndLogChargeControllerStatus, fetchAndLogInverterStatus, getChargeControllerStatus, getInverterStatus } from "../services/InverterService"
 import { showToast, ToastType } from "../components/Toast"
-import { DashboardData } from "../types/bleTypes"
+import { BatteryData, BatteryInfo, ChargeControllerState, InverterState } from "../types/bleTypes"
 
 type DashboardScreenNavigationProp = DrawerNavigationProp<RootStackParamList, "Dashboard">
 type DashboardScreenRouteProp = RouteProp<RootStackParamList, "Dashboard">
@@ -22,19 +22,67 @@ interface DashboardScreenProps {
 }
 
 export default function DashboardScreen({ navigation, route }: DashboardScreenProps) {
-  const [systemData, setSystemData] = useState<DashboardData>({
-    batterySoC: 0,
-    inverterOutput: 0,
-    solarInput: 0,
-    temperature: 0,
-    kWhGenerated: 0,
-    kWhConsumed: 0,
-    co2Savings: 0,
-    leaseProgress: 0,
-    alerts: [],
-  })
+  // const [systemData, setSystemData] = useState<DashboardData>({
+  //   batterySoC: 0,
+  //   inverterOutput: 0,
+  //   solarInput: 0,
+  //   temperature: 0,
+  //   kWhGenerated: 0,
+  //   kWhConsumed: 0,
+  //   co2Savings: 0,
+  //   leaseProgress: 0,
+  //   alerts: [],
+  // });
+
+  const [chargeControllerState, setChargeControllerState ] = useState<ChargeControllerState>({
+    PV_Voltage: 0,
+    Batt_Voltage: 0,
+    PV_Current: 0,
+    PV_Watt: 0,
+    LoadCurrent: 0,
+    LoadWatt: 0,
+    BatteryStatus: 0,
+    ChargingStatus: 0,
+    DischargingStatus: 0,
+    DeviceTemperature: 0,
+  });
+
+  const [inverterState, setInverterState] = useState<InverterState>({
+    LoadInputVoltage: 0,
+    LoadInputCurrent: 0,
+    LoadInputPower: 0,
+    LoadOutputVoltage: 0,
+    LoadOutputCurrent: 0,
+    LoadOutputPower: 0,
+    DeviceTemperature: 0,
+    HeatsinkTemperature: 0,
+    LoadStatus: 0,
+    Version: 0,
+    InverterOn: 0,
+    SolarVoltage: 0,
+    SolarCurrent: 0,
+  });
+
+  const [nodeDataList, setNodeDataList] = useState<BatteryInfo[]>({
+    TotalVoltage: 0,
+    Current: 0,
+    RemainCapacity: 0,
+    TotalCapacity: 0,
+    CycleLife: 0,
+    ProductLife: 0,
+    BalanceStatusLow: 0,
+    BalanceStatusHigh: 0,
+    ProtectionStatus: 0,
+    Version: 0,
+    RSOC: 0,
+    FetStatus: 0,
+    CellInSeries: 0,
+    N_NTC: 0, 
+  });
+
   const inverterId = route.params.inverter.id;
   const inverter = getConnectedInverterDevice(inverterId);
+  const nodes = getSelectedNodes();
   const [isLoading, setIsLoading] = useState(true);
   const theme = useTheme();
 
@@ -42,31 +90,41 @@ export default function DashboardScreen({ navigation, route }: DashboardScreenPr
   useEffect(() => {
     const loadData = async () => {
       try {
-        console.log( "inverter STUFF"+inverter);
-        setTimeout(async ()  =>  {
-        if(inverter)
-        {
-            const ChargeController = await getChargeControllerStatus( inverter );
-            const inverterState = await getInverterStatus(inverter);
 
+        setTimeout(async ()  =>  {
+        if(inverter && nodes)
+        {
+            const ChargeController = await fetchAndLogChargeControllerStatus( inverter );
+            const inverterState = await fetchAndLogInverterStatus(inverter);
+            let nodeDataList : BatteryInfo[] = []
             if (ChargeController && inverterState) {
               console.log(ChargeController);
               console.log(inverterState);
-              setSystemData({
-                batterySoC: ChargeController.BatteryStatus,
-                inverterOutput: inverterState.LoadOutputPower,
-                solarInput: inverterState.SolarVoltage,
-                temperature: ChargeController.DeviceTemperature / 100,
-                kWhGenerated: inverterState.LoadOutputVoltage,
-                kWhConsumed: inverterState.LoadInputVoltage,
-                co2Savings: 0,
-                leaseProgress: 0,
-                alerts: inverterState.LoadStatus > 0 ? ['Inverter Error'] : ['No Alerts'],
-              });
 
+              setChargeControllerState(ChargeController);
+              setInverterState(inverterState);
+
+              // nodes.forEach(async(node) => {
+              //   const batteryData = await fetchAndLogBatteryInfo( node, inverter);
+              //   if(batteryData){
+              //     nodeDataList.push(batteryData);
+              //   }
+              // });
+
+              // setNodeDataList(nodeDataList);
+              // setSystemData({
+              //   batterySoC: ChargeController.BatteryStatus,
+              //   inverterOutput: inverterState.LoadOutputPower,
+              //   solarInput: inverterState.SolarVoltage,
+              //   temperature: ChargeController.DeviceTemperature / 100,
+              //   kWhGenerated: inverterState.LoadOutputVoltage,
+              //   kWhConsumed: inverterState.LoadInputVoltage,
+              //   co2Savings: 0,
+              //   leaseProgress: 0,
+              //   alerts: inverterState.LoadStatus > 0 ? ['Inverter Error'] : ['No Alerts'],
+              // });
             }
             setIsLoading(false);
-
           }
           else{
             showToast(ToastType.Error, 'Failed to load dashboard data. Please try again.');
@@ -117,51 +175,57 @@ export default function DashboardScreen({ navigation, route }: DashboardScreenPr
                 <View style={styles.inverterHeader}>
                   <MaterialCommunityIcons name="lightning-bolt" size={24} color={theme.colors.primary} />
                   <Text variant="titleLarge" style={styles.inverterTitle}>
-                    {inverter.name}
+                    {'Inverter ' + inverter.id}
                   </Text>
                 </View>
               </Card.Content>
             </Card>
           )}
-
-          {systemData && (
+ 
+          {/* Charge Controller State */}
+          {chargeControllerState && (
             <Card style={styles.overviewCard}>
               <Card.Content>
                 <Text variant="titleMedium" style={styles.sectionTitle}>
-                  Dashboard
+                  Charge Controller State
                 </Text>
 
-                {/* Battery SoC */}
-                {renderMetricRow("battery-high", "#4CAF50", "Battery SoC:", systemData.batterySoC, "%")}
+                {/* Add metrics related to charge controller state here */}
+                {renderMetricRow("chart-bar", "#03A9F4", "Charge Voltage:", chargeControllerState.LoadCurrent, "A")}
+                {renderMetricRow("chart-bar", "#03A9F4", "Charge Current:", chargeControllerState.LoadWatt, "W")}
+                {renderMetricRow("chart-bar", "#03A9F4", "Battery Voltage:", chargeControllerState.Batt_Voltage / 100, "V")}
+                {renderMetricRow("chart-bar", "#03A9F4", "Battery Current:", chargeControllerState.PV_Current, "A")}
+                {renderMetricRow("chart-bar", "#03A9F4", "Battery Power:", chargeControllerState.PV_Watt, "W")}
+                {renderMetricRow("chart-bar", "#03A9F4", "Load Current:", chargeControllerState.LoadCurrent, "A")}
+                {renderMetricRow("chart-bar", "#03A9F4", "Load Power:", chargeControllerState.LoadWatt, "W")}
+                {renderMetricRow("chart-bar", "#03A9F4", "Battery Status:", chargeControllerState.BatteryStatus )}
+                {renderMetricRow("chart-bar", "#03A9F4", "Charging Status:", chargeControllerState.ChargingStatus )}
+                {renderMetricRow("chart-bar", "#03A9F4", "Discharging Status:", chargeControllerState.DischargingStatus)}
+                {renderMetricRow("chart-bar", "#03A9F4", "Device Temperature:", chargeControllerState.DeviceTemperature / 100, "°C")}
+                {renderMetricRow("chart-bar", "#03A9F4", "PV Voltage:", chargeControllerState.PV_Voltage / 100, "V")}
+              </Card.Content>
+            </Card>
+          )}
 
-                {/* Inverter Output */}
-                {renderMetricRow("flash", "#FF9800", "Inverter Output:", systemData.inverterOutput, "V")}
-
-                {/* Solar Input */}
-                {renderMetricRow("white-balance-sunny", "#FFC107", "Solar Input:", systemData.solarInput, "W")}
-
-                {/* Temperature */}
-                {renderMetricRow("thermometer", "#F44336", "Temperature:", systemData.temperature, "°C")}
-
-                {/* kWh Generated */}
-                {renderMetricRow("chart-line", "#2196F3", "kWh Generated:", systemData.kWhGenerated, "kWh")}
-
-                {/* kWh Consumed */}
-                {renderMetricRow("lightbulb-on", "#FFC107", "kWh Consumed:", systemData.kWhConsumed, "kWh")}
-
-                {/* CO2 Savings */}
-                {renderMetricRow("leaf", "#4CAF50", "CO2:", systemData.co2Savings, "kg/kWh")}
-
-                {/* Lease Progress */}
-                {renderMetricRow("cash-multiple", "#8BC34A", "Lease-to-Own Progress:", systemData.leaseProgress, "%")}
-
-                {/* Alerts */}
-                {renderMetricRow(
-                  "alert-circle",
-                  "#F44336",
-                  "Alerts:",
-                  systemData.alerts.length > 0 ? `${systemData.alerts.length} active` : "No active errors",
-                )}
+          {/* Inverter State */}
+          {inverterState && (
+            <Card style={styles.overviewCard}>
+              <Card.Content>
+                <Text variant="titleMedium" style={styles.sectionTitle}>
+                  Inverter State
+                </Text>
+                {renderMetricRow("flash", "#FF9800", "Load Input Current:", inverterState.LoadInputCurrent / 100, "A")}
+                {renderMetricRow("flash", "#FF9800", "Load Input Power:", inverterState.LoadInputPower / 100, "W")}
+                {renderMetricRow("flash", "#FF9800", "Load Output Voltage:", inverterState.LoadOutputVoltage / 100 , "V")}
+                {renderMetricRow("flash", "#FF9800", "Load Output Current:", inverterState.LoadOutputCurrent / 100, "A")}
+                {renderMetricRow("flash", "#FF9800", "Load Output Power:", inverterState.LoadOutputPower, "W")}
+                {renderMetricRow("flash", "#FF9800", "Device Temperature:", inverterState.DeviceTemperature / 100, "°C")}
+                {renderMetricRow("flash", "#FF9800", "Heatsink Temperature:", inverterState.HeatsinkTemperature / 100, "°C")}
+                {renderMetricRow("flash", "#FF9800", "Load Status:", inverterState.LoadStatus)}
+                {renderMetricRow("flash", "#FF9800", "Version:", inverterState.Version )}
+                {renderMetricRow("flash", "#FF9800", "Inverter On:", inverterState.InverterOn )}
+                {renderMetricRow("flash", "#FF9800", "Solar Voltage:", inverterState.SolarVoltage / 1000, "V")}
+                {renderMetricRow("flash", "#FF9800", "Solar Current:", inverterState.SolarCurrent / 1000 , "A")}
               </Card.Content>
             </Card>
           )}

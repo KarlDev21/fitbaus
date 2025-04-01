@@ -10,6 +10,7 @@ import type { RootStackParamList } from '../nav/CreateStackNavigation';
 import { showToast, ToastType } from '../components/Toast';
 import { getInverters, setSelectedInverter } from '../services/storage';
 import { Device } from 'react-native-ble-plx';
+import { connectToInverter } from '../services/InverterService';
 
 type InverterScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Devices'>
 
@@ -47,6 +48,7 @@ export default function InverterScreen({ navigation }: InverterScreenProps) {
     try {
       setSelectedInverter(inverter);
       showToast(ToastType.Success, 'Inverter selected successfully!');
+      connectToInverter(inverter);
       navigation.navigate('Nodes');
     } catch (error) {
       console.error('Failed to save selected inverter', error);

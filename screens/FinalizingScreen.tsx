@@ -27,7 +27,7 @@ export default function FinalizingScreen({ navigation }: FinalizingScreenProps) 
       const selectedNodes = getSelectedNodes();
 
       if (selectedInverter && selectedNodes) {
-        console.log('Authing');
+        console.log('Inverter Authing');
         authenticateInverter(selectedInverter, selectedNodes);
         setConnectedInverterDevice(selectedInverter);//difference is that this one needs and id when getting
         setConnectedInverter(selectedInverter); // this only saves one inverter currently

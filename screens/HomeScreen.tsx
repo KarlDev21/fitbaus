@@ -9,7 +9,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { RootStackParamList } from '../nav/CreateStackNavigation';
 import { showToast, ToastType } from '../components/Toast';
 import { scanDevices } from '../services/BluetoothLowEnergyService';
-import { getConnectedInverter, setDevices } from '../services/storage';
+import { clearConnectedInverter, getConnectedInverter, setDevices } from '../services/storage';
+import { connectToInverter } from '../services/InverterService';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>
 
@@ -59,6 +60,16 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       }
   };
 
+  const handleConnect = async () => {
+    if (savedInverter) {
+      () => {
+        connectToInverter(savedInverter)
+          .then(() => showToast(ToastType.Success, 'Connected to Inverter'))
+          .catch((error) => showToast(ToastType.Error, 'Failed to connect to Inverter ' + error));
+      };
+    }
+  };
+
   const handleInverterClick = () => {
     if (savedInverter) {
       navigation.navigate('Dashboard', { inverter: savedInverter })
@@ -90,7 +101,6 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
               {isScanning ? (
                 <>
                   <ActivityIndicator size={16} color="#fff" />
-                  {'Scanning...'}
                 </>
               ) : (
                 'Scan for Inverters'
@@ -103,7 +113,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
           <Card style={styles.card} onPress={handleInverterClick}>
             <Card.Content>
               <Text variant="titleMedium" style={styles.cardTitle}>
-                Connected Inverter
+                Saved Inverters
               </Text>
               <View style={styles.inverterRow}>
                 <View style={[styles.iconContainer, { backgroundColor: theme.colors.primary + "20" }]}>
@@ -114,8 +124,17 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
                     {savedInverter.name + " " + savedInverter.id }
                   </Text>
                   <Text variant="bodySmall" style={styles.inverterStatus}>
-                    Connected
+                    {getConnectedInverter()?.isConnected ? 'Connected' : 'Disconnected'}
                   </Text>
+                  {/* <Button
+                    mode="contained"
+                    onPress={handleConnect}
+                    style={styles.button}
+                    labelStyle={styles.buttonLabel}
+                  >
+                    Connect
+                  </Button> */}
+                  <View style={{ height: 8 }} />
                 </View>
               </View>
             </Card.Content>

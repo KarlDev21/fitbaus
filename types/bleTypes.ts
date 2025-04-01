@@ -4,7 +4,7 @@ export interface InverterStatus {
     power: number;
 }
 
-  export interface ChargeControllerStatus {
+export interface ChargeControllerStatus {
     charging: boolean;
     efficiency: number;
 }
@@ -24,7 +24,7 @@ export interface BatteryData {
     FetStatus: number;
     CellInSeries: number;
     N_NTC: number;
-  }
+}
 
 export interface ChargeControllerState {
   PV_Voltage: number;

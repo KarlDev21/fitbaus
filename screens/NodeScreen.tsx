@@ -86,36 +86,36 @@ export default function NodeScreen({ navigation }: NodeScreenProps) {
 
       const results: Record<string, boolean> = {};
 
-      // Simulate some batteries authenticating successfully and others failing
-      selectedBatteries.forEach( async (nodeId) => {
-        if (selectedInverter) {
+        selectedBatteries.forEach( async (nodeId) => {
+            console.log('Selected Inverter:', selectedInverter);
+            if (selectedInverter) {
+              console.log('Authenticating Node:', nodeId);
+              const response = await authenticateNode(nodeId);
+              console.log('Authentication response:', response);
+              if(response){
+                results[nodeId] = response;
+              }
+              console.log(results);
+            }
+          });
 
-          const response = await authenticateNode(nodeId);
-          console.log('Authentication Response:', response);
-          if(response){
-            results[nodeId] = response;
+        setTimeout(() => {
+          setAuthenticatedBatteries(results);
+          console.log('Authenticated Batteries:', results);
+          console.log(Object.keys(authenticatedBatteries).length);
+          console.log(selectedBatteries.length);
+
+          if(Object.keys(results).length === selectedBatteries.length){
+            showToast(ToastType.Success, 'All Batteries authenticated successfully!');
           }
-          console.log(results);
-        }
-      });
-
-      setTimeout(() => {
-        setAuthenticatedBatteries(results);
-        console.log('Authenticated Batteries:', results);
-        console.log(Object.keys(authenticatedBatteries).length);
-        console.log(selectedBatteries.length);
-
-        if(Object.keys(results).length === selectedBatteries.length){
-          showToast(ToastType.Success, 'All Batteries authenticated successfully!');
-        }
-        else if (Object.keys(results).length) {
-          showToast(ToastType.Error, 'No Batteries authenticated successfully!');
-        }
-        else{
-          showToast(ToastType.Error, 'Some Batteries failed authentication!');
-        }
-        setIsAuthenticating(false);
-        setShowResults(true);
+          else if (Object.keys(results).length) {
+            showToast(ToastType.Error, 'No Batteries authenticated successfully!');
+          }
+          else{
+            showToast(ToastType.Error, 'Some Batteries failed authentication!');
+          }
+          setIsAuthenticating(false);
+          setShowResults(true);
       }, 3000);
 
 
