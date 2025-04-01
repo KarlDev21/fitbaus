@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Button, Card, Text, ActivityIndicator, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,7 +21,20 @@ interface HomeScreenProps {
 export default function HomeScreen({ navigation }: HomeScreenProps) {
   const [isScanning, setIsScanning] = useState(false);
   const savedInverter = getConnectedInverter();
+  const [isConnected, setIsConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const theme = useTheme();
+
+  useEffect(() => {
+    const checkConnection = async ()=> {
+      const connection = await savedInverter?.isConnected();
+        if(connection){
+          setIsConnected(connection);
+        }
+      };
+
+    checkConnection();
+  }, [isConnected,savedInverter]);
 
   const handleScan = async ()  => {
       // clearConnectedInverter();
@@ -61,14 +74,62 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   };
 
   const handleConnect = async () => {
+    console.log("Checking connection...");
+  
+    setIsConnecting(true);
+  
     if (savedInverter) {
-      () => {
-        connectToInverter(savedInverter)
-          .then(() => showToast(ToastType.Success, 'Connected to Inverter'))
-          .catch((error) => showToast(ToastType.Error, 'Failed to connect to Inverter ' + error));
-      };
+      // Create a timeout that will trigger if connection takes too long
+      // const timeoutDuration = 10000; // 10 seconds
+      let timeoutReached = false;
+  
+      // const timeoutPromise = new Promise((resolve) => {
+      //   setTimeout(() => {
+      //     timeoutReached = true;
+      //     showToast(ToastType.Error, 'Connection Timeout: Inverter did not respond');
+      //     setIsConnecting(false);
+      //     resolve(null); // Ensure the Promise resolves
+      //   }, timeoutDuration);
+      // });
+  
+      // Attempt to connect, race it against the timeout
+      // const connection = await Promise.race([, timeoutPromise]);
+      const connection = await connectToInverter(savedInverter)
+      // If timeout happened, exit early
+      if (timeoutReached) {
+        setIsConnecting(false);
+        return;
+      }
+  
+      console.log('Connected to Inverter:', connection);
+  
+      if (connection) {
+        setIsConnected(true);
+        showToast(ToastType.Success, 'Connected to Inverter');
+      } else {
+        showToast(ToastType.Error, 'Connection to Inverter Failed');
+      }
+  
+      setIsConnecting(false);
     }
   };
+  
+
+  // const handleConnect = async () => {
+  //   console.log("checking stuff")
+  //   setIsConnecting(true);
+  //   if (savedInverter) {
+  //     const connection = await connectToInverter(savedInverter);
+  //     console.log('Connected to Inverter:', connection);
+  //     if(connection){
+  //       setIsConnected(true);
+  //       showToast(ToastType.Success, 'Connected to Inverter');
+  //     }  else{
+  //       showToast(ToastType.Error, 'Connection to Inverter Failed');
+  //     }
+  //     setIsConnecting(false);
+  //   }
+  // };
 
   const handleInverterClick = () => {
     if (savedInverter) {
@@ -124,8 +185,27 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
                     {savedInverter.name + " " + savedInverter.id }
                   </Text>
                   <Text variant="bodySmall" style={styles.inverterStatus}>
-                    {getConnectedInverter()?.isConnected ? 'Connected' : 'Disconnected'}
+                    {isConnected ? 'Connected' : 'Disconnected'}
                   </Text>
+
+                  {!isConnected && (
+                    <Button
+                      mode="contained"
+                      onPress={handleConnect}
+                      style={styles.button}
+                      labelStyle={styles.buttonLabel}
+                      >
+                      {isConnecting ? (
+                      <>
+                      <ActivityIndicator size={16} color="#fff" />
+                      </>
+                      ) : (
+                        'Reconnect'
+                      )}
+                    </Button>
+                  )}
+                  <View style={{ height: 8 }} />
+                
                   {/* <Button
                     mode="contained"
                     onPress={handleConnect}

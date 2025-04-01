@@ -10,7 +10,7 @@ export interface ChargeControllerStatus {
 }
 
 export interface BatteryData {
-    TotalVoltage: number;
+    // TotalVoltage: number;
     Current: number;
     RemainCapacity: number;
     TotalCapacity: number;

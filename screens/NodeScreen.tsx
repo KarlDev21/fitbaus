@@ -9,7 +9,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { RootStackParamList } from '../nav/CreateStackNavigation';
 import { showToast, ToastType } from '../components/Toast';
 import { Device } from 'react-native-ble-plx';
-import { getNodes, getSelectedInverter, setSelectedNodes } from '../services/storage';
+import { getNodes, getSelectedInverter, setConnectedInverter, setConnectedNodes, setSelectedNodes } from '../services/storage';
 import { authenticateNode } from '../services/NodeService';
 
 type NodeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Nodes'>
@@ -135,8 +135,12 @@ export default function NodeScreen({ navigation }: NodeScreenProps) {
     try {
       setSelectedNodes(authenticatednodeIds.map((id) => nodes.find((node) => node.id === id)).filter((node): node is Device => node !== undefined));
 
+      //will handle this better as well
       if (selectedInverter) {
         setSelectedInverter(selectedInverter);
+        setConnectedInverter(selectedInverter);
+        setConnectedNodes(authenticatednodeIds.map((id) => nodes.find((node) => node.id === id))
+        .filter((node): node is Device => node !== undefined), selectedInverter);
       }
 
       // Navigate to final authentication screen for inverter auth and node enrollment

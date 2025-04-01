@@ -48,7 +48,9 @@ export default function InverterScreen({ navigation }: InverterScreenProps) {
     try {
       setSelectedInverter(inverter);
       showToast(ToastType.Success, 'Inverter selected successfully!');
+      console.log('Is connected before:', inverter.isConnected);
       connectToInverter(inverter);
+      console.log('Is connected after:', inverter.isConnected);
       navigation.navigate('Nodes');
     } catch (error) {
       console.error('Failed to save selected inverter', error);

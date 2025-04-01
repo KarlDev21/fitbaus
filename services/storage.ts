@@ -49,6 +49,15 @@ export const getSelectedNodes = (): Device[] | null => {
   return data ? JSON.parse(data) : [];
 };
 
+export const setConnectedNodes = (nodes: Device[], parentInverter: Device) => {
+  storage.set( parentInverter.id + 'connectedNodes', JSON.stringify(nodes));
+};
+
+export const getConnectedNodes = (parentInverter: Device): Device[] | null => {
+  const data = storage.getString(parentInverter.id + 'connectedNodes');
+  return data ? JSON.parse(data) : null;
+};
+
 export const setConnectedInverterDevice = (inverter : Device) => {
   storage.set('Device ' + inverter.id, JSON.stringify(inverter));
 };
@@ -61,6 +70,7 @@ export const getConnectedInverterDevice = (inverterId: string): Device | null =>
 export const clearScannedDevices = () => {
     storage.delete('inverters');
     storage.delete('nodes');
+    storage.delete('selectedNodes');
   };
 
 export const clearSelectedInverter = () => {

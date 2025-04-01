@@ -52,20 +52,56 @@ export async function authenticateInverter(selectedInverter: Device, Selectednod
   }
 }
 
-export async function connectToInverter(selerctedInverter: Device): Promise<Boolean> {
-
-  return new Promise((resolve, reject) => {
-    BleManagerInstance.connectToDevice(selerctedInverter.id)
-      .then((device: Device) => {
-        console.log('Connected to Inverter:', device.id);
-        resolve(true);
-      })
-      .catch((error: any) => {
-        console.error('Failed to connect to Inverter:', error);
-        reject(error);
-      });
-  });
+export async function checkAndConnectToInverter(selectedInverter: Device): Promise<Boolean> {
+  //will handle these errors better
+    const connection = await selectedInverter.isConnected();
+    if(connection){
+      console.log('Inverter already connected:', selectedInverter.id);
+      return true;
+    }
+    console.log('Inverter not connected:', selectedInverter.id);
+    const response = await BleManagerInstance.connectToDevice(selectedInverter.id);
+    const isConnected = await response.isConnected();
+    console.log("reconnected")
+    console.log(isConnected);
+    return isConnected;
+      // .then((device: Device) => {
+      //   console.log('Connected to Inverter:', device.id);
+      // })
+      // .catch((error: any) => {
+      //   console.error('Failed to connect to Inverter:', error);
+      // });
 }
+
+export async function connectToInverter(selectedInverter: Device): Promise<Boolean> {
+  //will handle these errors better
+    const response = await BleManagerInstance.connectToDevice(selectedInverter.id);
+    const isConnected = await response.isConnected();
+    console.log("Checking BLE status")
+    console.log(isConnected);
+    return isConnected;
+      // .then((device: Device) => {
+      //   console.log('Connected to Inverter:', device.id);
+      // })
+      // .catch((error: any) => {
+      //   console.error('Failed to connect to Inverter:', error);
+      // });
+}
+
+// export async function connectToInverter(selectedInverter: Device): Promise<Boolean> {
+//   //will handle these errors better
+//   return new Promise((resolve, reject) => {
+//     BleManagerInstance.connectToDevice(selectedInverter.id)
+//       .then((device: Device) => {
+//         console.log('Connected to Inverter:', device.id);
+//         resolve(true);
+//       })
+//       .catch((error: any) => {
+//         console.error('Failed to connect to Inverter:', error);
+//         reject(false);
+//       });
+//   });
+// }
 
 async function connectAndDiscoverServices(inverter: Device): Promise<Device> {
   const connectedDevice = await BleManagerInstance.connectToDevice(inverter.id);
@@ -133,10 +169,27 @@ export async function fetchAndLogChargeControllerStatus(inverter: Device): Promi
 export async function fetchAndLogBatteryInfo(node: Device, inverter: Device): Promise<BatteryInfo | null> {
 
   const batteryInfo = await retrieveBatteryInfo(node, inverter);
+  // 48:CA:43:59:BA:D9
+  // await checkAndConnectToInverter(inverter);
   console.log('Battery Info:', batteryInfo);
 
   if (batteryInfo) {
     return batteryInfo;
+  } else {
+    console.error('Failed to fetch battery info.');
+    return null;
+  }
+}
+
+export async function fetchAndLogBatteryData(node: Device, inverter: Device): Promise<BatteryData | null> {
+
+  const batterydata = await retrieveBatteryData(node, inverter);
+  // 48:CA:43:59:BA:D9
+  // await checkAndConnectToInverter(inverter);
+  console.log('Battery Info:', batterydata);
+
+  if (batterydata) {
+    return batterydata;
   } else {
     console.error('Failed to fetch battery info.');
     return null;
@@ -393,10 +446,10 @@ export function parseBatteryData(data: Uint8Array): BatteryData {
 export async function retrieveBatteryInfo(node: Device, inverter: Device): Promise< BatteryInfo | null> {
   try {
     const batts = [node.id];
-    const connectedDevice = await BleManagerInstance.connectToDevice(
-      inverter.id,
-    );
-    await connectedDevice.discoverAllServicesAndCharacteristics();
+    // const connectedDevice = await BleManagerInstance.connectToDevice(
+    //   inverter.id,
+    // );
+    // await connectedDevice.discoverAllServicesAndCharacteristics();
 
     const batStatus: Record<string, BatteryData> = {};
 
@@ -433,6 +486,72 @@ export async function retrieveBatteryInfo(node: Device, inverter: Device): Promi
     }
 
     return batStatus;
+  } catch (error) {
+    console.error('Error retrieving battery info:', error);
+    return null;
+  }
+}
+
+export async function retrieveBatteryData(node: Device, inverter: Device): Promise< BatteryData | null> {
+  try {
+    const batts = [node.id];
+    // const connectedDevice = await BleManagerInstance.connectToDevice(
+    //   inverter.id,
+    // );
+    // await connectedDevice.discoverAllServicesAndCharacteristics();
+
+    const batStatus: Record<string, BatteryData> = {};
+    let batteryData: BatteryData = {
+      // TotalVoltage: 0,
+      Current: 0,
+      RemainCapacity: 0,
+      TotalCapacity: 0,
+      CycleLife: 0,
+      ProductLife: 0,
+      BalanceStatusLow: 0,
+      BalanceStatusHigh: 0,
+      ProtectionStatus: 0,
+      Version: 0,
+      RSOC: 0,
+      FetStatus: 0,
+      CellInSeries: 0,
+      N_NTC: 0,
+    };
+
+
+    for (const mac of batts) {
+      // Convert MAC address to bytes
+      const macBytes = mac.split(':').map(byte => parseInt(byte, 16));
+      const macBuffer = Buffer.from(macBytes);
+
+      // Write the MAC address to the SET_BATT_RETR_CHAR characteristic
+      await BleManagerInstance.writeCharacteristicWithResponseForDevice(
+        inverter.id,
+        inverter?.serviceUUIDs?.[0] ?? '',
+        SET_BATT_RETR_CHAR,
+        macBuffer.toString('base64'),
+      );
+
+      // Read the battery data from the RETR_BATTERY_CHAR characteristic
+      const base64Data = await BleManagerInstance.readCharacteristicForDevice(
+        inverter.id,
+        inverter?.serviceUUIDs?.[0] ?? '',
+        RETR_BATTERY_CHAR,
+      );
+
+      // Decode the Base64 data into a Uint8Array
+      const rawData = Buffer.from(base64Data.value ?? '', 'base64');
+
+      // Parse the data into the `BatteryData` structure
+      batteryData = parseBatteryData(rawData);
+
+      // Store the parsed data in the batStatus object
+      batStatus[mac] = batteryData;
+
+      console.log(`Battery Data for ${mac}:`, batteryData);
+    }
+
+    return batteryData;
   } catch (error) {
     console.error('Error retrieving battery info:', error);
     return null;

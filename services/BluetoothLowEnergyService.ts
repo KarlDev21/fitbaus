@@ -54,6 +54,6 @@ export async function scanDevices(): Promise<{ inverters: Device[]; nodes: Devic
         inverters: Array.from(inverters.values()),
         nodes: Array.from(nodes.values()),
       });
-    }, 3000);
+    }, 4000);
   });
 }

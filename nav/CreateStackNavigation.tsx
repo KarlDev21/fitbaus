@@ -5,6 +5,7 @@ import InverterScreen from '../screens/InverterScreen';
 import NodeScreen from '../screens/NodeScreen';
 import FinalizingScreen from '../screens/FinalizingScreen';
 import DashboardScreen from '../screens/DashboardScreen';
+import NodeInfoScreen from '../screens/NodeInfoScreen';
 import { Device } from 'react-native-ble-plx';
 
 export type RootStackParamList = {
@@ -13,6 +14,7 @@ export type RootStackParamList = {
   Nodes: undefined
   Finalizing: undefined
   Dashboard: { inverter: Device }
+  NodeInfo:undefined
 }
 
 type StackNavigationScreen = {
@@ -51,6 +53,13 @@ export const StackScreens: NavStackScreenRegistry = {
       component: DashboardScreen,
       options: {headerShown: false},
     },
+    NodeInfo: {
+      name: "NodeInfo",
+      component: NodeInfoScreen,
+      options: {
+        headerShown: false,
+      },
+    }
   };
 
 const Stack = createStackNavigator();
