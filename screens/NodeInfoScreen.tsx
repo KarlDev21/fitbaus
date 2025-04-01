@@ -7,17 +7,20 @@ import { SafeAreaView } from "react-native-safe-area-context"
 import type { RouteProp } from "@react-navigation/native"
 import { MaterialCommunityIcons } from "@expo/vector-icons"
 import type { RootStackParamList } from '../nav/CreateStackNavigation';
-import { BatteryData } from "../types/bleTypes"
-import { fetchAndLogBatteryData, fetchAndLogBatteryInfo, fetchAndLogInverterStatus } from "../services/InverterService"
+import { fetchAndLogBatteryData } from "../services/InverterService"
 import { getConnectedInverter, getConnectedNodes } from "../services/storage"
+import { DrawerNavigationProp } from "@react-navigation/drawer"
 
+type NodeInfoScreenNavigationProp = DrawerNavigationProp<RootStackParamList, "NodeInfo">
 type NodeInfoScreenRouteProp = RouteProp<RootStackParamList, "NodeInfo">
 
 interface NodeInfoScreenProps {
-  navigation: NodeInfoScreenRouteProp
+  navigation: NodeInfoScreenNavigationProp
+  route: NodeInfoScreenRouteProp
 }
 
-export default function NodeInfoScreen({ navigation }: NodeInfoScreenProps) {
+export default function NodeInfoScreen({ navigation, route }: NodeInfoScreenProps) {
+
   const [batteryData, setBatteryData] = useState<{
     Current: number;
     RemainCapacity: number;
@@ -33,8 +36,8 @@ export default function NodeInfoScreen({ navigation }: NodeInfoScreenProps) {
     CellInSeries: number;
     N_NTC: number;
   }>()
-  const [isLoading, setIsLoading] = useState(true)
-  const theme = useTheme()
+  const [isLoading, setIsLoading] = useState(true);
+  const theme = useTheme();
 
   useEffect(() => {
     const loadBatteryData = async () => {
@@ -43,7 +46,7 @@ export default function NodeInfoScreen({ navigation }: NodeInfoScreenProps) {
         if(inverter){
             const node = await getConnectedNodes(inverter);
             if(node){
-                const data = await fetchAndLogBatteryData(node[0], inverter);
+                const data = await fetchAndLogBatteryData(route.params.nodeId, inverter);
                 if(data){
                 setBatteryData({
                     Current: data.Current,
@@ -59,20 +62,20 @@ export default function NodeInfoScreen({ navigation }: NodeInfoScreenProps) {
                     FetStatus: data.FetStatus,
                     CellInSeries: data.CellInSeries,
                     N_NTC: data.N_NTC,
-                })
+                });
             }
             }
 
         }
 
-        setIsLoading(false)
+        setIsLoading(false);
       } catch (error) {
-        console.error("Failed to load battery data", error)
-        setIsLoading(false)
+        console.error("Failed to load battery data", error);
+        setIsLoading(false);
       }
     }
 
-    loadBatteryData()
+    loadBatteryData();
   })
 
   // Helper function to get battery status color based on RSOC
@@ -107,8 +110,8 @@ export default function NodeInfoScreen({ navigation }: NodeInfoScreenProps) {
   return (
     <SafeAreaView style={styles.container}>
       <Appbar.Header>
-        {/* <Appbar.BackAction onPress={() => navigation.goBack()} /> */}
-        {/* <Appbar.Content title={`Battery ${batteryId}`} /> */}
+        <Appbar.BackAction onPress={() => navigation.goBack()} />
+        <Appbar.Content title={`Battery ${route.params.nodeId}`} />
       </Appbar.Header>
 
       {isLoading ? (

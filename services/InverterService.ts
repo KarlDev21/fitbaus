@@ -181,9 +181,9 @@ export async function fetchAndLogBatteryInfo(node: Device, inverter: Device): Pr
   }
 }
 
-export async function fetchAndLogBatteryData(node: Device, inverter: Device): Promise<BatteryData | null> {
+export async function fetchAndLogBatteryData(nodeId: number, inverter: Device): Promise<BatteryData | null> {
 
-  const batterydata = await retrieveBatteryData(node, inverter);
+  const batterydata = await retrieveBatteryData(nodeId, inverter);
   // 48:CA:43:59:BA:D9
   // await checkAndConnectToInverter(inverter);
   console.log('Battery Info:', batterydata);
@@ -492,9 +492,9 @@ export async function retrieveBatteryInfo(node: Device, inverter: Device): Promi
   }
 }
 
-export async function retrieveBatteryData(node: Device, inverter: Device): Promise< BatteryData | null> {
+export async function retrieveBatteryData(nodeId: number, inverter: Device): Promise< BatteryData | null> {
   try {
-    const batts = [node.id];
+    const batts = [nodeId];
     // const connectedDevice = await BleManagerInstance.connectToDevice(
     //   inverter.id,
     // );

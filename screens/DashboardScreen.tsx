@@ -8,10 +8,10 @@ import type { DrawerNavigationProp } from "@react-navigation/drawer"
 import type { RouteProp } from "@react-navigation/native"
 import { MaterialCommunityIcons } from "@expo/vector-icons"
 import type { RootStackParamList } from "../nav/CreateStackNavigation"
-import { getConnectedInverterDevice, getConnectedNodes, getSelectedNodes } from "../services/storage"
-import { checkAndConnectToInverter, connectToInverter, fetchAndLogBatteryInfo, fetchAndLogChargeControllerStatus, fetchAndLogInverterStatus, getChargeControllerStatus, getInverterStatus } from "../services/InverterService"
-import { showToast, ToastType } from "../components/Toast"
-import { BatteryData, BatteryInfo, ChargeControllerState, InverterState } from "../types/bleTypes"
+import { getConnectedInverterDevice, getConnectedNodes } from "../services/storage"
+import { fetchAndLogBatteryInfo, fetchAndLogChargeControllerStatus, fetchAndLogInverterStatus } from "../services/InverterService"
+import { showToast, ToastType } from "../components/Toast";
+import { BatteryInfo, ChargeControllerState, InverterState } from "../types/bleTypes"
 
 type DashboardScreenNavigationProp = DrawerNavigationProp<RootStackParamList, "Dashboard">
 type DashboardScreenRouteProp = RouteProp<RootStackParamList, "Dashboard">
@@ -102,7 +102,7 @@ export default function DashboardScreen({ navigation, route }: DashboardScreenPr
   const inverterId = route.params.inverter.id;
   const inverter = getConnectedInverterDevice(inverterId);
   const [isLoading, setIsLoading] = useState(true);
-  const [connectedNodeIds, setConnectedNodeIds] = useState<string[]>([]);
+  const [connectedNodeIds, setConnectedNodeIds] = useState<number[]>([]);
   const theme = useTheme();
 
 
@@ -164,11 +164,11 @@ export default function DashboardScreen({ navigation, route }: DashboardScreenPr
     loadData();
   });
 
-  const handleInfo = () => {
-      navigation.navigate('NodeInfo');
+  const handleInfoPress = (nodeId: number) => {
+    if(nodeId){
+      navigation.navigate('NodeInfo',{nodeId: nodeId});
+    }
   };
-
-  
 
   // Helper function to render a metric row with icon
   const renderMetricRow = (icon: string, iconColor: string, label: string, value: string | number, unit = "") => (
@@ -184,7 +184,7 @@ export default function DashboardScreen({ navigation, route }: DashboardScreenPr
         {unit}
       </Text>
     </View>
-  )
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -202,7 +202,7 @@ export default function DashboardScreen({ navigation, route }: DashboardScreenPr
         <ScrollView style={styles.scrollView} >
           {connectedNodeIds && (
             connectedNodeIds.map((nodeId) => (
-              <Card key={nodeId} style={styles.inverterCard} onPress={handleInfo}>
+              <Card key={nodeId} style={styles.inverterCard} onPress={() => handleInfoPress(nodeId)}>
                 <Card.Content>
                   <View style={styles.inverterHeader}>
                     <MaterialCommunityIcons name="battery" size={24} color={theme.colors.primary} />

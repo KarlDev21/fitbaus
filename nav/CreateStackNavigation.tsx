@@ -14,7 +14,7 @@ export type RootStackParamList = {
   Nodes: undefined
   Finalizing: undefined
   Dashboard: { inverter: Device }
-  NodeInfo:undefined
+  NodeInfo: { nodeId: number }
 }
 
 type StackNavigationScreen = {
