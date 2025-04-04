@@ -166,7 +166,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
 
       console.log('Files on inverter:', files);
     } catch (error) {
-      console.error("Error listing files:", error);
+      console.error("Error listing files: ", error);
     }
   }
 

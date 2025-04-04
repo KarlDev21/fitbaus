@@ -6,129 +6,6 @@ import {getConnectedInverter} from './storage';
 // const FILE_CMD_CHAR_UUID = '669a0c20-0008-d690-ec11-e214466ccb95';
 // const FILE_RESULT_CHAR_UUID = '669a0c20-0009-d690-ec11-e214466ccb95'; // Assuming from pattern
 
-const Inverter = getConnectedInverter();
-export async function connectAndStartNotifications() {
-  try {
-    const device = await BleManagerInstance.connectToDevice(Inverter?.id ?? '');
-
-    const response = await device.discoverAllServicesAndCharacteristics();
-    console.log('Discovered services and characteristics:', response);
-
-    const getServiceCharacteristics = await device.characteristicsForService(
-      '669a0c20-0008-d690-ec11-e2143045cb95',
-    );
-    console.log('Discovered characteristics:', getServiceCharacteristics);
-
-    startNotificationListener(
-      device,
-      '669a0c20-0008-d690-ec11-e2143045cb95',
-      '669a0c20-0008-d690-ec11-e214476ccb95',
-    );
-  } catch (error) {
-    console.error('Connection or setup failed:', error);
-  }
-}
-
-const notificationQueue: Buffer[] = [];
-
-function startNotificationListener(
-  device: Device,
-  serviceUUID: string,
-  characteristicUUID: string,
-) {
-  try {
-    device.monitorCharacteristicForService(
-      serviceUUID,
-      characteristicUUID,
-      (error, characteristic) => {
-        console.log('StartedNOTIFC');
-        if (error) {
-          console.error('Notification error:', error);
-          return;
-        }
-
-        if (characteristic?.value) {
-          const rawData = Buffer.from(characteristic.value, 'base64');
-          notificationQueue.push(rawData);
-          console.log('Received data:', rawData);
-        }
-
-        console.log('Received notification:', characteristic);
-      },
-    );
-
-    console.log('Started monitoring notifications for characteristic');
-  } catch (error) {
-    console.error('Notification error:', error);
-    return;
-  }
-}
-
-// LIST THE FILES LOGIC
-async function sendFileCmd(
-  device: Device,
-  characteristicUUID: string,
-  command: string,
-  filename = '',
-) {
-  let cmdToSend = command;
-  if (command === 'GET' || command === 'RM') {
-    cmdToSend += ` ${filename}`;
-  }
-
-  console.log('send Cmd:', cmdToSend);
-
-  const base64Cmd = Buffer.from(cmdToSend, 'utf-8').toString('base64');
-
-  await device.writeCharacteristicWithResponseForService(
-    '669a0c20-0008-d690-ec11-e2143045cb95',
-    characteristicUUID,
-    base64Cmd,
-  );
-}
-
-// Simulates waitFileResults() using the queue
-async function waitFileResults(): Promise<Buffer> {
-  return new Promise(resolve => {
-    const interval = setInterval(() => {
-      if (notificationQueue.length > 0) {
-        clearInterval(interval);
-        resolve(notificationQueue.shift()!);
-      }
-    }, 100); // poll every 100ms
-  });
-}
-
-// Main logic: Get file list
-export async function getListOfFiles(device: Device, writeCharUUID: string) {
-  console.log('get list of files');
-
-  await sendFileCmd(device, writeCharUUID, 'LS');
-
-  const files: string[] = [];
-
-  while (true) {
-    const data = await waitFileResults();
-    const filename = data.toString('utf-8').replace(/\x00+$/, '');
-    console.log('Filename:', filename);
-
-    if (filename.length > 0) {
-      files.push(filename);
-    } else {
-      break;
-    }
-  }
-
-  console.log('files:', files);
-  writeFiles(files);
-}
-
-// Simulated writeFiles (for demo only — in RN, use AsyncStorage or secure storage)
-function writeFiles(files: string[]) {
-  const devicefiles = {files};
-  console.log('Device Files:', JSON.stringify(devicefiles, null, 2));
-}
-
 //CHATGPT
 export const listFiles = async (
   device: Device,
@@ -141,6 +18,11 @@ export const listFiles = async (
 
     try {
       console.log('[BLE] Subscribing to notifications...');
+
+      //First thing we do is subscribe
+      //We use the callback to add the infomation we pick up to the accumulatedData array
+      //since the response doesnt come back from the commond we send,
+      //we have to wait for the notification to come back to the subscription
       const subscription = device.monitorCharacteristicForService(
         serviceUUID,
         notifyCharUUID,
@@ -157,7 +39,7 @@ export const listFiles = async (
           }
 
           const buffer = Buffer.from(characteristic.value, 'base64');
-          const chunk = [...buffer];
+          const chunk = buffer.toString('utf-8').trim().split('\n');
 
           console.log('[BLE] Chunk received:', chunk);
 
@@ -179,13 +61,32 @@ export const listFiles = async (
       );
 
       console.log('[BLE] Sending "list" command...');
+      //Now we Send the "list" command to the device'
       const listCommand = Buffer.from('LS', 'utf-8').toString('base64');
       await device.writeCharacteristicWithResponseForService(
         serviceUUID,
         cmdCharUUID,
         listCommand,
       );
-      console.log('[BLE] "list" command sent', accumulatedData);
+
+      let formatedListNames = [];
+      //At this stage, the accumulateData is ray has been filled, so theoretically we can loop through it until
+      //we reach the end of the list of file names.
+      //and ultimately break the loop
+      while (true) {
+        console.log('start data loop');
+        const data = accumulatedData;
+        const filename = Buffer.from(data);
+
+        // .replace(/\x00+$/, '');
+        console.log('[BLE] Filename:', filename);
+
+        if (filename.length > 0) {
+          formatedListNames.push(filename);
+        } else {
+          break;
+        }
+      }
     } catch (err) {
       console.error('[BLE] listFiles failed:', err);
       reject('Failed to list files: ' + (err as Error).message);
