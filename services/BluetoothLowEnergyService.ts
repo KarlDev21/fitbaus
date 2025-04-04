@@ -1,64 +1,59 @@
-import {Device} from 'react-native-ble-plx';
-import {showToast, ToastType} from '../components/Toast';
-import {BleManagerInstance, generateDigest} from '../helpers/BluetoothHelper';
-import {getConfigStringValue, RemoteConfigKeys} from './RemoteConfigService';
+import { Device, ScanCallbackType } from 'react-native-ble-plx';
+import { showToast, ToastType } from '../components/Toast';
+import { BleManagerInstance } from '../helpers/BluetoothHelper';
+import { clearScannedDevices } from './storage';
+import { decodeManufacturerData, extractManufacturerData, parseNodeMetaV2 } from './NodeService';
 
-export async function scanDevices(
-  setDevices: (devices: Device[]) => void,
-): Promise<void> {
-  // Clear existing devices first
-  setDevices([]);
 
-  // Track latest device by name
-  const devicesByName = new Map<string, Device>();
+//used on the HomeScreen and returns all available inverters and nodes.
+export async function scanDevices(): Promise<{ inverters: Device[]; nodes: Device[] }> {
+  return new Promise((resolve, reject) => {
 
-  // Start scanning
-  BleManagerInstance.startDeviceScan(null, null, (error, device) => {
-    if (error) {
-      showToast(ToastType.Error, 'Error scanning for devices');
-      return;
-    }
+    // Clear existing devices first
+    clearScannedDevices();
 
-    if (
-      device?.name &&
-      (device.name.includes('Invert') || device.name.includes('Node'))
-    ) {
-      devicesByName.set(device.name, device);
-      setDevices(Array.from(devicesByName.values()));
-    }
-  });
+    const inverters = new Map<string, Device>();
+    const nodes = new Map<string, Device>();
 
-  // Stop scanning after 10 seconds
-  //TODO: Rather check if we have scanned a device than timing it out
-  setTimeout(() => BleManagerInstance.stopDeviceScan(), 10000);
-}
+    // Start scanning
+    BleManagerInstance.startDeviceScan(null,
+      {allowDuplicates: false, callbackType: ScanCallbackType.AllMatches},
+      (error, device) => {
+      if (error) {
+        showToast(ToastType.Error, 'Error scanning for devices');
+        reject(error);
+        return;
+      }
 
-export async function authNode(device: Device | null): Promise<boolean> {
-  if (!device) {
-    showToast(ToastType.Error, 'No device connected');
-    return false;
-  }
+      if (device?.name && device.name.includes('Invert')) {
+        inverters.set(device.name, device);
+        // console.log('Scanned Inverter:', device);
+      } else if (device?.name && device.name.includes('Node')) {
+        nodes.set(device.name + device.id, device);
+        // console.log('Scanned Node:', device);
+      }
 
-  try {
-    const connectedDevice = await BleManagerInstance.connectToDevice(device.id);
-    await connectedDevice.discoverAllServicesAndCharacteristics();
+    });
 
-    const digest = generateDigest(device.id);
-
-    // Write digest to characteristic
-    await BleManagerInstance.writeCharacteristicWithResponseForDevice(
-      device.id,
-      getConfigStringValue(RemoteConfigKeys.NODE_SERVICE_UUID) ?? '',
-      getConfigStringValue(RemoteConfigKeys.NODE_AUTHENTICATION_CHAR_UUID) ??
-        '',
-      digest.toString('base64'),
+    //NOTE: Parse in the node manufacturer data (Inverter has nothing to parse)
+    const rawBytes = decodeManufacturerData(
+      'OQABBRf//BbhF3AAACBoAAAAAIAACWEDBAE=',
     );
+    console.log('Decoded Bytes:', rawBytes.length);
+    const manufacturerData = extractManufacturerData(rawBytes);
+    console.log('Manufacturer Data:', manufacturerData);
+    if (manufacturerData) {
+      const nodeMetaData = parseNodeMetaV2(manufacturerData);
+      console.log('Parsed Node Metadata:', nodeMetaData);
+    }
 
-    await connectedDevice.cancelConnection();
-    showToast(ToastType.Success, 'Node authentication successful');
-    return true;
-  } catch (error: any) {
-    showToast(ToastType.Error, `Authentication failed: ${error.message}`);
-    return false;
-  }
+    // // Stop scanning after 3 seconds and resolve the devices
+    setTimeout(() => {
+      BleManagerInstance.stopDeviceScan();
+      resolve({
+        inverters: Array.from(inverters.values()),
+        nodes: Array.from(nodes.values()),
+      });
+    }, 4000);
+  });
 }
