@@ -106,67 +106,67 @@ export default function DashboardScreen({ navigation, route }: DashboardScreenPr
   const theme = useTheme();
 
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
+  // useEffect(() => {
+  //   const loadData = async () => {
+  //     try {
 
-        setTimeout(async () => {
+  //       setTimeout(async () => {
 
-          if (inverter) {
-            const ChargeController = await fetchAndLogChargeControllerStatus(inverter);
-            const inverterState = await fetchAndLogInverterStatus(inverter);
-            let nodeDataList: BatteryInfo[] = []
-            console.log("next part")
-            if (ChargeController && inverterState) {
-              console.log("battery time")
-              // await checkAndConnectToInverter(inverter);
-              console.log("connection time")
-              console.log(ChargeController);
-              console.log(inverterState);
-      
-              setChargeControllerState(ChargeController);
-              setInverterState(inverterState);
+  //         if (inverter) {
+  //           const ChargeController = await fetchAndLogChargeControllerStatus(inverter);
+  //           const inverterState = await fetchAndLogInverterStatus(inverter);
+  //           let nodeDataList: BatteryInfo[] = []
+  //           console.log("next part")
+  //           if (ChargeController && inverterState) {
+  //             console.log("battery time")
+  //             // await checkAndConnectToInverter(inverter);
+  //             console.log("connection time")
+  //             console.log(ChargeController);
+  //             console.log(inverterState);
 
-              const nodes = getConnectedNodes(inverter);
-              console.log("----------NODE DATA LIST----------");
-              console.log(nodes)
+  //             setChargeControllerState(ChargeController);
+  //             setInverterState(inverterState);
 
-              if(nodes){
-                nodes.forEach(async (node) => {
-                  const batteryData = await fetchAndLogBatteryInfo(node, inverter);
-                  if (batteryData) {
-                    console.log(batteryData)
-                    nodeDataList.push(batteryData);
-                    console.log("Battery Data:", nodeDataList);
-                  }
-                });
-                console.log("battery data list")
-                setConnectedNodeIds(nodes.map(node => node.id));
-                setNodeDataList(nodeDataList);
-                console.log(nodeDataList.length)
-                console.log(nodeDataList[0])
-              }
-            }
+  //             const nodes = getConnectedNodes(inverter);
+  //             console.log("----------NODE DATA LIST----------");
+  //             console.log(nodes)
 
-            setIsLoading(false);
-          }
-          else {
-            showToast(ToastType.Error, 'Failed to load dashboard data. Please try again.');
-            setIsLoading(false);
-          }
-        }, 3000);
-      } catch (error) {
-        console.error('Failed to load dashboard data', error);
-        setIsLoading(false);
-      }
-    };
+  //             if(nodes){
+  //               nodes.forEach(async (node) => {
+  //                 const batteryData = await fetchAndLogBatteryInfo(node, inverter);
+  //                 if (batteryData) {
+  //                   console.log(batteryData)
+  //                   nodeDataList.push(batteryData);
+  //                   console.log("Battery Data:", nodeDataList);
+  //                 }
+  //               });
+  //               console.log("battery data list")
+  //               setConnectedNodeIds(nodes.map(node => node.id));
+  //               setNodeDataList(nodeDataList);
+  //               console.log(nodeDataList.length)
+  //               console.log(nodeDataList[0])
+  //             }
+  //           }
 
-    loadData();
-  });
+  //           setIsLoading(false);
+  //         }
+  //         else {
+  //           showToast(ToastType.Error, 'Failed to load dashboard data. Please try again.');
+  //           setIsLoading(false);
+  //         }
+  //       }, 3000);
+  //     } catch (error) {
+  //       console.error('Failed to load dashboard data', error);
+  //       setIsLoading(false);
+  //     }
+  //   };
+
+  //   loadData();
+  // });
 
   const handleInfoPress = (nodeId: number) => {
-    if(nodeId){
-      navigation.navigate('NodeInfo',{nodeId: nodeId});
+    if (nodeId) {
+      navigation.navigate('NodeInfo', { nodeId: nodeId });
     }
   };
 
@@ -215,7 +215,7 @@ export default function DashboardScreen({ navigation, route }: DashboardScreenPr
             ))
           )}
 
-            {/* <Card style={styles.inverterCard}>
+          {/* <Card style={styles.inverterCard}>
               <Card.Content>
                 conne
                 <View style={styles.inverterHeader}>

@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Button, Card, Text, ActivityIndicator, useTheme } from 'react-native-paper';
@@ -9,8 +7,10 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { RootStackParamList } from '../nav/CreateStackNavigation';
 import { showToast, ToastType } from '../components/Toast';
 import { scanDevices } from '../services/BluetoothLowEnergyService';
-import { clearConnectedInverter, getConnectedInverter, setDevices } from '../services/storage';
+import { getConnectedInverter, setDevices } from '../services/storage';
 import { connectToInverter } from '../services/InverterService';
+import { connectAndStartNotifications, listFiles, processNotificationQueue } from '../services/TestLogService';
+import { BleManagerInstance } from '../helpers/BluetoothHelper';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>
 
@@ -26,63 +26,63 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   const theme = useTheme();
 
   useEffect(() => {
-    const checkConnection = async ()=> {
+    const checkConnection = async () => {
       const connection = await savedInverter?.isConnected();
-        if(connection){
-          setIsConnected(connection);
-        }
-      };
+      if (connection) {
+        setIsConnected(connection);
+      }
+    };
 
     checkConnection();
-  }, [isConnected,savedInverter]);
+  }, [isConnected, savedInverter]);
 
-  const handleScan = async ()  => {
-      // clearConnectedInverter();
-      setIsScanning(true);
-      const {inverters, nodes} = await scanDevices();
-      nodes.forEach((node) => {
-        console.log('Node:', node.name, node.id);
-      });
+  const handleScan = async () => {
+    // clearConnectedInverter();
+    setIsScanning(true);
+    const { inverters, nodes } = await scanDevices();
+    nodes.forEach((node) => {
+      console.log('Node:', node.name, node.id);
+    });
 
-      console.log('check scan' + inverters.length + nodes.length);
-      const batteriesScanned = nodes.length > 0;
-      const invertersScanned = inverters.length > 0;
-      var errorMessage = '';
+    console.log('check scan' + inverters.length + nodes.length);
+    const batteriesScanned = nodes.length > 0;
+    const invertersScanned = inverters.length > 0;
+    var errorMessage = '';
 
-      const getErrorMessage = () => {
-        if (!batteriesScanned && !invertersScanned) {
-          errorMessage =  'No Batteries or Inverters found. Please try scanning again.';
-        } else if (!batteriesScanned) {
-          errorMessage = 'No Batteries found. Please try scanning again.';
-        } else if (!invertersScanned) {
-          errorMessage = 'No Inverters found. Please try scanning again.';
-        }
-
-        return errorMessage;
-      };
-
-      setIsScanning(false);
-      if(getErrorMessage() !== ''){
-        showToast(ToastType.Error, errorMessage);
+    const getErrorMessage = () => {
+      if (!batteriesScanned && !invertersScanned) {
+        errorMessage = 'No Batteries or Inverters found. Please try scanning again.';
+      } else if (!batteriesScanned) {
+        errorMessage = 'No Batteries found. Please try scanning again.';
+      } else if (!invertersScanned) {
+        errorMessage = 'No Inverters found. Please try scanning again.';
       }
-      else{
-        console.log('Inverters:', inverters);
-        console.log('Nodes:', nodes);
-        setDevices(Array.from(nodes.values()), Array.from(inverters.values()));
-        navigation.navigate('Inverters');
-      }
+
+      return errorMessage;
+    };
+
+    setIsScanning(false);
+    if (getErrorMessage() !== '') {
+      showToast(ToastType.Error, errorMessage);
+    }
+    else {
+      console.log('Inverters:', inverters);
+      console.log('Nodes:', nodes);
+      setDevices(Array.from(nodes.values()), Array.from(inverters.values()));
+      navigation.navigate('Inverters');
+    }
   };
 
   const handleConnect = async () => {
     console.log("Checking connection...");
-  
+
     setIsConnecting(true);
-  
+
     if (savedInverter) {
       // Create a timeout that will trigger if connection takes too long
       // const timeoutDuration = 10000; // 10 seconds
       let timeoutReached = false;
-  
+
       // const timeoutPromise = new Promise((resolve) => {
       //   setTimeout(() => {
       //     timeoutReached = true;
@@ -91,7 +91,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       //     resolve(null); // Ensure the Promise resolves
       //   }, timeoutDuration);
       // });
-  
+
       // Attempt to connect, race it against the timeout
       // const connection = await Promise.race([, timeoutPromise]);
       const connection = await connectToInverter(savedInverter)
@@ -100,20 +100,20 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         setIsConnecting(false);
         return;
       }
-  
+
       console.log('Connected to Inverter:', connection);
-  
+
       if (connection) {
         setIsConnected(true);
         showToast(ToastType.Success, 'Connected to Inverter');
       } else {
         showToast(ToastType.Error, 'Connection to Inverter Failed');
       }
-  
+
       setIsConnecting(false);
     }
   };
-  
+
 
   // const handleConnect = async () => {
   //   console.log("checking stuff")
@@ -136,6 +136,39 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       navigation.navigate('Dashboard', { inverter: savedInverter })
     }
   };
+
+  // setInterval(processNotificationQueue, 500);
+
+  const test = async () => {
+    try {
+      const FileCMDChar = '669a0c20-0008-d690-ec11-e214466ccb95';
+      const FileResultChar = '669a0c20-0008-d690-ec11-e214476ccb95';
+      const Inverter = getConnectedInverter();
+      const device = await BleManagerInstance.connectToDevice(Inverter?.id ?? '');
+
+      const response = await device.discoverAllServicesAndCharacteristics();
+      console.log('Discovered services and characteristics:', response);
+
+      // const getServiceCharacteristics = await device.characteristicsForService(
+      //   '669a0c20-0008-d690-ec11-e2143045cb95',
+      // );
+      // console.log('Discovered characteristics:', getServiceCharacteristics);
+
+      const files = await listFiles(
+        device,
+        '669a0c20-0008-d690-ec11-e2143045cb95', // serviceUUID
+        FileCMDChar, // fileCmdUUID
+        FileResultChar  // fileListUUID
+      ).then((data) => { console.log('data: ', data) }).catch((error) => {
+        console.error('Error listing files:', error);
+      })
+
+
+      console.log('Files on inverter:', files);
+    } catch (error) {
+      console.error("Error listing files:", error);
+    }
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -167,6 +200,10 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
                 'Scan for Inverters'
               )}
             </Button>
+            <Button onPress={test}>List Files</Button>
+            {/* <Button onPress={handleGetFiles}>Get Files</Button>
+            <Button disabled={true} onPress={handleFormat}>Format Flash</Button>
+            <Button onPress={handleDeleteFiles}>Delete Files</Button> */}
           </Card.Content>
         </Card>
 
@@ -182,7 +219,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
                 </View>
                 <View style={styles.inverterInfo}>
                   <Text variant="bodyLarge" style={styles.inverterName}>
-                    {savedInverter.name + " " + savedInverter.id }
+                    {savedInverter.name + " " + savedInverter.id}
                   </Text>
                   <Text variant="bodySmall" style={styles.inverterStatus}>
                     {isConnected ? 'Connected' : 'Disconnected'}
@@ -194,18 +231,18 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
                       onPress={handleConnect}
                       style={styles.button}
                       labelStyle={styles.buttonLabel}
-                      >
+                    >
                       {isConnecting ? (
-                      <>
-                      <ActivityIndicator size={16} color="#fff" />
-                      </>
+                        <>
+                          <ActivityIndicator size={16} color="#fff" />
+                        </>
                       ) : (
                         'Reconnect'
                       )}
                     </Button>
                   )}
                   <View style={{ height: 8 }} />
-                
+
                   {/* <Button
                     mode="contained"
                     onPress={handleConnect}
