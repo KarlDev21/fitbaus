@@ -16,19 +16,14 @@ const RETR_BATTERY_CHAR = '669a0c20-0008-d690-ec11-e214446ccb95';
 const BATTERY_CHAR = '669a0c20-0008-d690-ec11-e214426ccb95';
 
 export async function authenticateInverter(selectedInverter: Device, Selectednodes: Device[]): Promise<void> {
+
   console.log('Selected Inverter:', selectedInverter);
 
-  // await connectToInverter(selectedInverter);
-
-  // if (!selectedInverter.isConnected) {
-  //   console.error('Inverter was disconnected');
-  //   return;
-  // }
 
   try {
     const connectedDevice = await connectAndDiscoverServices(selectedInverter);
     const authPayload = generateAuthPayload(selectedInverter.id);
-    const responses: Record<string, boolean> = {};
+    // const responses: Record<string, boolean> = {};
 
     await sendAuthPayload(selectedInverter, authPayload);
 
@@ -36,15 +31,20 @@ export async function authenticateInverter(selectedInverter: Device, Selectednod
     // await fetchAndLogChargeControllerStatus(selectedInverter);
     console.log(Selectednodes.length + ' nodes found');
 
-    Selectednodes.forEach(async(node)=> {
+    console.log('-------------------------------Enrollment Process--------------------------------------');
 
-      let response = await enrollBatteries(selectedInverter, node, 0);
-      responses[node.id] = response !== null;
+    let response = await enrollBatteries(selectedInverter, Selectednodes, 0);
+
+    console.log(response)
+
+
+    // Selectednodes.forEach(async(node)=> {
+      // responses[node.id] = response !== null;
       // await fetchAndLogBatteryInfo(node, selectedInverter);
 
-      console.log('Enrollment response for node', node.id, ':', responses[node.id]);
+      // console.log('Enrollment response for node', node.id, ':', responses[node.id]);
 
-    });
+    // });
 
   } catch (error: any) {
     console.error('Error authenticating:', error);
@@ -254,9 +254,13 @@ function hexStringToUint8Array(hex: string): Uint8Array {
  * enrollBatteries builds the payload to enroll battery MAC addresses.
  * @param logInterval - Optional log interval (default is 0).
  */
-async function enrollBatteries(inverter: Device, node: Device, logInterval = 0): Promise<Characteristic | null> {
+async function enrollBatteries(inverter: Device, nodes: Device[], logInterval = 0): Promise<Characteristic | null> {
   try {
-    const batts = [node.id];
+    let nodeIds: string[] = [];
+
+    nodes.map((node) => { nodeIds.push(node.id)});
+
+    const batts = nodeIds;
     // Number of batteries
     const num = batts.length;
 
