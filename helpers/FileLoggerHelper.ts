@@ -3,7 +3,7 @@ import * as FileSystem from 'expo-file-system';
 
 export const appendFileNameToJson = async (fileName: string, filePath: string) => {
     const fileInfo = await FileSystem.getInfoAsync(filePath);
-    console.log(filePath);
+    console.log(fileInfo);
     let jsonData: { files: string[] } = { files: [] };
     try {
         if (fileInfo.exists) {
@@ -23,6 +23,7 @@ export const appendFileNameToJson = async (fileName: string, filePath: string) =
         }
         //checking to make sure we dont add duplicates to the json file
         if (!jsonData.files.includes(fileName)) {
+            console.log('Safe to push:', fileName);
             jsonData.files.push(fileName);
         }
 
@@ -46,4 +47,12 @@ export const unpackFileSize = (binaryData: ArrayBuffer): number => {
     const fileSize = dataView.getUint32(0, true); // true indicates little-endian
   
     return fileSize;
-  };
+};
+
+export const writeFileConetentToJson = async (fileName: string, fileContent: string, filePath: string) => {
+    console.log('Writing file content to JSON:', fileName, fileContent);
+    await FileSystem.writeAsStringAsync(
+        '${FileSystem.documentDirectory}' + fileName,
+        JSON.stringify(fileContent),
+    );
+}

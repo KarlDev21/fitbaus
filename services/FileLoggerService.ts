@@ -3,11 +3,11 @@ import {Buffer} from 'buffer';
 import {BleManagerInstance} from '../helpers/BluetoothHelper';
 import * as FileSystem from 'expo-file-system';
 import { AsyncQueue } from './AsyncQueue';
-import { appendFileNameToJson } from '../helpers/FileLoggerHelper';
+import { appendFileNameToJson, unpackFileSize } from '../helpers/FileLoggerHelper';
 // const FILE_CMD_CHAR_UUID = '669a0c20-0008-d690-ec11-e214466ccb95';
 // const FILE_RESULT_CHAR_UUID = '669a0c20-0009-d690-ec11-e214466ccb95'; // Assuming from pattern
 
-const fileQueue = new AsyncQueue<string>();
+const fileQueue = new AsyncQueue<Buffer<ArrayBuffer>>();
 const filePath = `${FileSystem.documentDirectory}files.json`;
 
 
@@ -62,14 +62,17 @@ export const startListener = async (
             return;
           }
 
-          const buffer = Buffer.from(characteristic.value, 'base64');
-          const chunk = buffer.toString('utf-8').trim();
+          //here we want to only push the buffer because we will only need to .toString('utf-8') if its a file name, can do this in the processQueue function
 
-          console.log('[BLE] Chunk received:', chunk);
+          const buffer = Buffer.from(characteristic.value, 'base64');
+
+          console.log('[BLE] buffer received:', buffer);
           console.log('adding to queue/array');
 
           //Here we would add stuff to the queue/array
-          fileQueue.push(chunk);
+          fileQueue.push(buffer);
+
+          processQueue();
 
     });
 
@@ -140,19 +143,43 @@ export const processQueue = async () => {
     console.log('Processing queue...');
     while (true) {
         const data = await fileQueue.pop();
-        console.log('Processing data:', data);
+        const fileName = data.toString('utf-8').trim();
+
+        console.log('Processing data:', fileName);
         // Process the data here
 
-        if (data.startsWith('2')) {
+        if (fileName.startsWith('2')) {
             console.log('would save this file name:', data);
-            appendFileNameToJson(data, filePath);
-          } else if (data === ' ') {
+            await appendFileNameToJson(fileName, filePath);
+          } else if (fileName === ' ') {
             //need to check if this is significant to keep track of or just discard it
-            console.log('we got to the end here, empty file :', data);
+            console.log('we got to the end here, empty file :', fileName);
           } else {
             //we can probably assume this is the file size so now we can get that and have a sub process que to handle the file content which should be next in the queue
-            console.log('not a file name, start unpacking file size:', data)
-            
+            console.log(fileName);
+            console.log('not a file name, start unpacking file size:', data);
+            const fileSize = unpackFileSize(data);
+
+            const contents : Buffer<ArrayBuffer>[] = []
+            let piece: number = 0
+            console.log(contents)
+            //now that we have the file size we can start a sub process to handle the file content
+            console.log('unpacked file size:', fileSize);
+            while(contents.length < fileSize) {
+                let fileContent = await fileQueue.pop();
+                //We get the available piece of information from the queue and add it to the contents array
+                console.log('Processing file content:', contents);
+                contents.push(fileContent);
+
+                if(((contents.length/fileSize)*100)>(piece*10)){
+                    console.log('File content progress:', piece*10, '%');{
+                    piece++;
+                }
+                //We check if the contents array is equal to the file size, if it is we break out of the loop
+                //This is a bit of a hacky way to do this but it works for now, we can probably make this better later
+            }
+
+            console.log('Finished processing file content:', contents);
 
           }
         // Here we would process the data and save it to a file
@@ -160,4 +187,4 @@ export const processQueue = async () => {
     }
 }
 
-
+}

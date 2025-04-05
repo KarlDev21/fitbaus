@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Button, Card, Text, ActivityIndicator, useTheme } from 'react-native-paper';
@@ -9,8 +10,9 @@ import { showToast, ToastType } from '../components/Toast';
 import { scanDevices } from '../services/BluetoothLowEnergyService';
 import { getConnectedInverter, setDevices } from '../services/storage';
 import { connectToInverter } from '../services/InverterService';
-import { connectAndStartNotifications, getFiles, listFiles, processNotificationQueue } from '../services/TestLogService';
+import { connectAndStartNotifications, getFiles, processNotificationQueue } from '../services/TestLogService';
 import { BleManagerInstance } from '../helpers/BluetoothHelper';
+import { listFiles, processQueue, startListener } from '../services/FileLoggerService';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>
 
@@ -20,6 +22,9 @@ interface HomeScreenProps {
 
 export default function HomeScreen({ navigation }: HomeScreenProps) {
   const [isScanning, setIsScanning] = useState(false);
+  const [isInitiating, setIsInitiating] = useState(false);
+  const [isGetFileNames, setIsGetFileNames] = useState(false);
+  const [isGettingFiles, setIsGettingFiles] = useState(false);
   const savedInverter = getConnectedInverter();
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -114,23 +119,6 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     }
   };
 
-
-  // const handleConnect = async () => {
-  //   console.log("checking stuff")
-  //   setIsConnecting(true);
-  //   if (savedInverter) {
-  //     const connection = await connectToInverter(savedInverter);
-  //     console.log('Connected to Inverter:', connection);
-  //     if(connection){
-  //       setIsConnected(true);
-  //       showToast(ToastType.Success, 'Connected to Inverter');
-  //     }  else{
-  //       showToast(ToastType.Error, 'Connection to Inverter Failed');
-  //     }
-  //     setIsConnecting(false);
-  //   }
-  // };
-
   const handleInverterClick = () => {
     if (savedInverter) {
       navigation.navigate('Dashboard', { inverter: savedInverter })
@@ -139,43 +127,75 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
 
   // setInterval(processNotificationQueue, 500);
 
-  const test = async () => {
+  const startListen = async () => {
     try {
+      setIsInitiating(true);
       const FileCMDChar = '669a0c20-0008-d690-ec11-e214466ccb95';
       const FileResultChar = '669a0c20-0008-d690-ec11-e214476ccb95';
+      
       const Inverter = getConnectedInverter();
+      
+      // Inverter?.cancelConnection();
+
       console.log('Inverter:', Inverter)
       const device = await BleManagerInstance.connectToDevice(Inverter?.id ?? '');
+      if(Inverter){
+        const response = await device.discoverAllServicesAndCharacteristics();
+        console.log('Discovered services and characteristics:', response);
+      }
 
-      const response = await device.discoverAllServicesAndCharacteristics();
-      console.log('Discovered services and characteristics:', response);
 
-      // const getServiceCharacteristics = await device.characteristicsForService(
-      //   '669a0c20-0008-d690-ec11-e2143045cb95',
-      // );
-      // console.log('Discovered characteristics:', getServiceCharacteristics);
-
-      // await listFiles(
-      //   device,
-      //   '669a0c20-0008-d690-ec11-e2143045cb95', // serviceUUID
-      //   FileCMDChar, // fileCmdUUID
-      //   FileResultChar  // fileListUUID
-      // ).then((data) => { console.log('data: ', data) }).catch((error) => {
-      //   console.error('Error listing files:', error);
-      // })
-
-      await getFiles(
-        device,
-        '669a0c20-0008-d690-ec11-e2143045cb95', // serviceUUID
-        FileCMDChar, // fileCmdUUID
-      )
-
+      await startListener(device, '669a0c20-0008-d690-ec11-e2143045cb95', FileCMDChar, FileResultChar);
+      console.log('Listener started');
 
       // console.log('Files on inverter:', files);
     } catch (error) {
+      setIsInitiating(false)
       console.error("Error listing files: ", error);
+    }finally{
+      setIsInitiating(false)
     }
   }
+
+  const handleGetFiles = async () => {
+    await setIsGettingFiles(true);
+
+    const FileCMDChar = '669a0c20-0008-d690-ec11-e214466ccb95';
+
+    try {
+      //bad practice I know
+      const files = await getFiles(savedInverter!, '669a0c20-0008-d690-ec11-e2143045cb95', FileCMDChar);
+      console.log('Files on inverter:', files);
+      
+    } catch (error) {
+      console.error("Error listing files: ", error);
+    } finally {
+      setIsGettingFiles(false);
+    }
+  };
+
+  const handleListFiles = async () => {
+    setIsGetFileNames(true);
+    const FileCMDChar = '669a0c20-0008-d690-ec11-e214466ccb95';
+    const FileResultChar = '669a0c20-0008-d690-ec11-e214476ccb95';
+    const Inverter = getConnectedInverter();
+    const devices = await BleManagerInstance.connectedDevices(['669a0c20-0008-d690-ec11-e2143045cb95'])
+    try {
+      console.log(devices[0])
+      //bad practice I know
+      const files = await listFiles(devices[0], '669a0c20-0008-d690-ec11-e2143045cb95', FileCMDChar);
+      // processQueue();
+      console.log('Files on inverter:', files);
+      setIsGetFileNames(false);
+
+    } catch (error) {
+      console.error("Error listing files: ", error);
+      setIsGetFileNames(false);
+
+    } finally {
+      setIsGetFileNames(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -207,7 +227,51 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
                 'Scan for Inverters'
               )}
             </Button>
-            <Button onPress={test}>List Files</Button>
+            <Button
+              mode="contained"
+              onPress={startListen}
+              disabled={isInitiating}
+              style={styles.button}
+              labelStyle={styles.buttonLabel}
+            >
+              {isInitiating ? (
+                <>
+                  <ActivityIndicator size={16} color="#fff" />
+                </>
+              ) : (
+                'Start Listener'
+              )}
+            </Button>
+            <Button
+              mode="contained"
+              onPress={handleListFiles}
+              disabled={isGetFileNames}
+              style={styles.button}
+              labelStyle={styles.buttonLabel}
+            >
+              {isGetFileNames ? (
+                <>
+                  <ActivityIndicator size={16} color="#fff" />
+                </>
+              ) : (
+                'List Files'
+              )}
+            </Button>
+            <Button
+              mode="contained"
+              onPress={handleGetFiles}
+              disabled={isGettingFiles}
+              style={styles.button}
+              labelStyle={styles.buttonLabel}
+            >
+              {isGettingFiles ? (
+                <>
+                  <ActivityIndicator size={16} color="#fff" />
+                </>
+              ) : (
+                'Get Files'
+              )}
+            </Button>
             {/* <Button onPress={handleGetFiles}>Get Files</Button>
             <Button disabled={true} onPress={handleFormat}>Format Flash</Button>
             <Button onPress={handleDeleteFiles}>Delete Files</Button> */}

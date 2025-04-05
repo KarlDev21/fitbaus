@@ -9,139 +9,139 @@ import * as FileSystem from 'expo-file-system';
 const filePath = `${FileSystem.documentDirectory}files.json`;
 
 //CHATGPT
-export const listFiles = async (
-  device: Device,
-  serviceUUID: string,
-  cmdCharUUID: string, // same as Python's "write to this"
-  notifyCharUUID: string, // same as Python's "subscribe to this"
-): Promise<string[]> => {
-  return new Promise(async (resolve, reject) => {
-    let accumulatedData: any[] = [];
+// export const listFiles = async (
+//   device: Device,
+//   serviceUUID: string,
+//   cmdCharUUID: string, // same as Python's "write to this"
+//   notifyCharUUID: string, // same as Python's "subscribe to this"
+// ): Promise<string[]> => {
+//   return new Promise(async (resolve, reject) => {
+//     let accumulatedData: any[] = [];
 
-    try {
-      console.log('[BLE] Subscribing to notifications...');
+//     try {
+//       console.log('[BLE] Subscribing to notifications...');
 
-      //First thing we do is subscribe
-      //We use the callback to add the infomation we pick up to the accumulatedData array
-      //since the response doesnt come back from the commond we send,
-      //we have to wait for the notification to come back to the subscription
-      const subscription = device.monitorCharacteristicForService(
-        serviceUUID,
-        notifyCharUUID,
-        (error, characteristic) => {
-          if (error) {
-            console.error('[BLE] Notification error:', error.message);
-            reject('Notification error: ' + error.message);
-            return;
-          }
+//       //First thing we do is subscribe
+//       //We use the callback to add the infomation we pick up to the accumulatedData array
+//       //since the response doesnt come back from the commond we send,
+//       //we have to wait for the notification to come back to the subscription
+//       const subscription = device.monitorCharacteristicForService(
+//         serviceUUID,
+//         notifyCharUUID,
+//         (error, characteristic) => {
+//           if (error) {
+//             console.error('[BLE] Notification error:', error.message);
+//             reject('Notification error: ' + error.message);
+//             return;
+//           }
 
-          if (!characteristic?.value) {
-            console.warn('[BLE] Empty characteristic received');
-            return;
-          }
+//           if (!characteristic?.value) {
+//             console.warn('[BLE] Empty characteristic received');
+//             return;
+//           }
 
-          const buffer = Buffer.from(characteristic.value, 'base64');
-          const fileName = buffer.toString('utf-8').trim();
-          //Over here we write all the file names we read to a json file in the
-          //expo file system directory.
-          console.log('[BLE] file received:', fileName);
+//           const buffer = Buffer.from(characteristic.value, 'base64');
+//           const fileName = buffer.toString('utf-8').trim();
+//           //Over here we write all the file names we read to a json file in the
+//           //expo file system directory.
+//           console.log('[BLE] file received:', fileName);
 
-          const appendFileNameToJson = async (fileName: string) => {
-            const fileInfo = await FileSystem.getInfoAsync(filePath);
-            console.log(filePath);
-            let jsonData: {files: string[]} = {files: []};
-            try {
-              if (fileInfo.exists) {
-                const fileContent = await FileSystem.readAsStringAsync(
-                  filePath,
-                );
-                jsonData = JSON.parse(fileContent);
-              } else {
-                console.log(
-                  'File does not exist. Creating a new one at:',
-                  filePath,
-                );
-                await FileSystem.writeAsStringAsync(
-                  filePath,
-                  JSON.stringify(jsonData),
-                );
-              }
-              //checking to make sure we dont add duplicates to the json file
-              if (!jsonData.files.includes(fileName)) {
-                jsonData.files.push(fileName);
-              }
+//           const appendFileNameToJson = async (fileName: string) => {
+//             const fileInfo = await FileSystem.getInfoAsync(filePath);
+//             console.log(filePath);
+//             let jsonData: {files: string[]} = {files: []};
+//             try {
+//               if (fileInfo.exists) {
+//                 const fileContent = await FileSystem.readAsStringAsync(
+//                   filePath,
+//                 );
+//                 jsonData = JSON.parse(fileContent);
+//               } else {
+//                 console.log(
+//                   'File does not exist. Creating a new one at:',
+//                   filePath,
+//                 );
+//                 await FileSystem.writeAsStringAsync(
+//                   filePath,
+//                   JSON.stringify(jsonData),
+//                 );
+//               }
+//               //checking to make sure we dont add duplicates to the json file
+//               if (!jsonData.files.includes(fileName)) {
+//                 jsonData.files.push(fileName);
+//               }
 
-              await FileSystem.writeAsStringAsync(
-                filePath,
-                JSON.stringify(jsonData),
-              );
+//               await FileSystem.writeAsStringAsync(
+//                 filePath,
+//                 JSON.stringify(jsonData),
+//               );
 
-              console.log('Successfully appended file name to files.json');
-            } catch (error) {
-              console.error('Error appending file name to files.json:', error);
-            }
-          };
+//               console.log('Successfully appended file name to files.json');
+//             } catch (error) {
+//               console.error('Error appending file name to files.json:', error);
+//             }
+//           };
 
-          if (fileName.startsWith('2')) {
-            // appendFileNameToJson(fileName);
-            console.log('would save this name');
-          } else if (fileName === ' ') {
-            console.log('we got to the end here');
-          } else {
-            //probably means its a file, need to do a better check
-            const bufferTransform = buffer.buffer.slice(
-              buffer.byteOffset,
-              buffer.byteOffset + buffer.byteLength,
-            );
-            const fileSize = unpackFileSize(bufferTransform);
+//           if (fileName.startsWith('2')) {
+//             // appendFileNameToJson(fileName);
+//             console.log('would save this name');
+//           } else if (fileName === ' ') {
+//             console.log('we got to the end here');
+//           } else {
+//             //probably means its a file, need to do a better check
+//             const bufferTransform = buffer.buffer.slice(
+//               buffer.byteOffset,
+//               buffer.byteOffset + buffer.byteLength,
+//             );
+//             const fileSize = unpackFileSize(bufferTransform);
 
-            console.log('File size:', fileSize); // This is the file size
+//             console.log('File size:', fileSize); // This is the file size
 
-            let contents: Uint8Array;
+//             let contents: Uint8Array;
 
-            // while(len(contents > fileSize)):
-            // // Read the file contents here
-            // contents = contents +
-          }
+//             // while(len(contents > fileSize)):
+//             // // Read the file contents here
+//             // contents = contents +
+//           }
 
-          //chance this value can change depending one what the command is
-          //need to have a way to download these files
-        },
-      );
+//           //chance this value can change depending one what the command is
+//           //need to have a way to download these files
+//         },
+//       );
 
-      console.log('[BLE] Sending "list" command...');
-      //Now we Send the "list" command to the device'
-      const listCommand = Buffer.from('LS', 'utf-8').toString('base64');
-      await device.writeCharacteristicWithResponseForService(
-        serviceUUID,
-        cmdCharUUID,
-        listCommand,
-      );
+//       console.log('[BLE] Sending "list" command...');
+//       //Now we Send the "list" command to the device'
+//       const listCommand = Buffer.from('LS', 'utf-8').toString('base64');
+//       await device.writeCharacteristicWithResponseForService(
+//         serviceUUID,
+//         cmdCharUUID,
+//         listCommand,
+//       );
 
-      let formatedListNames = [];
-      //At this stage, the accumulateData is ray has been filled, so theoretically we can loop through it until
-      //we reach the end of the list of file names.
-      //and ultimately break the loop
-      while (true) {
-        console.log('start data loop');
-        const data = accumulatedData;
-        const filename = Buffer.from(data);
+//       let formatedListNames = [];
+//       //At this stage, the accumulateData is ray has been filled, so theoretically we can loop through it until
+//       //we reach the end of the list of file names.
+//       //and ultimately break the loop
+//       while (true) {
+//         console.log('start data loop');
+//         const data = accumulatedData;
+//         const filename = Buffer.from(data);
 
-        // .replace(/\x00+$/, '');
-        console.log('[BLE] Filename:', filename);
+//         // .replace(/\x00+$/, '');
+//         console.log('[BLE] Filename:', filename);
 
-        if (filename.length > 0) {
-          formatedListNames.push(filename);
-        } else {
-          break;
-        }
-      }
-    } catch (err) {
-      console.error('[BLE] listFiles failed:', err);
-      reject('Failed to list files: ' + (err as Error).message);
-    }
-  });
-};
+//         if (filename.length > 0) {
+//           formatedListNames.push(filename);
+//         } else {
+//           break;
+//         }
+//       }
+//     } catch (err) {
+//       console.error('[BLE] listFiles failed:', err);
+//       reject('Failed to list files: ' + (err as Error).message);
+//     }
+//   });
+// };
 
 const unpackFileSize = (binaryData: ArrayBuffer): number => {
   // Create a DataView for the binary data
