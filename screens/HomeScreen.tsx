@@ -9,7 +9,7 @@ import { showToast, ToastType } from '../components/Toast';
 import { scanDevices } from '../services/BluetoothLowEnergyService';
 import { getConnectedInverter, setDevices } from '../services/storage';
 import { connectToInverter } from '../services/InverterService';
-import { connectAndStartNotifications, listFiles, processNotificationQueue } from '../services/TestLogService';
+import { connectAndStartNotifications, getFiles, listFiles, processNotificationQueue } from '../services/TestLogService';
 import { BleManagerInstance } from '../helpers/BluetoothHelper';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>
@@ -144,6 +144,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       const FileCMDChar = '669a0c20-0008-d690-ec11-e214466ccb95';
       const FileResultChar = '669a0c20-0008-d690-ec11-e214476ccb95';
       const Inverter = getConnectedInverter();
+      console.log('Inverter:', Inverter)
       const device = await BleManagerInstance.connectToDevice(Inverter?.id ?? '');
 
       const response = await device.discoverAllServicesAndCharacteristics();
@@ -154,17 +155,23 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       // );
       // console.log('Discovered characteristics:', getServiceCharacteristics);
 
-      const files = await listFiles(
+      // await listFiles(
+      //   device,
+      //   '669a0c20-0008-d690-ec11-e2143045cb95', // serviceUUID
+      //   FileCMDChar, // fileCmdUUID
+      //   FileResultChar  // fileListUUID
+      // ).then((data) => { console.log('data: ', data) }).catch((error) => {
+      //   console.error('Error listing files:', error);
+      // })
+
+      await getFiles(
         device,
         '669a0c20-0008-d690-ec11-e2143045cb95', // serviceUUID
         FileCMDChar, // fileCmdUUID
-        FileResultChar  // fileListUUID
-      ).then((data) => { console.log('data: ', data) }).catch((error) => {
-        console.error('Error listing files:', error);
-      })
+      )
 
 
-      console.log('Files on inverter:', files);
+      // console.log('Files on inverter:', files);
     } catch (error) {
       console.error("Error listing files: ", error);
     }
