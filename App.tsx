@@ -45,13 +45,6 @@ function App(): React.JSX.Element {
   // });
 
   useEffect(() => {
-    // console.log("check this kak out")
-    // if (fileData) {
-    //   console.log('File data received:', fileData);
-    //   console.log('isListening:', isListening);
-    //   // Handle the received file data here
-    //   showToast( ToastType.Success, 'File data received: ' + fileData);
-    // }
     bootstrap();
   
   }, [bootstrap]);

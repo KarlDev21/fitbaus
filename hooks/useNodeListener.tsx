@@ -17,8 +17,7 @@ const useInverterFileListener = ({
   const [isListening, setIsListening] = useState(false);
 
   useEffect(() => {
-    console.log("check this kak out AGAIN AGAIN")
-
+    
     console.log(node)
 
     const status = checkAndConnectToInverter(node);
