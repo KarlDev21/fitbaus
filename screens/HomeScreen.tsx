@@ -8,9 +8,13 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { RootStackParamList } from '../nav/CreateStackNavigation';
 import { showToast, ToastType } from '../components/Toast';
-import { scanDevices } from '../services/BluetoothLowEnergyService';
-import { clearConnectedInverter, getConnectedInverter, setDevices } from '../services/storage';
+import { listenToComponents, listenToNode, scanDevices } from '../services/BluetoothLowEnergyService';
+import { clearConnectedInverter, getConnectedInverter, getConnectedNodes, setDevices } from '../services/storage';
 import { connectToInverter } from '../services/InverterService';
+import { BleManagerInstance } from '../helpers/BluetoothHelper';
+import base64 from 'react-native-base64';
+import { useBluetooth } from '../services/BluetoothContext';
+import useNodeListener from '../hooks/useNodeListener';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>
 
@@ -24,6 +28,8 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const theme = useTheme();
+  const { isBluetoothOn } = useBluetooth();
+
 
   useEffect(() => {
     const checkConnection = async ()=> {
@@ -34,9 +40,19 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       };
 
     checkConnection();
+
+    // return () => {
+    //   savedInverter?.cancelConnection();
+
+    // }
+
   }, [isConnected,savedInverter]);
 
   const handleScan = async ()  => {
+      console.log("checkng")
+      savedInverter?.cancelConnection()
+      await listenToNode();
+
       // clearConnectedInverter();
       setIsScanning(true);
       const {inverters, nodes} = await scanDevices();
@@ -69,7 +85,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         console.log('Inverters:', inverters);
         console.log('Nodes:', nodes);
         setDevices(Array.from(nodes.values()), Array.from(inverters.values()));
-        navigation.navigate('Inverters');
+        // navigation.navigate('Inverters');
       }
   };
 
@@ -139,6 +155,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
 
   return (
     <SafeAreaView style={styles.container}>
+      { isBluetoothOn ? (
       <View style={styles.content}>
         <Text variant="headlineMedium" style={styles.title}>
           Inverter Scanner
@@ -220,7 +237,16 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             </Card.Content>
           </Card>
         )}
-      </View>
+      </View>) : (
+        <View style={styles.content}>
+          <Text variant="headlineMedium" style={styles.title}>
+            Bluetooth is Off
+          </Text>
+          <Text variant="bodyMedium" style={styles.footer}>
+            Please enable Bluetooth to use the app.
+          </Text>
+        </View>
+      )}
     </SafeAreaView>
   )
 }
