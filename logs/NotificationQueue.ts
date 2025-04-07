@@ -48,6 +48,16 @@ export class AsyncQueue<T> {
     });
   }
 
+  async get(): Promise<T> {
+    if (this.queue.length > 0) {
+      return this.queue.shift()!;
+    }
+
+    return new Promise<T>(resolve => {
+      this.resolvers.push(resolve);
+    });
+  }
+
   /**
    * Checks if the queue is empty.
    * @returns `true` if the queue is empty, otherwise `false`.
