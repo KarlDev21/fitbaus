@@ -28,7 +28,6 @@ export async function authenticateInverter(selectedInverter: Device, Selectednod
   try {
     const connectedDevice = await connectAndDiscoverServices(selectedInverter);
     const authPayload = generateAuthPayload(selectedInverter.id);
-    const responses: Record<string, boolean> = {};
 
     await sendAuthPayload(selectedInverter, authPayload);
 
@@ -36,15 +35,9 @@ export async function authenticateInverter(selectedInverter: Device, Selectednod
     // await fetchAndLogChargeControllerStatus(selectedInverter);
     console.log(Selectednodes.length + ' nodes found');
 
-    Selectednodes.forEach(async(node)=> {
+    let response = await enrollBatteries(selectedInverter, Selectednodes, 0);
 
-      let response = await enrollBatteries(selectedInverter, node, 0);
-      responses[node.id] = response !== null;
-      // await fetchAndLogBatteryInfo(node, selectedInverter);
-
-      console.log('Enrollment response for node', node.id, ':', responses[node.id]);
-
-    });
+    console.log(response);
 
   } catch (error: any) {
     console.error('Error authenticating:', error);
@@ -254,9 +247,13 @@ function hexStringToUint8Array(hex: string): Uint8Array {
  * enrollBatteries builds the payload to enroll battery MAC addresses.
  * @param logInterval - Optional log interval (default is 0).
  */
-async function enrollBatteries(inverter: Device, node: Device, logInterval = 0): Promise<Characteristic | null> {
+async function enrollBatteries(inverter: Device, nodes: Device[], logInterval = 0): Promise<Characteristic | null> {
   try {
-    const batts = [node.id];
+    let nodeIds: string[] = [];
+
+    nodes.map((node) => { nodeIds.push(node.id)});
+
+    const batts = nodeIds;
     // Number of batteries
     const num = batts.length;
 
