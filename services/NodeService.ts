@@ -6,7 +6,7 @@ export const decodeManufacturerData = (base64Data: string): Uint8Array => {
 };
 
 export const extractManufacturerData = (rawBytes: Uint8Array) => {
-  // console.log('Raw Bytes Length:', rawBytes.length);
+  console.log('Raw Bytes Length:', rawBytes.length);
 
   // Search for manufacturer ID (0x39 in your case)
   const manufacturerIdIndex = rawBytes.findIndex(b => b === 0x39);
@@ -15,13 +15,13 @@ export const extractManufacturerData = (rawBytes: Uint8Array) => {
     manufacturerIdIndex === -1 ||
     manufacturerIdIndex + 2 >= rawBytes.length
   ) {
-    // console.error('Manufacturer Data Not Found');
+    console.error('Manufacturer Data Not Found');
     return null;
   }
 
   // Extract all bytes after the manufacturer ID
   const extractedData = rawBytes.slice(manufacturerIdIndex + 2);
-  // console.log('Extracted Manufacturer Data Length:', extractedData.length);
+  console.log('Extracted Manufacturer Data Length:', extractedData.length);
   return extractedData;
 };
 
@@ -72,7 +72,7 @@ export async function authenticateNode(nodeId: string) {
 
       const digest = generateNodeDigest(nodeId);
       // console.log(`Authenticate ${digest}`);
-      // console.log(`Byte Array ${Array.from(digest)}`);
+      console.log(`Byte Array ${Array.from(digest)}`);
 
       const response =
         await BleManagerInstance.writeCharacteristicWithResponseForDevice(

@@ -13,17 +13,6 @@ export const getNodes = (): Device[] => {
   return data ? JSON.parse(data) : [];
 };
 
-export const getSingleNode = (nodeId: string): Device | undefined => {
-  const inverter = getConnectedInverter();
-  if (inverter){
-    const node = getConnectedNodes(inverter);
-    // return node ? node.find((node: Device) => node.id === nodeId) : undefined;
-    return node ? node[0] : undefined;
-  }
-  return undefined;
-
-}
-
 export const getInverters = (): Device[] => {
     const data = storage.getString('inverters');
     return data ? JSON.parse(data) : [];

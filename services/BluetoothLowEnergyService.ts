@@ -1,9 +1,8 @@
-import { Characteristic, Device, ScanCallbackType, Subscription } from 'react-native-ble-plx';
+import { Device, ScanCallbackType } from 'react-native-ble-plx';
 import { showToast, ToastType } from '../components/Toast';
 import { BleManagerInstance } from '../helpers/BluetoothHelper';
-import { clearScannedDevices, getConnectedInverter } from './storage';
+import { clearScannedDevices } from './storage';
 import { decodeManufacturerData, extractManufacturerData, parseNodeMetaV2 } from './NodeService';
-import base64 from 'react-native-base64';
 
 
 //used on the HomeScreen and returns all available inverters and nodes.
@@ -57,46 +56,4 @@ export async function scanDevices(): Promise<{ inverters: Device[]; nodes: Devic
       });
     }, 4000);
   });
-}
-
-export async function listenToNode(): Promise<Subscription>{
-
-  // which characteristics are notifyable, listen to inverter and nodes
-  console.log("checkiiiing")
-
-  const node = getConnectedInverter();
-  console.log("this is the inverter" + node)
-  await node?.discoverAllServicesAndCharacteristics();
-  console.log("checkiiiiiiiiiiiiiiiing")
-
-  const nodeSubscription = await BleManagerInstance.monitorCharacteristicForDevice(
-    node ? node.id : '',
-    node?.serviceUUIDs?.[0] ?? '', 
-    '669a0c20-0008-d690-ec11-e214446ccb95',
-    (error, characteristic) => {
-      if(error){
-        console.warn("Monitoring Error :", error);
-        return;
-      }
-      console.log('Monitoring characteristic:', characteristic?.uuid);
-      const rawValue = characteristic?.value;
-      const decodedValue = base64.decode(rawValue || '')
-
-      console.log('Node value has changed:', decodedValue)
-    });
-
-    return nodeSubscription;
-
-  // try {
-  //     console.log("checkng again")
-
-    
-  
-  //     // return nodeSubscription;
-  // } catch (error) {
-  //   console.warn('Error monitoring characteristic:', error);
-  //   throw error; 
-  // }
-  
-
 }
