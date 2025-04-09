@@ -16,7 +16,7 @@ export function AppScreen(props: ScreenComponentProps) {
 
     return (
         // TODO: Fix styling issues
-        <SafeAreaView style={{ width: '100%', height: '100%', flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <SafeAreaView style={{ width: '100%', height: '100%', flex: 1 }}>
             {isLoading && <LoadingIndicator />}
             {props.children}
         </SafeAreaView>

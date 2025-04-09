@@ -1,8 +1,23 @@
 import {Buffer} from 'buffer';
-import {BleManagerInstance, concatBytes, packInt64LE, generateInverterDigest} from '../helpers/BluetoothHelper';
-import {Alert} from 'react-native';
-import { Characteristic, Device } from 'react-native-ble-plx';
-import { BatteryData, BatteryInfo, ChargeControllerState, InverterState } from '../types/bleTypes';
+import {
+  BleManagerInstance,
+  createPaddedPayload,
+  convertMacToBytes,
+  generateDigest,
+} from '../helpers/BluetoothHelper';
+import {Characteristic, Device} from 'react-native-ble-plx';
+import {
+  BatteryData,
+  BatteryInfo,
+  ChargeControllerState,
+  InverterState,
+} from '../types/bleTypes';
+import {Battery, Inverter} from '../types/DeviceType';
+import {
+  parseBatteryData,
+  parseChargeControllerState,
+  parseInverterState,
+} from '../helpers/ParserHelper';
 
 const AUTHENTICATION_CHAR = '669a0c20-0008-d690-ec11-e214416ccb95';
 
@@ -15,291 +30,136 @@ const SET_BATT_RETR_CHAR = '669a0c20-0008-d690-ec11-e214436ccb95';
 const RETR_BATTERY_CHAR = '669a0c20-0008-d690-ec11-e214446ccb95';
 const BATTERY_CHAR = '669a0c20-0008-d690-ec11-e214426ccb95';
 
-export async function authenticateInverter(selectedInverter: Device, Selectednodes: Device[]): Promise<void> {
-  console.log('Selected Inverter:', selectedInverter);
-
-  // await connectToInverter(selectedInverter);
-
-  // if (!selectedInverter.isConnected) {
-  //   console.error('Inverter was disconnected');
-  //   return;
-  // }
-
+/**
+ * Authenticates the selected inverter and enrolls the associated batteries.
+ *
+ * This method performs the following steps:
+ * 1. Connects to the inverter and discovers its services and characteristics.
+ * 2. Generates an authentication payload based on the inverter's ID.
+ * 3. Sends the authentication payload to the inverter.
+ * 4. Enrolls the selected batteries with the inverter.
+ *
+ * @param {Inverter} selectedInverter - The inverter device to authenticate.
+ * @param {Battery[]} selectedNodes - The list of batteries to enroll with the inverter.
+ *
+ * @returns {Promise<void>} - Resolves when the authentication and enrollment process is complete.
+ */
+export async function authenticateInverter(
+  selectedInverter: Inverter,
+  selectedNodes: Battery[],
+): Promise<void> {
   try {
-    const connectedDevice = await connectAndDiscoverServices(selectedInverter);
-    const authPayload = generateAuthPayload(selectedInverter.id);
+    await connectAndDiscoverServices(selectedInverter);
+    const digest = generateDigest(selectedInverter.id);
 
-    await sendAuthPayload(selectedInverter, authPayload);
+    await BleManagerInstance.writeCharacteristicWithResponseForDevice(
+      selectedInverter.id,
+      selectedInverter?.serviceUUIDs?.[0] ?? '',
+      AUTHENTICATION_CHAR,
+      Buffer.from(digest).toString('base64'),
+    );
 
-    // await fetchAndLogInverterStatus(selectedInverter);
-    // await fetchAndLogChargeControllerStatus(selectedInverter);
-    console.log(Selectednodes.length + ' nodes found');
-
-    let response = await enrollBatteries(selectedInverter, Selectednodes, 0);
-
-    console.log(response);
-
-  } catch (error: any) {
+    await enrollBatteriesToInverter(selectedInverter, selectedNodes);
+  } catch (error) {
     console.error('Error authenticating:', error);
-    Alert.alert('Error', 'Auth failed.', error);
+    throw error;
   }
 }
 
-export async function checkAndConnectToInverter(selectedInverter: Device): Promise<Boolean> {
+export async function checkAndConnectToInverter(
+  selectedInverter: Device,
+): Promise<Boolean> {
   //will handle these errors better
-    const connection = await selectedInverter.isConnected();
-    if(connection){
-      console.log('Inverter already connected:', selectedInverter.id);
-      return true;
-    }
-    console.log('Inverter not connected:', selectedInverter.id);
-    const response = await BleManagerInstance.connectToDevice(selectedInverter.id);
-    const isConnected = await response.isConnected();
-    console.log("reconnected")
-    console.log(isConnected);
-    return isConnected;
-      // .then((device: Device) => {
-      //   console.log('Connected to Inverter:', device.id);
-      // })
-      // .catch((error: any) => {
-      //   console.error('Failed to connect to Inverter:', error);
-      // });
+  const connection = await selectedInverter.isConnected();
+  if (connection) {
+    console.log('Inverter already connected:', selectedInverter.id);
+    return true;
+  }
+  console.log('Inverter not connected:', selectedInverter.id);
+  const response = await BleManagerInstance.connectToDevice(
+    selectedInverter.id,
+  );
+  const isConnected = await response.isConnected();
+  console.log('reconnected');
+  console.log(isConnected);
+  return isConnected;
+  // .then((device: Device) => {
+  //   console.log('Connected to Inverter:', device.id);
+  // })
+  // .catch((error: any) => {
+  //   console.error('Failed to connect to Inverter:', error);
+  // });
 }
 
-export async function connectToInverter(selectedInverter: Device): Promise<Boolean> {
-  //will handle these errors better
-    const response = await BleManagerInstance.connectToDevice(selectedInverter.id);
+/**
+ * Attempts to establish a Bluetooth connection to the specified inverter.
+ *
+ * @param {Inverter} selectedInverter - The inverter device to connect to.
+ *
+ * @returns {Promise<Boolean>} - Resolves to `true` if the connection is successful,
+ * otherwise resolves to `false` if the connection fails.
+ */
+export async function connectToInverter(
+  selectedInverter: Inverter,
+): Promise<Boolean> {
+  try {
+    const response = await BleManagerInstance.connectToDevice(
+      selectedInverter.id,
+    );
     const isConnected = await response.isConnected();
-    console.log("Checking BLE status")
-    console.log(isConnected);
     return isConnected;
-      // .then((device: Device) => {
-      //   console.log('Connected to Inverter:', device.id);
-      // })
-      // .catch((error: any) => {
-      //   console.error('Failed to connect to Inverter:', error);
-      // });
+  } catch (error) {
+    console.error('Failed to connect to Inverter:', error);
+    return false;
+  }
 }
 
-// export async function connectToInverter(selectedInverter: Device): Promise<Boolean> {
-//   //will handle these errors better
-//   return new Promise((resolve, reject) => {
-//     BleManagerInstance.connectToDevice(selectedInverter.id)
-//       .then((device: Device) => {
-//         console.log('Connected to Inverter:', device.id);
-//         resolve(true);
-//       })
-//       .catch((error: any) => {
-//         console.error('Failed to connect to Inverter:', error);
-//         reject(false);
-//       });
-//   });
-// }
-
-async function connectAndDiscoverServices(inverter: Device): Promise<Device> {
+/**
+ * Establishes a Bluetooth connection to the specified inverter and discovers all its services and characteristics.
+ *
+ * This function performs the following steps:
+ * 1. Connects to the inverter using its unique ID.
+ * 2. Discovers all available services and characteristics for the connected inverter.
+ *
+ * @param {Inverter} inverter - The inverter device to connect to and discover services for.
+ *
+ * @returns {Promise<Inverter>} - Resolves with the connected inverter device after successfully discovering its services and characteristics.
+ */
+async function connectAndDiscoverServices(
+  inverter: Inverter,
+): Promise<Inverter> {
   const connectedDevice = await BleManagerInstance.connectToDevice(inverter.id);
   await connectedDevice.discoverAllServicesAndCharacteristics();
   return connectedDevice;
 }
 
-function generateAuthPayload(inverterId: string): Uint8Array {
-  const extime = Date.now();
-  const digest = generateInverterDigest(inverterId, extime);
-  console.log(`Authenticate len digest ${digest.length}`);
-
-  console.log(
-    'Digest in hex:',
-    Array.from(digest)
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join(' ')
-  );
-
-  const etime = packInt64LE(extime);
-  const badigest = concatBytes(digest, etime);
-
-  console.log(
-    'Badigest in hex:',
-    Array.from(badigest)
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join(' ')
-  );
-
-  return badigest;
-}
-
-async function sendAuthPayload(inverter: Device, payload: Uint8Array): Promise<void> {
-  const response = await BleManagerInstance.writeCharacteristicWithResponseForDevice(
-    inverter.id,
-    inverter?.serviceUUIDs?.[0] ?? '',
-    AUTHENTICATION_CHAR,
-    Buffer.from(payload).toString('base64'),
-  );
-  console.log('Authentication successful', response);
-}
-
-export async function fetchAndLogInverterStatus(inverter: Device): Promise<InverterState | null> {
-  const inverterStatus = await getInverterStatus(inverter);
-  if (inverterStatus) {
-    console.log('Inverter Status:', inverterStatus);
-    return inverterStatus;
-  } else {
-    console.error('Failed to fetch inverter status.');
-    return null;
-  }
-}
-
-export async function fetchAndLogChargeControllerStatus(inverter: Device): Promise<ChargeControllerState | null> {
-  const chargeControllerStatus = await getChargeControllerStatus(inverter);
-  if (chargeControllerStatus) {
-    console.log('Charge Controller Status:', chargeControllerStatus);
-    return chargeControllerStatus;
-  } else {
-    console.error('Failed to fetch charge controller status.');
-    return null;
-  }
-}
-
-export async function fetchAndLogBatteryInfo(node: Device, inverter: Device): Promise<BatteryInfo | null> {
-
-  const batteryInfo = await retrieveBatteryInfo(node, inverter);
-  // 48:CA:43:59:BA:D9
-  // await checkAndConnectToInverter(inverter);
-  console.log('Battery Info:', batteryInfo);
-
-  if (batteryInfo) {
-    return batteryInfo;
-  } else {
-    console.error('Failed to fetch battery info.');
-    return null;
-  }
-}
-
-export async function fetchAndLogBatteryData(nodeId: number, inverter: Device): Promise<BatteryData | null> {
-
-  const batterydata = await retrieveBatteryData(nodeId, inverter);
-  // 48:CA:43:59:BA:D9
-  // await checkAndConnectToInverter(inverter);
-  console.log('Battery Info:', batterydata);
-
-  if (batterydata) {
-    return batterydata;
-  } else {
-    console.error('Failed to fetch battery info.');
-    return null;
-  }
-}
-
-//   try {
-//     const batteryInfo = await retrieveBatteryInfo(node, inverter);
-//     if (batteryInfo) {
-//       console.log('Battery Info:', batteryInfo);
-//     } else {
-//       console.error('Failed to fetch battery info.');
-//     }
-//   } catch (error: any) {
-//     console.error('Error authenticating:', error);
-//     Alert.alert('Error', 'Auth failed..', error);
-//   }
-// }
-
-//NOTE: ENROLL BATTERIES
-//THIS IS USED ONLY TO LOG INFORMATION TO THE CONSOLE
-function parseAndPrintSystemBatteries(payload: Uint8Array) {
-  if (payload.length !== 98) {
-    throw new Error(
-      `Invalid payload length: expected 98 bytes, got ${payload.length}`,
-    );
-  }
-
-  const numberOfBatteries = payload[0];
-  const logInterval = payload[1];
-
-  console.log('Container:');
-  console.log(`  NumberOfBatteries = ${numberOfBatteries}`);
-  console.log(`  LogInterval = ${logInterval}`);
-  console.log('  Macs = ListContainer:');
-
-  for (let i = 0; i < 16; i++) {
-    const offset = 2 + i * 6;
-    const macBytes = payload.slice(offset, offset + 6);
-    const macHex = Array.from(macBytes)
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join(':');
-
-    console.log(`    Container`);
-    console.log(`      mac = ${macHex} (total 6)`);
-  }
-}
-
-// Helper: Converts a hex string (e.g. "123456789ABC") to a Uint8Array.
-function hexStringToUint8Array(hex: string): Uint8Array {
-  if (hex.length % 2 !== 0) {
-    throw new Error('Invalid hex string');
-  }
-  const result = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < hex.length; i += 2) {
-    result[i / 2] = parseInt(hex.substr(i, 2), 16);
-  }
-  return result;
-}
-
 /**
- * enrollBatteries builds the payload to enroll battery MAC addresses.
- * @param logInterval - Optional log interval (default is 0).
+ * Enrolls batteries by building and sending a payload containing their MAC addresses to the inverter.
+ *
+ * This function performs the following steps:
+ * 1. Extracts the MAC addresses of the provided batteries.
+ * 2. Builds a payload containing the number of batteries, an optional log interval, and the MAC addresses.
+ * 3. Pads the payload to ensure it meets the required length.
+ * 4. Sends the payload to the inverter using the specified characteristic.
+ *
+ * @param {Inverter} inverter - The inverter device to enroll the batteries with.
+ * @param {Battery[]} nodes - The list of batteries to enroll.
+ * @param {number} [logInterval=0] - Optional log interval to include in the payload (default is 0).
+ *
+ * @returns {Promise<Characteristic | null>} - Resolves with the BLE characteristic response if successful, or `null` if an error occurs.
  */
-async function enrollBatteries(inverter: Device, nodes: Device[], logInterval = 0): Promise<Characteristic | null> {
+async function enrollBatteriesToInverter(
+  inverter: Inverter,
+  nodes: Battery[],
+  logInterval = 0,
+): Promise<Characteristic | null> {
   try {
-    let nodeIds: string[] = [];
+    const macAddresses = nodes.map(node => node.id);
+    const macBytesArray = macAddresses.map(convertMacToBytes);
 
-    nodes.map((node) => { nodeIds.push(node.id)});
-
-    const batts = nodeIds;
-    // Number of batteries
-    const num = batts.length;
-
-    // Create header: first byte is num, second is logInterval.
-    const header = new Uint8Array([num, logInterval]);
-
-    // Process each MAC address.
-    const macBytesArray: Uint8Array[] = batts.map(mac => {
-      console.log('MAC:', mac);
-      // Remove any colons from the MAC address.
-      const cleanMac = mac.replace(/:/g, '');
-      console.log('Clean MAC:', cleanMac);
-      // Convert the clean hex string into 6 bytes.
-      return hexStringToUint8Array(cleanMac);
-    });
-
-    // Concatenate all battery MAC addresses.
-    const batteryMacs =
-      macBytesArray.length > 0
-        ? concatBytes(...macBytesArray)
-        : new Uint8Array();
-
-    // Calculate the padding length: Total entries must be 16, each 6 bytes.
-    const paddingLength = (16 - num) * 6;
-    // Create padding zeros.
-    const padding = new Uint8Array(paddingLength);
-
-    // Final payload: header + battery MACs + padding.
-    const payload = concatBytes(header, batteryMacs, padding);
-    console.log('Payload length:', payload.length);
-
-    // (Optional) Print out the payload in hex.
-    console.log(
-      'Payload (hex):',
-      Array.from(payload)
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join(' '),
-    );
-
-    console.log('PAYLOAD:: ', parseAndPrintSystemBatteries(payload));
-
-    // Convert the payload into a base64 string for rn-ble-plx.
+    const payload = createPaddedPayload(macBytesArray, logInterval);
     const base64Payload = Buffer.from(payload).toString('base64');
-    console.log('Payload (base64):', base64Payload);
 
-    // Write the payload to the BLE device using rn-ble-plx.
     const response =
       await BleManagerInstance.writeCharacteristicWithoutResponseForDevice(
         inverter.id,
@@ -308,60 +168,27 @@ async function enrollBatteries(inverter: Device, nodes: Device[], logInterval = 
         base64Payload,
       );
 
-    console.log('Enroll Batteries Response:', response);
     return response;
-  } catch (error: any) {
-    console.error('Error authenticating:', error);
-    Alert.alert('Error', 'Auth failed..', error);
+  } catch (error) {
+    console.error('Error enrolling batteries:', error);
     return null;
   }
 }
 
-//THIS IS USED TO TEST IF AUTHENTICATE AND ENROLLMENT WORKED
-
-// Function to parse the binary data into the `InverterState` structure
-export function parseInverterState(data: Uint8Array): InverterState {
-  const buffer = Buffer.from(data);
-
-  return {
-    LoadInputVoltage: buffer.readUInt16LE(0),
-    LoadInputCurrent: buffer.readUInt16LE(2),
-    LoadInputPower: buffer.readUInt32LE(4),
-    LoadOutputVoltage: buffer.readUInt16LE(8),
-    LoadOutputCurrent: buffer.readUInt16LE(10),
-    LoadOutputPower: buffer.readUInt32LE(12),
-    DeviceTemperature: buffer.readUInt16LE(16),
-    HeatsinkTemperature: buffer.readUInt16LE(18),
-    LoadStatus: buffer.readUInt16LE(20),
-    Version: buffer.readUInt16LE(22),
-    InverterOn: buffer.readUInt8(24),
-    SolarVoltage: buffer.readUInt16LE(25),
-    SolarCurrent: buffer.readUInt16LE(27),
-  };
-}
-
-export async function getInverterStatus(inverter: Device): Promise<InverterState | null> {
+export async function getInverterStatus(
+  inverter: Device,
+): Promise<InverterState | null> {
   try {
-    // Connect to the device
-    const connectedDevice = await BleManagerInstance.connectToDevice(
-      inverter.id,
-    );
-    await connectedDevice.discoverAllServicesAndCharacteristics();
+    await connectAndDiscoverServices(inverter);
 
-    // Read the inverter state characteristic
     const base64Data = await BleManagerInstance.readCharacteristicForDevice(
       inverter.id,
-      inverter?.serviceUUIDs?.[0] ?? '', // Replace with the correct service UUID
+      inverter?.serviceUUIDs?.[0] ?? '',
       INVERTER_STATE_CHAR,
     );
 
-    // Decode the Base64 data into a Uint8Array
     const rawData = Buffer.from(base64Data.value ?? '', 'base64');
-
-    // Parse the data into the `InverterState` structure
     const inverterState = parseInverterState(rawData);
-
-    console.log('Inverter State:', inverterState);
     return inverterState;
   } catch (error) {
     console.error('Error reading inverter status:', error);
@@ -369,48 +196,20 @@ export async function getInverterStatus(inverter: Device): Promise<InverterState
   }
 }
 
-// Function to parse the binary data into the `ChargeControllerState` structure
-export function parseChargeControllerState(
-  data: Uint8Array,
-): ChargeControllerState {
-  const buffer = Buffer.from(data);
-
-  return {
-    PV_Voltage: buffer.readUInt16LE(0),
-    Batt_Voltage: buffer.readUInt16LE(2),
-    PV_Current: buffer.readUInt16LE(4),
-    PV_Watt: buffer.readInt32LE(6),
-    LoadCurrent: buffer.readInt16LE(10),
-    LoadWatt: buffer.readInt32LE(12),
-    BatteryStatus: buffer.readUInt16LE(16),
-    ChargingStatus: buffer.readUInt16LE(18),
-    DischargingStatus: buffer.readUInt16LE(20),
-    DeviceTemperature: buffer.readInt16LE(22),
-  };
-}
-
-export async function getChargeControllerStatus(inverter: Device): Promise<ChargeControllerState | null> {
+export async function getChargeControllerStatus(
+  inverter: Device,
+): Promise<ChargeControllerState | null> {
   try {
-    // Connect to the device
-    const connectedDevice = await BleManagerInstance.connectToDevice(
-      inverter.id,
-    );
-    await connectedDevice.discoverAllServicesAndCharacteristics();
+    await connectAndDiscoverServices(inverter);
 
-    // Read the charge controller state characteristic
     const base64Data = await BleManagerInstance.readCharacteristicForDevice(
       inverter.id,
       inverter?.serviceUUIDs?.[0] ?? '',
       CHARGE_CONTROLLER_STATE_CHAR,
     );
 
-    // Decode the Base64 data into a Uint8Array
     const rawData = Buffer.from(base64Data.value ?? '', 'base64');
-
-    // Parse the data into the `ChargeControllerState` structure
     const chargeControllerState = parseChargeControllerState(rawData);
-
-    console.log('Charge Controller State:', chargeControllerState);
     return chargeControllerState;
   } catch (error) {
     console.error('Error reading charge controller status:', error);
@@ -418,44 +217,18 @@ export async function getChargeControllerStatus(inverter: Device): Promise<Charg
   }
 }
 
-// Function to parse the binary data into the `BatteryData` structure
-export function parseBatteryData(data: Uint8Array): BatteryData {
-  const buffer = Buffer.from(data);
-
-  return {
-    TotalVoltage: buffer.readUInt16BE(0),
-    Current: buffer.readInt16BE(2),
-    RemainCapacity: buffer.readUInt16BE(4),
-    TotalCapacity: buffer.readUInt16BE(6),
-    CycleLife: buffer.readUInt16BE(8),
-    ProductLife: buffer.readUInt16BE(10),
-    BalanceStatusLow: buffer.readUInt16BE(12),
-    BalanceStatusHigh: buffer.readUInt16BE(14),
-    ProtectionStatus: buffer.readUInt16BE(16),
-    Version: buffer.readUInt8(18),
-    RSOC: buffer.readUInt8(19),
-    FetStatus: buffer.readUInt8(20),
-    CellInSeries: buffer.readUInt8(21),
-    N_NTC: buffer.readUInt8(22),
-  };
-}
-
-export async function retrieveBatteryInfo(node: Device, inverter: Device): Promise< BatteryInfo | null> {
+export async function getBatteryInfo(
+  node: Battery,
+  inverter: Inverter,
+): Promise<BatteryInfo | null> {
   try {
     const batts = [node.id];
-    // const connectedDevice = await BleManagerInstance.connectToDevice(
-    //   inverter.id,
-    // );
-    // await connectedDevice.discoverAllServicesAndCharacteristics();
-
     const batStatus: Record<string, BatteryData> = {};
 
     for (const mac of batts) {
-      // Convert MAC address to bytes
       const macBytes = mac.split(':').map(byte => parseInt(byte, 16));
       const macBuffer = Buffer.from(macBytes);
 
-      // Write the MAC address to the SET_BATT_RETR_CHAR characteristic
       await BleManagerInstance.writeCharacteristicWithResponseForDevice(
         inverter.id,
         inverter?.serviceUUIDs?.[0] ?? '',
@@ -463,23 +236,15 @@ export async function retrieveBatteryInfo(node: Device, inverter: Device): Promi
         macBuffer.toString('base64'),
       );
 
-      // Read the battery data from the RETR_BATTERY_CHAR characteristic
       const base64Data = await BleManagerInstance.readCharacteristicForDevice(
         inverter.id,
         inverter?.serviceUUIDs?.[0] ?? '',
         RETR_BATTERY_CHAR,
       );
 
-      // Decode the Base64 data into a Uint8Array
       const rawData = Buffer.from(base64Data.value ?? '', 'base64');
-
-      // Parse the data into the `BatteryData` structure
       const batteryData = parseBatteryData(rawData);
-
-      // Store the parsed data in the batStatus object
       batStatus[mac] = batteryData;
-
-      console.log(`Battery Data for ${mac}:`, batteryData);
     }
 
     return batStatus;
@@ -489,13 +254,72 @@ export async function retrieveBatteryInfo(node: Device, inverter: Device): Promi
   }
 }
 
-export async function retrieveBatteryData(nodeId: number, inverter: Device): Promise< BatteryData | null> {
+export async function fetchAndLogInverterStatus(
+  inverter: Device,
+): Promise<InverterState | null> {
+  return fetchAndLog(() => getInverterStatus(inverter), 'Inverter Status');
+}
+
+export async function fetchAndLogChargeControllerStatus(
+  inverter: Device,
+): Promise<ChargeControllerState | null> {
+  return fetchAndLog(
+    () => getChargeControllerStatus(inverter),
+    'Charge Controller Status',
+  );
+}
+
+export async function fetchAndLogBatteryInfo(
+  node: Device,
+  inverter: Device,
+): Promise<BatteryInfo | null> {
+  return fetchAndLog(() => getBatteryInfo(node, inverter), 'Battery Info');
+}
+
+export async function fetchAndLogBatteryData(
+  batteryId: string,
+  inverter: Inverter,
+): Promise<BatteryData | null> {
+  return fetchAndLog(
+    () => retrieveBatteryData(batteryId, inverter),
+    'Battery Data',
+  );
+}
+
+/**
+ * Fetches data using the provided retrieval function, logs the result, and handles errors.
+ *
+ * @param {() => Promise<T | null>} fetchFunction - The function to fetch the data.
+ * @param {string} description - A description of the data being fetched (used for logging).
+ *
+ * @returns {Promise<T | null>} - The fetched data, or `null` if an error occurs.
+ */
+async function fetchAndLog<T>(
+  fetchFunction: () => Promise<T | null>,
+  description: string,
+): Promise<T | null> {
+  try {
+    const data = await fetchFunction();
+    if (data) {
+      console.log(`${description}:`, data);
+      return data;
+    } else {
+      console.error(`Failed to fetch ${description}.`);
+      return null;
+    }
+  } catch (error) {
+    console.error(`Error fetching ${description}:`, error);
+    return null;
+  }
+}
+
+//Note: This is the on the Node Screen
+export async function retrieveBatteryData(
+  nodeId: string,
+  inverter: Device,
+): Promise<BatteryData | null> {
   try {
     const batts = [nodeId];
-    // const connectedDevice = await BleManagerInstance.connectToDevice(
-    //   inverter.id,
-    // );
-    // await connectedDevice.discoverAllServicesAndCharacteristics();
 
     const batStatus: Record<string, BatteryData> = {};
     let batteryData: BatteryData = {
@@ -515,10 +339,9 @@ export async function retrieveBatteryData(nodeId: number, inverter: Device): Pro
       N_NTC: 0,
     };
 
-
     for (const mac of batts) {
       // Convert MAC address to bytes
-      const macBytes = mac.split(':').map(byte => parseInt(byte, 16));
+      const macBytes = mac.split(':').map((byte: string) => parseInt(byte, 16));
       const macBuffer = Buffer.from(macBytes);
 
       // Write the MAC address to the SET_BATT_RETR_CHAR characteristic

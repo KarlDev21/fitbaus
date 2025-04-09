@@ -1,4 +1,7 @@
-import {BleManagerInstance, generateNodeDigest} from '../helpers/BluetoothHelper';
+import {
+  BleManagerInstance,
+  generateNodeDigest,
+} from '../helpers/BluetoothHelper';
 import {Buffer} from 'buffer';
 
 export const decodeManufacturerData = (base64Data: string): Uint8Array => {
@@ -61,36 +64,29 @@ export const parseNodeMetaV2 = (data: Uint8Array) => {
   };
 };
 
-
+/**
+ * Authenticates a node by connecting to it via Bluetooth, discovering its services and characteristics,
+ * and writing a generated digest to a specific characteristic.
+ *
+ * @param {string} nodeId - The unique identifier of the node to authenticate.
+ * @returns {Promise<boolean>} - Resolves to `true` if authentication is successful, otherwise `false`.
+ */
 export async function authenticateNode(nodeId: string) {
   try {
+    const connectedDevice = await BleManagerInstance.connectToDevice(nodeId);
+    await connectedDevice.discoverAllServicesAndCharacteristics();
 
-      const connectedDevice = await BleManagerInstance.connectToDevice(
-        nodeId,
-      );
-      await connectedDevice.discoverAllServicesAndCharacteristics();
+    const digest = generateNodeDigest(nodeId);
 
-      const digest = generateNodeDigest(nodeId);
-      // console.log(`Authenticate ${digest}`);
-      console.log(`Byte Array ${Array.from(digest)}`);
-
-      const response =
-        await BleManagerInstance.writeCharacteristicWithResponseForDevice(
-          nodeId,
-          'ffffffff-21b5-ec11-e214-000030452e68',
-          '669a0c20-0008-21b5-ec11-e214416c2e68',
-          Buffer.from(digest).toString('base64'),
-        );
-
-      // BleManagerInstance.cancelDeviceConnection(nodeId);
-      // console.log('Disconnected successfully!');
-
-      console.log('Authentication Response:', response);
-      return true;
-
+    //Note: The UUIDs used here are placeholders. Replace them with the actual UUIDs for the device.
+    await BleManagerInstance.writeCharacteristicWithResponseForDevice(
+      nodeId,
+      'ffffffff-21b5-ec11-e214-000030452e68',
+      '669a0c20-0008-21b5-ec11-e214416c2e68',
+      Buffer.from(digest).toString('base64'),
+    );
+    return true;
   } catch (error) {
-    console.error('Authentication Error:', error);
     return false;
   }
-
 }

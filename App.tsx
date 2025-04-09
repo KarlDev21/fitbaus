@@ -5,19 +5,7 @@ import { initBootstrapper } from './bootstrap/bootstrapper';
 import { requestBluetoothPermissions } from './helpers/AppHelper';
 import { NavigationContainer } from '@react-navigation/native';
 import CreateDrawerNavigation from './nav/CreateDrawerNavigation';
-import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
-
-const theme = {
-  ...MD3LightTheme,
-  colors: {
-    ...MD3LightTheme.colors,
-    primary: '#FFC107', // Blue
-    secondary: '#2196F3', // Yellow
-    secondaryContainer: '#FFF8E1',
-    background: '#FFFFFF',
-    surface: '#FFFFFF',
-  },
-};
+import { Provider as PaperProvider } from 'react-native-paper';
 
 function App(): React.JSX.Element {
   const bootstrap = useCallback(async () => {
@@ -36,7 +24,7 @@ function App(): React.JSX.Element {
   }, [bootstrap]);
 
   return (
-    <PaperProvider theme={theme}>
+    <PaperProvider>
       <NavigationContainer>
         <CreateDrawerNavigation />
         <Toast config={toastConfig} topOffset={80} />
