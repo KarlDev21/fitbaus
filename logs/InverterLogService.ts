@@ -1,39 +1,15 @@
 import {Buffer} from 'buffer';
-import {BleManager, Device, Subscription} from 'react-native-ble-plx';
+import {Device, Subscription} from 'react-native-ble-plx';
 import {Mutex} from 'async-mutex';
 import {storage} from '../services/storage';
 import RNFS from 'react-native-fs';
-
-// Queue implementation for handling BLE notifications
-class AsyncQueue<T> {
-  private queue: T[] = [];
-  private resolvers: ((value: T) => void)[] = [];
-
-  async put(item: T): Promise<void> {
-    if (this.resolvers.length > 0) {
-      const resolve = this.resolvers.shift()!;
-      resolve(item);
-    } else {
-      this.queue.push(item);
-    }
-  }
-
-  async get(): Promise<T> {
-    if (this.queue.length > 0) {
-      return this.queue.shift()!;
-    }
-
-    return new Promise<T>(resolve => {
-      this.resolvers.push(resolve);
-    });
-  }
-}
+import {AsyncQueue} from './NotificationQueue';
 
 // Stower Inverter class that handles BLE communication
 export class StowerInverter {
   private peripheral: Device;
   private queue: AsyncQueue<Buffer> = new AsyncQueue<Buffer>();
-  private bleManager: BleManager;
+
   private fileCmdMutex = new Mutex();
 
   // Constants for characteristic UUIDs
@@ -45,9 +21,8 @@ export class StowerInverter {
     return '669a0c20-0008-d690-ec11-e214476ccb95';
   }
 
-  constructor(peripheral: Device, bleManager: BleManager) {
+  constructor(peripheral: Device) {
     this.peripheral = peripheral;
-    this.bleManager = bleManager;
   }
 
   private subscription: Subscription | null = null;
@@ -72,31 +47,6 @@ export class StowerInverter {
     } catch (error) {
       console.error('Error subscribing to notifications:', error);
     }
-  }
-
-  async mainLoop(): Promise<void> {
-    const files: string[] = [];
-
-    while (true) {
-      const filenameBuffer = await this.waitFileResults();
-      const filename = filenameBuffer.toString().replace(/\0+$/, ''); // Remove null terminator
-      console.log(filename);
-
-      if (filename.length > 0) {
-        files.push(filename);
-      } else {
-        break;
-      }
-    }
-
-    console.log(`Files: ${files}`);
-    writeFiles(files);
-
-    const fileslist = readFiles();
-    const filteredList = fileslist.filter(file => file !== 'config.json');
-    console.log('FileList: ' + filteredList);
-    // inverter.unsubscribe();
-    await getFiles(this, filteredList);
   }
 
   unsubscribe(): void {
@@ -128,14 +78,6 @@ export class StowerInverter {
         console.error('Error writing characteristic:', error);
         throw error;
       }
-
-      //   this.mainLoop()
-      //     .then(() => {
-      //       console.log('Main loop finished');
-      //     })
-      //     .catch(error => {
-      //       console.error('Error in main loop:', error);
-      //     });
     });
   }
 
