@@ -1,7 +1,6 @@
 import {Buffer} from 'buffer';
 import {Device, Subscription} from 'react-native-ble-plx';
 import {Mutex} from 'async-mutex';
-import {storage} from '../services/storage';
 import RNFS from 'react-native-fs';
 import {AsyncQueue} from './NotificationQueue';
 
@@ -30,7 +29,7 @@ export class StowerInverter {
   subscribe(): void {
     try {
       this.subscription = this.peripheral.monitorCharacteristicForService(
-        '669a0c20-0008-d690-ec11-e2143045cb95', // Using device ID as we don't have a specific service ID
+        '669a0c20-0008-d690-ec11-e2143045cb95', // Using service ID as we don't have a specific service ID
         StowerInverter.FileResultChar(),
         (error, characteristic) => {
           if (error) {
@@ -101,12 +100,14 @@ export class StowerInverter {
 
   fileResultNotify(data: Buffer): void {
     // console.log(`Notification received: ${data.length} bytes`);
-    this.queue.put(data);
+    this.queue.put(data).then(() => {
+      //Do nothing
+    });
   }
 
   async waitFileResults(): Promise<Buffer> {
     // console.log("waitFileResults");
-    return this.queue.get();
+    return await this.queue.get();
   }
 
   async waitFileResultsTimer(timeoutMs = 10000): Promise<Buffer> {
@@ -120,105 +121,164 @@ export class StowerInverter {
       ),
     ]);
   }
-}
 
-// Helper functions for file operations
-export function writeFiles(files: string[]): void {
-  const deviceFiles = {files};
-  console.log(deviceFiles);
-  storage.set('files.json', JSON.stringify(deviceFiles));
-}
+  async downloadFiles(fileList: string[]): Promise<void> {
+    const dirPath = `${RNFS.DocumentDirectoryPath}/stower_files`;
 
-export function readFiles(): string[] {
-  try {
-    const fileData = storage.getString('files.json');
-    console.log('fileData: ', fileData);
-    if (fileData) {
-      const fileList = JSON.parse(fileData);
-      return fileList.files || [];
-    }
-  } catch (error) {
-    console.error('Error reading files:', error);
-  }
-  return [];
-}
-
-export async function getFiles(
-  sensor: StowerInverter,
-  fileList: string[],
-): Promise<void> {
-  const dirPath = `${RNFS.DocumentDirectoryPath}/stower_files`;
-
-  try {
-    // Create directory if it doesn't exist
-    const dirExists = await RNFS.exists(dirPath);
-    if (!dirExists) {
-      await RNFS.mkdir(dirPath);
-    }
-
-    for (const f of fileList) {
-      console.log(`Starting download of file: ${f}`);
-
-      // Send the GET command to request the file
-      await sensor.sendFileCmd('GET', f);
-
-      // First response is the file size
-      const fileSizeBuffer = await sensor.waitFileResults();
-      const fileSize = fileSizeBuffer.readUInt32LE(0);
-      console.log(`File size: ${fileSize} bytes`);
-
-      // Buffer to accumulate all file parts
-      let contents = Buffer.alloc(0);
-      let piece = 0;
-
-      // Print initial progress
-      console.log('0%..');
-
-      // Keep receiving chunks until we have the complete file
-      while (contents.length < fileSize) {
-        // Wait for next chunk of data
-        const chunk = await sensor.waitFileResultsTimer();
-
-        // Add chunk to our buffer
-        contents = Buffer.concat([contents, chunk]);
-
-        // Calculate progress percentage
-        const percentage = Math.floor((contents.length / fileSize) * 100);
-
-        // Print progress at 10% intervals
-        if (percentage >= (piece + 1) * 10) {
-          piece = Math.floor(percentage / 10);
-          console.log(`${piece * 10}%..`);
-        }
+    try {
+      // Create directory if it doesn't exist
+      const dirExists = await RNFS.exists(dirPath);
+      if (!dirExists) {
+        await RNFS.mkdir(dirPath);
       }
 
-      console.log('100%');
-      console.log(`Downloaded ${contents.length} bytes`);
+      for (const f of fileList) {
+        console.log(`Starting download of file: ${f}`);
 
-      // Save the file
-      const filePath = `${dirPath}/${f}`;
-      await RNFS.writeFile(filePath, contents.toString('base64'), 'base64');
-      console.log(`File saved to: ${filePath}`);
+        // Send the GET command to request the file
+        await this.sendFileCmd('GET', f);
+
+        // First response is the file size
+        const fileSizeBuffer = await this.waitFileResults();
+        const fileSize = fileSizeBuffer.readUInt32LE(0);
+        console.log(`File size: ${fileSize} bytes`);
+
+        // Buffer to accumulate all file parts
+        let contents = Buffer.alloc(0);
+        let piece = 0;
+
+        // Print initial progress
+        console.log('0%..');
+
+        // Keep receiving chunks until we have the complete file
+        while (contents.length < fileSize) {
+          // Wait for next chunk of data
+          const chunk = await this.waitFileResultsTimer();
+
+          // Add chunk to our buffer
+          contents = Buffer.concat([contents, chunk]);
+
+          // Calculate progress percentage
+          const percentage = Math.floor((contents.length / fileSize) * 100);
+
+          // Print progress at 10% intervals
+          if (percentage >= (piece + 1) * 10) {
+            piece = Math.floor(percentage / 10);
+            console.log(`${piece * 10}%..`);
+          }
+        }
+
+        console.log('100%');
+        console.log(`Downloaded ${contents.length} bytes`);
+
+        // Save the file
+        const filePath = `${dirPath}/${f}`;
+        await RNFS.writeFile(filePath, contents.toString('base64'), 'base64');
+        console.log(`File saved to: ${filePath}`);
+      }
+
+      console.log('All files downloaded successfully');
+    } catch (error) {
+      console.error('Error in getFiles:', error);
+      throw error;
     }
-
-    console.log('All files downloaded successfully');
-  } catch (error) {
-    console.error('Error in getFiles:', error);
-    throw error;
   }
-}
 
-export async function deleteFiles(
-  sensor: StowerInverter,
-  fileList: string[],
-): Promise<void> {
-  for (const f of fileList) {
-    // Send command
-    await sensor.sendFileCmd('RM', f);
+  async uploadFiles(sensor: StowerInverter, fileList: string[]): Promise<void> {
+    const dirPath = `${RNFS.DocumentDirectoryPath}/stower_files`;
 
-    const resultBuffer = await sensor.waitFileResults();
+    try {
+      // Create directory if it doesn't exist
+      const dirExists = await RNFS.exists(dirPath);
+      if (!dirExists) {
+        await RNFS.mkdir(dirPath);
+      }
+
+      for (const f of fileList) {
+        console.log(`Starting download of file: ${f}`);
+
+        // Send the GET command to request the file
+        await sensor.sendFileCmd('GET', f);
+
+        // First response is the file size
+        const fileSizeBuffer = await sensor.waitFileResults();
+        const fileSize = fileSizeBuffer.readUInt32LE(0);
+        console.log(`File size: ${fileSize} bytes`);
+
+        // Buffer to accumulate all file parts
+        let contents = Buffer.alloc(0);
+        let piece = 0;
+
+        // Print initial progress
+        console.log('0%..');
+
+        // Keep receiving chunks until we have the complete file
+        while (contents.length < fileSize) {
+          // Wait for next chunk of data
+          const chunk = await sensor.waitFileResultsTimer();
+
+          // Add chunk to our buffer
+          contents = Buffer.concat([contents, chunk]);
+
+          // Calculate progress percentage
+          const percentage = Math.floor((contents.length / fileSize) * 100);
+
+          // Print progress at 10% intervals
+          if (percentage >= (piece + 1) * 10) {
+            piece = Math.floor(percentage / 10);
+            console.log(`${piece * 10}%..`);
+          }
+        }
+
+        console.log('100%');
+        console.log(`Downloaded ${contents.length} bytes`);
+
+        // Convert the file contents to Base64
+        const base64File = contents.toString('base64');
+
+        // Upload the file to the server
+        const response = await fetch('', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json', // Use 'application/octet-stream' if sending blob
+          },
+          body: JSON.stringify({
+            fileName: f,
+            fileData: base64File,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to upload file ${f}: ${response.statusText}`);
+        }
+
+        console.log(`File ${f} uploaded successfully`);
+      }
+
+      console.log('All files uploaded successfully');
+    } catch (error) {
+      console.error('Error in getFiles:', error);
+      throw error;
+    }
+  }
+
+  async deleteFiles(fileList: string[]): Promise<void> {
+    for (const f of fileList) {
+      await this.sendFileCmd('RM', f);
+
+      const resultBuffer = await this.waitFileResults();
+      const result = resultBuffer.readUInt32LE(0);
+
+      console.log(`Delete ${f} result ${result}`);
+    }
+  }
+
+  async deleteFile(file: string): Promise<void> {
+    await this.sendFileCmd('RM', file);
+
+    const resultBuffer = await this.waitFileResults();
     const result = resultBuffer.readUInt32LE(0);
 
-    console.log(`Delete ${f} result ${result}`);
+    console.log(`Delete ${file} result ${result}`);
   }
 }
