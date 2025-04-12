@@ -10,7 +10,7 @@ import {
   BatteryInfo,
   ChargeControllerState,
   InverterState,
-} from '../types/bleTypes';
+} from '../types/BleTypes';
 import {Battery, Inverter} from '../types/DeviceType';
 import {
   parseBatteryData,

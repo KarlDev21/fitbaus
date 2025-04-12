@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Card, Divider, Text } from 'react-native-paper';
-import { BatteryData } from '../../types/bleTypes';
+import { BatteryData } from '../../types/BleTypes';
 
 export const BatteryDetailsCard = ({ batteryData }: { batteryData: BatteryData }) => (
     <Card style={styles.detailsCard}>

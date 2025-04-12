@@ -9,8 +9,14 @@ const storage = new MMKV();
  * @param {string} key - The key to store the value under.
  * @param {any} value - The value to store. If it's an object or array, it will be stringified.
  */
-export const setItem = (key: string, value: string): void => {
-  storage.set(key, value);
+export const saveToStorage = (key: string, value: string): void => {
+  try {
+    const stringValue =
+      typeof value === 'string' ? value : JSON.stringify(value);
+    storage.set(key, stringValue);
+  } catch (error) {
+    console.error(`Error saving key "${key}" to storage:`, error);
+  }
 };
 
 /**
@@ -19,14 +25,24 @@ export const setItem = (key: string, value: string): void => {
  * @param {string} key - The key of the value to retrieve.
  * @returns {any} - The stored value. If it's a JSON string, it will be parsed into an object or array.
  */
-export const getItem = (key: string): any => {
-  const data = storage.getString(key);
-  return data ? JSON.parse(data) : data;
+export const getFromStorage = (key: string): any => {
+  try {
+    const data = storage.getString(key);
+    return data ? JSON.parse(data) : null;
+  } catch (error) {
+    console.error(`Error retrieving key "${key}" from storage:`, error);
+    return null;
+  }
 };
 
-export const getStringItem = (key: string): string => {
-  const data = storage.getString(key);
-  return data ?? '';
+/**
+ * Retrieves a string value from MMKV storage.
+ *
+ * @param {string} key - The key of the value to retrieve.
+ * @returns {string} - The stored string value, or an empty string if not found.
+ */
+export const getStringFromStorage = (key: string): string => {
+  return storage.getString(key) ?? '';
 };
 
 /**
@@ -34,6 +50,17 @@ export const getStringItem = (key: string): string => {
  *
  * @param {string} key - The key of the value to delete.
  */
-export const deleteItem = (key: string): void => {
-  storage.delete(key);
+export const removeFromStorage = (key: string): void => {
+  try {
+    storage.delete(key);
+  } catch (error) {
+    console.error(`Error deleting key "${key}" from storage:`, error);
+  }
+};
+
+export const STORAGE_KEYS = {
+  FILE: 'files',
+  NODES: 'nodes',
+  INVERTERS: 'inverters',
+  SELECTED_NODES: 'selectedNodes',
 };

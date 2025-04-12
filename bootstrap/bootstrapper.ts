@@ -1,8 +1,4 @@
-import {initRemoteConfig} from '../services/RemoteConfigService';
-
-const instructionsAsync: BootstrapperInstructionAsync[] = [
-  {func: initRemoteConfig, key: 'RemoteConfig'},
-];
+const instructionsAsync: BootstrapperInstructionAsync[] = [];
 
 export async function initBootstrapper(): Promise<boolean> {
   try {

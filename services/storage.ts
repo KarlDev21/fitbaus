@@ -2,6 +2,7 @@ import {MMKV} from 'react-native-mmkv';
 import {Device} from 'react-native-ble-plx';
 import {Battery, Inverter} from '../types/DeviceType';
 
+//WE need to move away from this file
 export const DeviceStorage = new MMKV();
 
 export const getNodes = (): Device[] => {

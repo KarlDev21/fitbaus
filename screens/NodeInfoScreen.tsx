@@ -7,7 +7,7 @@ import type { RootStackParamList } from '../nav/CreateStackNavigation';
 import { checkAndConnectToInverter, connectAndDiscoverServices, fetchAndLogBatteryData } from '../services/InverterService';
 import { getConnectedInverter, getConnectedNodes } from '../services/storage';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
-import { BatteryData } from '../types/bleTypes';
+import { BatteryData } from '../types/BleTypes';
 import { AppScreen } from '../components/AppScreen';
 import { BatteryDetailsCard } from '../components/Cards/BatteryDetailsCard';
 import { BleManagerInstance } from '../helpers/BluetoothHelper';

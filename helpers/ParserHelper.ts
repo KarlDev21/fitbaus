@@ -2,7 +2,7 @@ import {
   BatteryData,
   ChargeControllerState,
   InverterState,
-} from '../types/bleTypes';
+} from '../types/BleTypes';
 
 export function parseInverterState(data: Uint8Array): InverterState {
   const buffer = Buffer.from(data);

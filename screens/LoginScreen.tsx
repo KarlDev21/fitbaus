@@ -11,7 +11,7 @@ import { useForm } from '../validation/useForm';
 import { loginAsync } from '../services/UserProfileService';
 import { showToast, ToastType } from '../components/Toast';
 import { IconButton } from 'react-native-paper';
-import { setItemAsync } from '../helpers/SecureStorageHelper';
+import { SECURE_STORE_KEYS, setItemAsync } from '../helpers/SecureStorageHelper';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 
 const LoginScreen = () => {
@@ -36,7 +36,7 @@ const LoginScreen = () => {
             return;
         }
 
-        await setItemAsync('UserProfile', response.data);
+        await setItemAsync(SECURE_STORE_KEYS.USER_PROFILE, response.data);
         setIsLoading(false);
     };
 

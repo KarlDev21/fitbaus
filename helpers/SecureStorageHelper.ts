@@ -30,3 +30,7 @@ export async function removeItemAsync(key: string): Promise<boolean> {
     return false;
   }
 }
+
+export const SECURE_STORE_KEYS = {
+  USER_PROFILE: 'UserProfile',
+};

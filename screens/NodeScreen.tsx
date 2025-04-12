@@ -8,7 +8,7 @@ import { Device } from 'react-native-ble-plx';
 import { setConnectedInverter, setConnectedNodes } from '../services/storage';
 import { authenticateNode } from '../services/NodeService';
 import { Colours } from '../styles/properties/colours';
-import { getItem, setItem } from '../helpers/StorageHelper';
+import { getFromStorage, saveToStorage, STORAGE_KEYS } from '../helpers/StorageHelper';
 import { Battery, Inverter } from '../types/DeviceType';
 import { LoadingIndicatorWithText } from '../components/LoadingIndicator';
 import { AppScreen } from '../components/AppScreen';
@@ -34,10 +34,10 @@ export default function NodeScreen({ navigation }: NodeScreenProps) {
     //Note: This has changed drastically. Need to check if this is correct
     const loadData = async () => {
       try {
-        const inverterData = await getItem('selectedInverter') as Inverter | null;
+        const inverterData = await getFromStorage('selectedInverter') as Inverter | null;
         if (inverterData) setSelectedInverter(inverterData);
 
-        const nodeData = await getItem('nodes') as Battery[];
+        const nodeData = await getFromStorage('nodes') as Battery[];
         if (nodeData) setNodes(nodeData);
       } catch (error) {
         console.error('Failed to load data', error);
@@ -110,7 +110,7 @@ export default function NodeScreen({ navigation }: NodeScreenProps) {
         .map((id) => nodes.find((node) => node.id === id))
         .filter((node): node is Device => node !== undefined);
 
-      setItem('selectedNodes', JSON.stringify(authenticatedNodes));
+      saveToStorage(STORAGE_KEYS.SELECTED_NODES, JSON.stringify(authenticatedNodes));
 
       if (selectedInverter) {
         setConnectedInverter(selectedInverter);

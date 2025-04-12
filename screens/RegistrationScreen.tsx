@@ -10,7 +10,7 @@ import { ScrollView } from 'react-native-gesture-handler';
 import { useForm } from '../validation/useForm';
 import { registerAsync } from '../services/UserProfileService';
 import { showToast, ToastType } from '../components/Toast';
-import { setItemAsync } from '../helpers/SecureStorageHelper';
+import { SECURE_STORE_KEYS, setItemAsync } from '../helpers/SecureStorageHelper';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 
 const RegistrationScreen = () => {
@@ -38,7 +38,7 @@ const RegistrationScreen = () => {
             return;
         }
 
-        await setItemAsync('UserProfile', response.data);
+        await setItemAsync(SECURE_STORE_KEYS.USER_PROFILE, response.data);
         setIsLoading(false);
     };
 

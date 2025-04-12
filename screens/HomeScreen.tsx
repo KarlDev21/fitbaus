@@ -10,7 +10,7 @@ import { connectToInverter } from '../services/InverterService';
 import { AppScreen } from '../components/AppScreen';
 import { ScanCard } from '../components/Cards/ScanCard';
 import { SavedInverterCard } from '../components/Cards/SavedInverterCard';
-import { setItem } from '../helpers/StorageHelper';
+import { saveToStorage, STORAGE_KEYS } from '../helpers/StorageHelper';
 import { StowerInverter } from '../logs/InverterLogService';
 import { Inverter } from '../types/DeviceType';
 import { writeFiles, readFiles } from '../helpers/FileHelper';
@@ -65,8 +65,8 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       if (errorMessage) {
         showToast(ToastType.Error, errorMessage);
       } else {
-        setItem('nodes', JSON.stringify(nodes));
-        setItem('inverters', JSON.stringify(inverters));
+        saveToStorage(STORAGE_KEYS.NODES, JSON.stringify(nodes));
+        saveToStorage(STORAGE_KEYS.INVERTERS, JSON.stringify(inverters));
         navigation.navigate('Inverters');
       }
     } catch (error) {

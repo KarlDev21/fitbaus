@@ -10,7 +10,7 @@ import type { RootStackParamList } from '../nav/CreateStackNavigation';
 import { getConnectedInverterDevice, getConnectedNodes } from '../services/storage';
 import { connectAndDiscoverServices, fetchAndLogBatteryInfo, fetchAndLogChargeControllerStatus, fetchAndLogInverterStatus } from '../services/InverterService';
 import { showToast, ToastType } from '../components/Toast';
-import { BatteryInfo, ChargeControllerState, InverterState } from '../types/bleTypes';
+import { BatteryInfo, ChargeControllerState, InverterState } from '../types/BleTypes';
 import { Colours } from '../styles/properties/colours';
 import { AppScreen } from '../components/AppScreen';
 import { MetricCard } from '../components/Cards/MetricCard';

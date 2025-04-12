@@ -1,25 +1,11 @@
-//TODO: Fetch from remote config
+import {ApiResponse, UserProfileResponse} from '../types/ApiResponse';
+
 export const API_BASE_URL = 'http://192.168.101.107:3000/api/v1';
-
-export type ApiResponse<T> = {
-  success: boolean;
-  data?: T;
-  error?: string;
-};
-
-type UserProfile = {
-  userID: string;
-  name: string;
-  email: string;
-  phone: string;
-  token: string;
-  role: string;
-};
 
 export async function loginAsync(
   email: string,
   password: string,
-): Promise<ApiResponse<UserProfile>> {
+): Promise<ApiResponse<UserProfileResponse>> {
   try {
     const response = await fetch(`${API_BASE_URL}/login`, {
       method: 'POST',
@@ -57,7 +43,7 @@ export async function registerAsync(
   email: string,
   password: string,
   phone: string,
-): Promise<ApiResponse<UserProfile>> {
+): Promise<ApiResponse<UserProfileResponse>> {
   try {
     const response = await fetch(`${API_BASE_URL}/register`, {
       method: 'POST',

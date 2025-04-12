@@ -2,7 +2,7 @@ import {Buffer} from 'buffer';
 import {Device, Subscription} from 'react-native-ble-plx';
 import {Mutex} from 'async-mutex';
 import RNFS from 'react-native-fs';
-import {AsyncQueue} from './NotificationQueue';
+import {AsyncQueue} from './AsyncQueue';
 
 // Stower Inverter class that handles BLE communication
 export class StowerInverter {
