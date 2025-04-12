@@ -5,7 +5,12 @@ import { Colours } from '../styles/properties/colours';
 
 export const FullScreenLoadingIndicator = () => {
     return (
-        <View style={{ flex: 1, height: '100%', width: '100%' }}>
+        <View style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: '#f9f9f9',
+        }}>
             <ActivityIndicator animating={true} size={16} color={Colours.primary} />
         </View>
     )
