@@ -6,7 +6,7 @@ import { requestBluetoothPermissions } from './helpers/AppHelper';
 import { NavigationContainer } from '@react-navigation/native';
 import CreateDrawerNavigation from './nav/CreateDrawerNavigation';
 import { Provider as PaperProvider } from 'react-native-paper';
-
+import { getItemAsync } from './helpers/SecureStorageHelper';
 function App(): React.JSX.Element {
   const bootstrap = useCallback(async () => {
     async function init() {
@@ -21,7 +21,20 @@ function App(): React.JSX.Element {
 
   useEffect(() => {
     bootstrap();
+
   }, [bootstrap]);
+
+  useEffect(() => {
+    async function init() {
+      const user = await getItemAsync('UserProfile');
+      if (user) {
+        console.log('User found');
+        //TODO: Navigate to the Home screen
+      }
+    }
+
+    init();
+  }, []);
 
   return (
     <PaperProvider>
