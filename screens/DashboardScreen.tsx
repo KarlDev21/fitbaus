@@ -8,12 +8,13 @@ import type { RouteProp } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { RootStackParamList } from '../nav/CreateStackNavigation';
 import { getConnectedInverterDevice, getConnectedNodes } from '../services/storage';
-import { fetchAndLogBatteryInfo, fetchAndLogChargeControllerStatus, fetchAndLogInverterStatus } from '../services/InverterService';
+import { connectAndDiscoverServices, fetchAndLogBatteryInfo, fetchAndLogChargeControllerStatus, fetchAndLogInverterStatus } from '../services/InverterService';
 import { showToast, ToastType } from '../components/Toast';
 import { BatteryInfo, ChargeControllerState, InverterState } from '../types/bleTypes';
 import { Colours } from '../styles/properties/colours';
 import { AppScreen } from '../components/AppScreen';
 import { MetricCard } from '../components/Cards/MetricCard';
+import { Battery, Inverter } from '../types/DeviceType';
 
 type DashboardScreenNavigationProp = DrawerNavigationProp<RootStackParamList, 'Dashboard'>
 type DashboardScreenRouteProp = RouteProp<RootStackParamList, 'Dashboard'>
@@ -64,34 +65,39 @@ export default function DashboardScreen({ navigation, route }: DashboardScreenPr
   useEffect(() => {
     const loadData = async () => {
       try {
-        if (inverter) {
-          const chargeControllerData = await fetchAndLogChargeControllerStatus(inverter);
-          const inverterData = await fetchAndLogInverterStatus(inverter);
-          if (chargeControllerData && inverterData) {
-            setChargeControllerState(chargeControllerData);
-            setInverterState(inverterData);
+        setTimeout(async () => {
+          if (inverter) {
+            const chargeControllerInfo = await fetchAndLogChargeControllerStatus(inverter);
+            const inverterState = await fetchAndLogInverterStatus(inverter);
+            let list: BatteryInfo[] = []
 
-            const batteries = getConnectedNodes(inverter);
+            if (chargeControllerInfo && inverterState) {
 
-            if (batteries) {
-              await Promise.all(
-                batteries.map(async (node) => {
+              setChargeControllerState(chargeControllerInfo);
+              setInverterState(inverterState);
+
+              const nodes = getConnectedNodes(inverter);
+
+              if (nodes) {
+                nodes.forEach(async (node) => {
                   const batteryData = await fetchAndLogBatteryInfo(node, inverter);
                   if (batteryData) {
-                    setNodeDataList((prev) => [...prev, batteryData]);
+                    list.push(batteryData);
                   }
-                })
-              );
-              setConnectedNodeIds(batteries.map(node => node.id));
-            }
-          }
+                });
 
-          setIsLoading(false);
-        }
-        else {
-          showToast(ToastType.Error, 'Failed to load dashboard data. Please try again.');
-          setIsLoading(false);
-        }
+                setConnectedNodeIds(nodes.map(node => node.id));
+                setNodeDataList(list);
+              }
+            }
+
+            setIsLoading(false);
+          }
+          else {
+            showToast(ToastType.Error, 'Failed to load dashboard data. Please try again.');
+            setIsLoading(false);
+          }
+        }, 3000);
       } catch (error) {
         console.error('Failed to load dashboard data', error);
         setIsLoading(false);

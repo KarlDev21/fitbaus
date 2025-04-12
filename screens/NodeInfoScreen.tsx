@@ -4,12 +4,14 @@ import { Card, Text, Appbar } from 'react-native-paper';
 import type { RouteProp } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { RootStackParamList } from '../nav/CreateStackNavigation';
-import { fetchAndLogBatteryData } from '../services/InverterService';
+import { checkAndConnectToInverter, connectAndDiscoverServices, fetchAndLogBatteryData } from '../services/InverterService';
 import { getConnectedInverter, getConnectedNodes } from '../services/storage';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { BatteryData } from '../types/bleTypes';
 import { AppScreen } from '../components/AppScreen';
 import { BatteryDetailsCard } from '../components/Cards/BatteryDetailsCard';
+import { BleManagerInstance } from '../helpers/BluetoothHelper';
+import { Inverter } from '../types/DeviceType';
 
 type NodeInfoScreenNavigationProp = DrawerNavigationProp<RootStackParamList, 'NodeInfo'>
 type NodeInfoScreenRouteProp = RouteProp<RootStackParamList, 'NodeInfo'>
@@ -30,8 +32,7 @@ export default function NodeInfoScreen({ navigation, route }: NodeInfoScreenProp
         if (inverter) {
           const node = getConnectedNodes(inverter);
           if (node) {
-            const nodeId = route.params.nodeId.toString();
-            const data = await fetchAndLogBatteryData(nodeId, inverter);
+            const data = await fetchAndLogBatteryData(route.params.nodeId, inverter);
             if (data) {
               setBatteryData(data);
             }

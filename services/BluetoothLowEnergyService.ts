@@ -34,6 +34,7 @@ export async function scanDevices(): Promise<{
         console.log('Scanned device:', device?.name, device?.id);
 
         if (device?.name && device.name.includes('Invert')) {
+          device.requestMTU(23);
           inverters.set(device.name, device);
         }
 

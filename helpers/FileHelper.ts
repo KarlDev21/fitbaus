@@ -1,4 +1,4 @@
-import {storage} from '../services/storage';
+import {getItem, setItem} from './StorageHelper';
 
 /**
  * Writes a list of file names to persistent storage.
@@ -9,7 +9,7 @@ export function writeFiles(files: string[]): void {
   try {
     const deviceFiles = {files};
     console.log('Saving files:', deviceFiles);
-    storage.set('files', JSON.stringify(deviceFiles));
+    setItem('files.json', JSON.stringify(deviceFiles));
   } catch (error) {
     console.error('Error writing files:', error);
   }
@@ -22,12 +22,12 @@ export function writeFiles(files: string[]): void {
  */
 export function readFiles(): string[] {
   try {
-    const fileData = storage.getString('files');
+    const fileData = getItem('files.json');
     console.log('Retrieved file data:', fileData);
 
     if (fileData) {
-      const fileList = JSON.parse(fileData);
-      return fileList.files || [];
+      // const fileList = JSON.parse(fileData);
+      return fileData.files || [];
     }
   } catch (error) {
     console.error('Error reading files:', error);

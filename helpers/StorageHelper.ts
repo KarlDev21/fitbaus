@@ -24,6 +24,11 @@ export const getItem = (key: string): any => {
   return data ? JSON.parse(data) : data;
 };
 
+export const getStringItem = (key: string): string => {
+  const data = storage.getString(key);
+  return data ?? '';
+};
+
 /**
  * Deletes a value from MMKV storage.
  *

@@ -3,7 +3,13 @@ import { StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Text } from 'react-native-paper';
 import { Colours } from '../styles/properties/colours';
 
-//Add message p
+export const FullScreenLoadingIndicator = () => {
+    return (
+        <View style={{ flex: 1, height: '100%', width: '100%' }}>
+            <ActivityIndicator animating={true} size={16} color={Colours.primary} />
+        </View>
+    )
+}
 export const LoadingIndicator = () => {
     return (
         <ActivityIndicator animating={true} size={16} color="#fff" />

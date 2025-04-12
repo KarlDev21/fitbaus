@@ -11,6 +11,10 @@ import { AppScreen } from '../components/AppScreen';
 import { ScanCard } from '../components/Cards/ScanCard';
 import { SavedInverterCard } from '../components/Cards/SavedInverterCard';
 import { setItem } from '../helpers/StorageHelper';
+import { StowerInverter } from '../logs/InverterLogService';
+import { Inverter } from '../types/DeviceType';
+import { writeFiles, readFiles } from '../helpers/FileHelper';
+import { BleManagerInstance } from '../helpers/BluetoothHelper';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>
 
@@ -20,20 +24,35 @@ interface HomeScreenProps {
 
 export default function HomeScreen({ navigation }: HomeScreenProps) {
   const [isScanning, setIsScanning] = useState(false);
-  const savedInverter = getConnectedInverter();
+  const savedInverter: Inverter | null = getConnectedInverter();
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [newInverter, setNewInverter] = useState<Inverter | null>(null);
 
   useEffect(() => {
     const checkConnection = async () => {
+      // if (savedInverter) {
+      //   setNewInverter(savedInverter as Inverter);
+      // }
       const connection = await savedInverter?.isConnected();
       if (connection) {
         setIsConnected(connection);
+        await uploadFiles();
       }
     };
 
     checkConnection();
   }, [isConnected, savedInverter]);
+
+  useEffect(() => {
+    const init = async () => {
+      if (isConnected) {
+        await uploadFiles();
+      }
+    }
+
+    init()
+  }, [isConnected, savedInverter])
 
   const handleScan = async () => {
     setIsScanning(true);
@@ -68,8 +87,6 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       if (connection) {
         setIsConnected(true);
         showToast(ToastType.Success, 'Connected to Inverter');
-      } else {
-        break;
       }
     } catch (error) {
       showToast(ToastType.Error, 'An error occurred while connecting to the inverter.');
@@ -82,6 +99,47 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       navigation.navigate('Dashboard', { inverter: savedInverter });
     }
   };
+
+  async function uploadFiles() {
+    if (savedInverter) {
+      const connectedDevice = await BleManagerInstance.connectToDevice(
+        savedInverter.id,
+      );
+      await connectedDevice.discoverAllServicesAndCharacteristics();
+      connectedDevice.requestMTU(512);
+
+      const inverter = new StowerInverter(connectedDevice);
+      inverter.subscribe();
+
+      console.log("Get list of files");
+      await inverter.sendFileCmd("LS");
+      const files: string[] = [];
+
+      while (true) {
+        const filenameBuffer = await inverter.waitFileResults();
+        const filename = filenameBuffer.toString().replace(/\0.*$/, '');
+        console.log(filename);
+
+        if (filename.length > 0) {
+          files.push(filename);
+        } else {
+          break;
+        }
+      }
+
+      console.log(`Files: ${files}`);
+      writeFiles(files);
+
+      const fileslist = readFiles();
+      const filteredList = fileslist.filter((file: string) => file !== 'config.json' && file !== '20250107.log');
+      console.log("FileList: " + filteredList);
+      await inverter.downloadFiles(filteredList);
+
+      // Unsubscribe when done
+      inverter.unsubscribe();
+      console.log("Done");
+    }
+  }
 
   return (
     <AppScreen>

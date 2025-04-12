@@ -1,4 +1,3 @@
-import {Buffer} from 'buffer';
 import {
   BleManagerInstance,
   createPaddedPayload,
@@ -18,6 +17,7 @@ import {
   parseChargeControllerState,
   parseInverterState,
 } from '../helpers/ParserHelper';
+import {Buffer} from 'buffer';
 
 const AUTHENTICATION_CHAR = '669a0c20-0008-d690-ec11-e214416ccb95';
 
@@ -125,12 +125,37 @@ export async function connectToInverter(
  *
  * @returns {Promise<Inverter>} - Resolves with the connected inverter device after successfully discovering its services and characteristics.
  */
-async function connectAndDiscoverServices(
+export async function connectAndDiscoverServices(
   inverter: Inverter,
 ): Promise<Inverter> {
-  const connectedDevice = await BleManagerInstance.connectToDevice(inverter.id);
-  await connectedDevice.discoverAllServicesAndCharacteristics();
-  return connectedDevice;
+  try {
+    // Check if the device is already connected
+    const isConnected = await BleManagerInstance.isDeviceConnected(inverter.id);
+    if (isConnected) {
+      console.log(`Device ${inverter.id} is already connected.`);
+      return inverter; // Return the device as it is already connected
+    }
+
+    // If not connected, connect to the device
+    console.log(`Connecting to device ${inverter.id}...`);
+    const connectedDevice = await BleManagerInstance.connectToDevice(
+      inverter.id,
+    );
+
+    // Discover all services and characteristics
+    await connectedDevice.discoverAllServicesAndCharacteristics();
+    console.log(
+      `Services and characteristics discovered for device ${inverter.id}.`,
+    );
+
+    return connectedDevice;
+  } catch (error) {
+    console.error(
+      `Error connecting to or discovering services for device ${inverter.id}:`,
+      error,
+    );
+    throw error;
+  }
 }
 
 /**
@@ -179,7 +204,10 @@ export async function getInverterStatus(
   inverter: Device,
 ): Promise<InverterState | null> {
   try {
-    await connectAndDiscoverServices(inverter);
+    const connectedDevice = await BleManagerInstance.connectToDevice(
+      inverter.id,
+    );
+    await connectedDevice.discoverAllServicesAndCharacteristics();
 
     const base64Data = await BleManagerInstance.readCharacteristicForDevice(
       inverter.id,
@@ -200,7 +228,10 @@ export async function getChargeControllerStatus(
   inverter: Device,
 ): Promise<ChargeControllerState | null> {
   try {
-    await connectAndDiscoverServices(inverter);
+    const connectedDevice = await BleManagerInstance.connectToDevice(
+      inverter.id,
+    );
+    await connectedDevice.discoverAllServicesAndCharacteristics();
 
     const base64Data = await BleManagerInstance.readCharacteristicForDevice(
       inverter.id,
@@ -213,7 +244,8 @@ export async function getChargeControllerStatus(
     return chargeControllerState;
   } catch (error) {
     console.error('Error reading charge controller status:', error);
-    return null;
+    throw error;
+    // return null;
   }
 }
 
@@ -277,7 +309,7 @@ export async function fetchAndLogBatteryInfo(
 }
 
 export async function fetchAndLogBatteryData(
-  batteryId: string,
+  batteryId: number,
   inverter: Inverter,
 ): Promise<BatteryData | null> {
   return fetchAndLog(
@@ -315,11 +347,11 @@ async function fetchAndLog<T>(
 
 //Note: This is the on the Node Screen
 export async function retrieveBatteryData(
-  nodeId: string,
+  nodeId: number,
   inverter: Device,
 ): Promise<BatteryData | null> {
   try {
-    const batts = [nodeId];
+    const batts = [nodeId.toString()];
 
     const batStatus: Record<string, BatteryData> = {};
     let batteryData: BatteryData = {
