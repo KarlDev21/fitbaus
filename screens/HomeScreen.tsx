@@ -69,7 +69,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         setIsConnected(true);
         showToast(ToastType.Success, 'Connected to Inverter');
       } else {
-        showToast(ToastType.Error, 'Connection to Inverter Failed');
+        break;
       }
     } catch (error) {
       showToast(ToastType.Error, 'An error occurred while connecting to the inverter.');
