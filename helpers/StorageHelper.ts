@@ -63,4 +63,5 @@ export const STORAGE_KEYS = {
   NODES: 'nodes',
   INVERTERS: 'inverters',
   SELECTED_NODES: 'selectedNodes',
+  SELECTED_INVERTER: 'selectedInverter',
 };

@@ -12,14 +12,10 @@ import { connectToInverter } from '../services/InverterService';
 import { Inverter } from '../types/DeviceType';
 import { Colours } from '../styles/properties/colours';
 import { AppScreen } from '../components/AppScreen';
+import { useNavigation } from '@react-navigation/native';
 
-type InverterScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Nodes'>
-
-interface InverterScreenProps {
-  navigation: InverterScreenNavigationProp,
-}
-
-export default function InverterScreen({ navigation }: InverterScreenProps) {
+export default function InverterScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [isLoading, setIsLoading] = useState(true);
   const [inverters, setInverters] = useState<Inverter[]>([]);
 

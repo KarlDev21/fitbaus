@@ -3,6 +3,15 @@ import {Device, Subscription} from 'react-native-ble-plx';
 import {Mutex} from 'async-mutex';
 import RNFS from 'react-native-fs';
 import {AsyncQueue} from './AsyncQueue';
+import {uploadFileToServerAsync} from '../services/DeviceUnitService';
+import {getItemAsync, SECURE_STORE_KEYS} from '../helpers/SecureStorageHelper';
+import {UserProfileResponse} from '../types/ApiResponse';
+import {
+  getFromStorage,
+  saveToStorage,
+  STORAGE_KEYS,
+} from '../helpers/StorageHelper';
+import {Inverter} from '../types/DeviceType';
 
 // Stower Inverter class that handles BLE communication
 export class StowerInverter {
@@ -281,4 +290,44 @@ export class StowerInverter {
 
     console.log(`Delete ${file} result ${result}`);
   }
+
+  async uploadAndDeleteFile(fileName: string, fileData: string) {
+    try {
+      const user = await getItemAsync<UserProfileResponse>(
+        SECURE_STORE_KEYS.USER_PROFILE,
+      );
+
+      const inverter: Inverter = await getFromStorage(
+        STORAGE_KEYS.SELECTED_INVERTER,
+      );
+
+      const response = await uploadFileToServerAsync({
+        userID: user?.userID ?? '',
+        inverterID: inverter.id,
+        fileName: fileName,
+        fileData: fileData,
+      });
+
+      if (response.success) {
+        this.deleteFile(fileName);
+
+        removeFileFromStorage(fileName);
+      } else {
+        console.error(`Failed to upload file ${fileName}.`);
+      }
+    } catch (err) {
+      console.error('Error: Uploading FIle and deleting it');
+      throw err;
+    }
+  }
+}
+
+export function removeFileFromStorage(fileName: string) {
+  const files: string[] = getFromStorage(STORAGE_KEYS.FILE) || [];
+
+  // Remove the deleted file from the list
+  const updatedFiles = files.filter(file => file !== fileName);
+
+  // Save the updated list back to storage
+  saveToStorage(STORAGE_KEYS.FILE, JSON.stringify(updatedFiles));
 }

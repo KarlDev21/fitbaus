@@ -2,19 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, ActivityIndicator } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../nav/CreateStackNavigation';
 import { authenticateInverter } from '../services/InverterService';
 import { getSelectedInverter, getSelectedNodes, setConnectedInverter, setConnectedInverterDevice } from '../services/storage';
 import { Colours } from '../styles/properties/colours';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../nav/CreateStackNavigation';
 
-type FinalizingScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Finalizing'>
-
-interface FinalizingScreenProps {
-  navigation: FinalizingScreenNavigationProp
-}
-
-export default function FinalizingScreen({ navigation }: FinalizingScreenProps) {
+export default function FinalizingScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -43,7 +39,8 @@ export default function FinalizingScreen({ navigation }: FinalizingScreenProps) 
     if (!isLoading) {
       navigation.reset({
         index: 0,
-        routes: [{ name: 'Home' }],
+        routes: [{ name: 'Home', params: { from: 'Finalizing', success: true } }],
+
       });
     }
   }, [isLoading, navigation]);

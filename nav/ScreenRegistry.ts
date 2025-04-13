@@ -5,6 +5,7 @@ import LandingScreen from '../screens/LandingScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegistrationScreen from '../screens/RegistrationScreen';
 import HomeScreen from '../screens/HomeScreen';
+import DashboardScreen from '../screens/DashboardScreen';
 
 type DrawerNavigationScreen = {
   name: string;
@@ -26,6 +27,11 @@ export const DrawerScreens: NavDrawerScreenRegistry = {
     name: 'CommissionScreen',
     component: StackNavigator,
     options: {title: 'Home', headerShown: true},
+  },
+  DashboardScreen: {
+    name: 'DashboardStack',
+    component: StackNavigator,
+    options: {headerShown: false},
   },
   Landing: {
     name: 'LandingScreen',

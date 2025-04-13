@@ -103,6 +103,7 @@ export async function connectToInverter(
   selectedInverter: Inverter,
 ): Promise<Boolean> {
   try {
+    console.log('SelectedInveter: ', selectedInverter);
     const response = await BleManagerInstance.connectToDevice(
       selectedInverter.id,
     );

@@ -1,6 +1,7 @@
 import {MMKV} from 'react-native-mmkv';
 import {Device} from 'react-native-ble-plx';
 import {Battery, Inverter} from '../types/DeviceType';
+import {STORAGE_KEYS} from '../helpers/StorageHelper';
 
 //WE need to move away from this file
 export const DeviceStorage = new MMKV();
@@ -12,17 +13,17 @@ export const getNodes = (): Device[] => {
 
 //TODO: Where this message is used, I need to change cause you cant call the methods on the device object
 export const getInverters = (): Inverter[] => {
-  const data = DeviceStorage.getString('inverters');
+  const data = DeviceStorage.getString(STORAGE_KEYS.INVERTERS);
   return data ? JSON.parse(data) : [];
 };
 
 export const setSelectedInverter = (inverter: Device) => {
-  DeviceStorage.set('selectedInverter', JSON.stringify(inverter));
+  DeviceStorage.set(STORAGE_KEYS.SELECTED_INVERTER, JSON.stringify(inverter));
 };
 
 //TODO: Where this message is used, I need to change cause you cant call the methods on the device object
 export const getSelectedInverter = (): Device | null => {
-  const data = DeviceStorage.getString('selectedInverter');
+  const data = DeviceStorage.getString(STORAGE_KEYS.SELECTED_INVERTER);
   return data ? (JSON.parse(data) as Inverter) : null;
 };
 

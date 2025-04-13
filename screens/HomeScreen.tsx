@@ -15,14 +15,10 @@ import { StowerInverter } from '../logs/InverterLogService';
 import { Inverter } from '../types/DeviceType';
 import { writeFiles, readFiles } from '../helpers/FileHelper';
 import { BleManagerInstance } from '../helpers/BluetoothHelper';
+import { useNavigation } from '@react-navigation/native';
 
-type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>
-
-interface HomeScreenProps {
-  navigation: HomeScreenNavigationProp
-}
-
-export default function HomeScreen({ navigation }: HomeScreenProps) {
+export default function HomeScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [isScanning, setIsScanning] = useState(false);
   const savedInverter: Inverter | null = getConnectedInverter();
   const [isConnected, setIsConnected] = useState(false);
@@ -37,7 +33,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       const connection = await savedInverter?.isConnected();
       if (connection) {
         setIsConnected(connection);
-        await uploadFiles();
+        // await uploadFiles();
       }
     };
 
@@ -47,7 +43,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   useEffect(() => {
     const init = async () => {
       if (isConnected) {
-        await uploadFiles();
+        // await uploadFiles();
       }
     }
 
@@ -67,7 +63,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       } else {
         saveToStorage(STORAGE_KEYS.NODES, JSON.stringify(nodes));
         saveToStorage(STORAGE_KEYS.INVERTERS, JSON.stringify(inverters));
-        navigation.navigate('Inverters');
+        navigation.navigate('CommissionScreen', { screen: 'Inverters' });
       }
     } catch (error) {
       showToast(ToastType.Error, 'An error occurred while scanning. Please try again.');
@@ -153,6 +149,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         {savedInverter && (
           <SavedInverterCard
             handleInverter={handleInverter}
+            // handleInverter={() => { console.log('Clied Dashboard') }}
             inverter={savedInverter}
             isConnected={isConnected}
             isConnecting={isConnecting}

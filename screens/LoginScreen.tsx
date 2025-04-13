@@ -10,7 +10,6 @@ import { ScrollView } from 'react-native-gesture-handler';
 import { useForm } from '../validation/useForm';
 import { loginAsync } from '../services/UserProfileService';
 import { showToast, ToastType } from '../components/Toast';
-import { IconButton } from 'react-native-paper';
 import { SECURE_STORE_KEYS, setItemAsync } from '../helpers/SecureStorageHelper';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 
@@ -18,14 +17,15 @@ const LoginScreen = () => {
     const navigation = useNavigation<NavigationProp<any>>();
     const [isLoading, setIsLoading] = useState(false);
     const { formState, handleChange, validateForm } = useForm({
-        email: '',
-        loginPassword: '',
+        email: 'Test1@test.com',
+        loginPassword: 'Project1234!',
     });
 
     const handleLogin = async () => {
         setIsLoading(true);
 
         if (!validateForm()) {
+            setIsLoading(false);
             return;
         }
 
@@ -38,6 +38,7 @@ const LoginScreen = () => {
 
         await setItemAsync(SECURE_STORE_KEYS.USER_PROFILE, response.data);
         setIsLoading(false);
+        navigation.navigate('HomeScreen');
     };
 
     function navigateToRegister() {
@@ -64,11 +65,6 @@ const LoginScreen = () => {
                 </View>
 
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: Padding.large, width: '100%' }}>
-                    <IconButton
-                        icon="camera"
-                        size={24}
-                        onPress={() => console.log('Pressed')}
-                    />
                     <Input
                         label={'Email'}
                         value={formState.values.email}

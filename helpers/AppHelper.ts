@@ -1,4 +1,5 @@
 import {PermissionsAndroid, Platform} from 'react-native';
+import NetInfo from '@react-native-community/netinfo';
 
 export async function requestBluetoothPermissions(): Promise<boolean> {
   //Need to come back and double check this is the case
@@ -33,6 +34,20 @@ export async function requestBluetoothPermissions(): Promise<boolean> {
     }
   } else {
     //TODO: Error Toast to user stating that this feature is not available on this platform
+    return false;
+  }
+}
+
+/**
+ * Checks if the device is connected to the internet.
+ *
+ * @returns {Promise<boolean>} - Resolves to `true` if the device is connected, otherwise `false`.
+ */
+export async function isConnectedAsync(): Promise<boolean> {
+  try {
+    const state = await NetInfo.fetch();
+    return state.isConnected ?? false;
+  } catch (error) {
     return false;
   }
 }
