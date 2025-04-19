@@ -18,6 +18,10 @@ import {
   parseInverterState,
 } from '../helpers/ParserHelper';
 import {Buffer} from 'buffer';
+import {createDeedOfRegistrationAsync} from './DeviceUnitService';
+import {getItemAsync} from '../helpers/SecureStorageHelper';
+import {UserProfileResponse} from '../types/ApiResponse';
+import {Device as ApiDevice} from '../types/ApiResponse';
 
 const AUTHENTICATION_CHAR = '669a0c20-0008-d690-ec11-e214416ccb95';
 
@@ -60,10 +64,27 @@ export async function authenticateInverter(
     );
 
     await enrollBatteriesToInverter(selectedInverter, selectedNodes);
+
+    //TODO: Test this functionality
+    // const user = await getItemAsync<UserProfileResponse>('UserProfile');
+    // if (user) {
+    //   const devices = convertBleDevicesToApiDevices([
+    //     selectedInverter,
+    //     ...selectedNodes,
+    //   ]);
+    //   await createDeedOfRegistrationAsync(user.userID, devices);
+    // }
   } catch (error) {
     console.error('Error authenticating:', error);
     throw error;
   }
+}
+
+function convertBleDevicesToApiDevices(bleDevices: Device[]): ApiDevice[] {
+  return bleDevices.map(bleDevice => ({
+    deviceID: bleDevice.id,
+    deviceType: bleDevice.name?.includes('Invert') ? 'Inverter' : 'Battery', // Assuming all devices are of type BLE
+  }));
 }
 
 export async function checkAndConnectToInverter(
