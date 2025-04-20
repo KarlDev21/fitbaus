@@ -1,16 +1,16 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, { useState } from 'react';
-import { AppScreen } from '../components/AppScreen';
+import { AppScreen } from '../../components/AppScreen';
 import { Image, Text, View } from 'react-native';
-import { Logo, ScreenBase } from '../styles';
-import { Padding } from '../styles/properties';
-import { Input, PasswordInput } from '../components/Input';
-import { ButtonLink, ButtonPrimary } from '../components/Button';
+import { Logo, ScreenBase } from '../../styles';
+import { Padding } from '../../styles/properties';
+import { Input, PasswordInput } from '../../components/Input';
+import { ButtonLink, ButtonPrimary } from '../../components/Button';
 import { ScrollView } from 'react-native-gesture-handler';
-import { useForm } from '../validation/useForm';
-import { loginAsync } from '../services/UserProfileService';
-import { showToast, ToastType } from '../components/Toast';
-import { SECURE_STORE_KEYS, setItemAsync } from '../helpers/SecureStorageHelper';
+import { useForm } from '../../validation/useForm';
+import { loginAsync } from '../../services/UserProfileService';
+import { showToast, ToastType } from '../../components/Toast';
+import { SECURE_STORE_KEYS, setItemAsync } from '../../helpers/SecureStorageHelper';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 
 const LoginScreen = () => {
@@ -29,7 +29,21 @@ const LoginScreen = () => {
             return;
         }
 
-        const response = await loginAsync(formState.values.email, formState.values.loginPassword);
+        // const response = await loginAsync(formState.values.email, formState.values.loginPassword);
+
+        
+        //mocking this for now to get in 
+        const response = {
+            success: true,
+            error: "an error occurred",
+            data: {
+                // name: formState.values.name,
+                email: formState.values.email,
+                loginPassword: formState.values.loginPassword,
+                // phone: formState.values.phone,
+            },
+        };
+        
         if (!response.success) {
             showToast(ToastType.Error, response.error!);
             setIsLoading(false);
@@ -49,7 +63,7 @@ const LoginScreen = () => {
         <AppScreen>
             <ScrollView style={{ flex: 1, width: '100%', height: '100%' }}>
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                    <Image source={require('../assets/logo-placeholder.png')} style={Logo.logo_container} />
+                    <Image source={require('../../assets/logo-placeholder.png')} style={Logo.logo_container} />
                     {/* Login Form */}
                     <Text style={{
                         fontSize: 24,

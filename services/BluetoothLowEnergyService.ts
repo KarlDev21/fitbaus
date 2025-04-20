@@ -69,3 +69,15 @@ export const getScanErrorMessage = (
   }
   return '';
 };
+
+export async function checkBluetoothConnection(): Promise<boolean> {
+
+    try {
+      const state = await BleManagerInstance.state();
+      return state === 'PoweredOn';
+    } catch (error) {
+      console.error('Error checking Bluetooth state:', error);
+      return false;
+    }
+
+}

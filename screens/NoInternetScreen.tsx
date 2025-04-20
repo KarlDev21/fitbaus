@@ -1,12 +1,16 @@
 import React from 'react';
 import { View, Text, Button, Image } from 'react-native';
 import { Colours } from '../styles/properties/colours';
+import { useConnectivity } from '../providers/ConnectivityProvider';
 
-interface NoInternetScreenProps {
-    onRetry: () => void;
-}
+const NoInternetScreen = () => {
 
-const NoInternetScreen: React.FC<NoInternetScreenProps> = ({ onRetry }) => {
+    const { setContinueOffline } = useConnectivity();
+
+    const handleContinueOffline = () => {
+        setContinueOffline(true);
+      };
+
     return (
         <View
             style={{
@@ -45,9 +49,9 @@ const NoInternetScreen: React.FC<NoInternetScreenProps> = ({ onRetry }) => {
                     paddingHorizontal: 20,
                 }}
             >
-                Please check your internet connection and try again.
+            You can continue using the app without an internet connection.
             </Text>
-            <Button title="Retry" onPress={onRetry} color={Colours.primary} />
+            <Button title="Continue Offline" onPress={handleContinueOffline} color={Colours.primary} />
         </View>
     );
 };

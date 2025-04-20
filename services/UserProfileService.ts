@@ -82,3 +82,5 @@ export async function registerAsync(
     return {success: false, error: error.message || 'Network error'};
   }
 }
+
+

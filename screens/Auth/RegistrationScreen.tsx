@@ -1,16 +1,16 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, { useState } from 'react';
-import { AppScreen } from '../components/AppScreen';
+import { AppScreen } from '../../components/AppScreen';
 import { Image, Text, View } from 'react-native';
-import { Logo, ScreenBase } from '../styles';
-import { Colours, Padding } from '../styles/properties';
-import { Input, PasswordInput } from '../components/Input';
-import { ButtonLink, ButtonPrimary } from '../components/Button';
+import { Logo, ScreenBase } from '../../styles';
+import { Colours, Padding } from '../../styles/properties';
+import { Input, PasswordInput } from '../../components/Input';
+import { ButtonLink, ButtonPrimary } from '../../components/Button';
 import { ScrollView } from 'react-native-gesture-handler';
-import { useForm } from '../validation/useForm';
-import { registerAsync } from '../services/UserProfileService';
-import { showToast, ToastType } from '../components/Toast';
-import { SECURE_STORE_KEYS, setItemAsync } from '../helpers/SecureStorageHelper';
+import { useForm } from '../../validation/useForm';
+import { registerAsync } from '../../services/UserProfileService';
+import { showToast, ToastType } from '../../components/Toast';
+import { SECURE_STORE_KEYS, setItemAsync } from '../../helpers/SecureStorageHelper';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 
 const RegistrationScreen = () => {
@@ -31,13 +31,31 @@ const RegistrationScreen = () => {
             return;
         }
 
-        const response = await registerAsync(formState.values.name, formState.values.email, formState.values.password, formState.values.phone);
+        // const response = await registerAsync(formState.values.name, formState.values.email, formState.values.password, formState.values.phone);
+        // if (!response.success) {
+        //     showToast(ToastType.Error, response.error!);
+        //     setIsLoading(false);
+        //     return;
+        // }
+
+        //mocking this for now to get in 
+        const response = {
+            success: true,
+            error: "an error occurred",
+            data: {
+                name: formState.values.name,
+                email: formState.values.email,
+                phone: formState.values.phone,
+            },
+        };
+        
         if (!response.success) {
             showToast(ToastType.Error, response.error!);
             setIsLoading(false);
             return;
         }
 
+        console.log("register working")
         await setItemAsync(SECURE_STORE_KEYS.USER_PROFILE, response.data);
         setIsLoading(false);
     };
@@ -50,7 +68,7 @@ const RegistrationScreen = () => {
         <AppScreen>
             <ScrollView style={{ flex: 1, width: '100%', height: '100%' }}>
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                    <Image source={require('../assets/logo-placeholder.png')} style={Logo.logo_container} />
+                    <Image source={require('../../assets/logo-placeholder.png')} style={Logo.logo_container} />
                     <Text style={{
                         fontSize: 24,
                         fontWeight: 'bold',
