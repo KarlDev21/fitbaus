@@ -1,82 +1,89 @@
-import { MMKV } from 'react-native-mmkv';
+import {MMKV} from 'react-native-mmkv';
 import {Device} from 'react-native-ble-plx';
+import {Battery, Inverter} from '../types/DeviceType';
+import {STORAGE_KEYS} from '../helpers/StorageHelper';
 
-export const storage = new MMKV();
-
-export const setDevices = (nodes: Device[], inverters: Device[]) => {
-  storage.set('nodes', JSON.stringify(nodes));
-  storage.set('inverters', JSON.stringify(inverters));
-};
+//WE need to move away from this file
+export const DeviceStorage = new MMKV();
 
 export const getNodes = (): Device[] => {
-  const data = storage.getString('nodes');
+  const data = DeviceStorage.getString('nodes');
   return data ? JSON.parse(data) : [];
 };
 
-export const getInverters = (): Device[] => {
-    const data = storage.getString('inverters');
-    return data ? JSON.parse(data) : [];
-  };
-
-export const setSelectedInverter = (inverter: Device) => {
-  storage.set('selectedInverter', JSON.stringify(inverter));
+//TODO: Where this message is used, I need to change cause you cant call the methods on the device object
+export const getInverters = (): Inverter[] => {
+  const data = DeviceStorage.getString(STORAGE_KEYS.INVERTERS);
+  return data ? JSON.parse(data) : [];
 };
 
+export const setSelectedInverter = (inverter: Device) => {
+  DeviceStorage.set(STORAGE_KEYS.SELECTED_INVERTER, JSON.stringify(inverter));
+};
+
+//TODO: Where this message is used, I need to change cause you cant call the methods on the device object
 export const getSelectedInverter = (): Device | null => {
-  const data = storage.getString('selectedInverter');
-  return data ? JSON.parse(data) : null;
+  const data = DeviceStorage.getString(STORAGE_KEYS.SELECTED_INVERTER);
+  return data ? (JSON.parse(data) as Inverter) : null;
 };
 
 export const setConnectedInverter = (inverter: Device) => {
-  storage.set('connectedInverter', JSON.stringify(inverter));
+  DeviceStorage.set('connectedInverter', JSON.stringify(inverter));
 };
 
 export const getConnectedInverter = (): Device | null => {
-  const data = storage.getString('connectedInverter');
+  const data = DeviceStorage.getString('connectedInverter');
   return data ? JSON.parse(data) : null;
 };
 
 export const clearConnectedInverter = () => {
-  storage.delete('connectedInverter');
+  DeviceStorage.delete('connectedInverter');
 };
 
 export const setSelectedNodes = (node: Device[]) => {
-  storage.set('selectedNodes', JSON.stringify(node));
+  DeviceStorage.set('selectedNodes', JSON.stringify(node));
 };
 
 export const getSelectedNodes = (): Device[] | null => {
-  const data = storage.getString('selectedNodes');
-  return data ? JSON.parse(data) : [];
+  const data = DeviceStorage.getString('selectedNodes');
+  return data ? (JSON.parse(data) as Battery[]) : [];
 };
 
 export const setConnectedNodes = (nodes: Device[], parentInverter: Device) => {
-  storage.set( parentInverter.id + 'connectedNodes', JSON.stringify(nodes));
+  DeviceStorage.set(
+    parentInverter.id + 'connectedNodes',
+    JSON.stringify(nodes),
+  );
 };
 
-export const getConnectedNodes = (parentInverter: Device): Device[] | null => {
-  const data = storage.getString(parentInverter.id + 'connectedNodes');
-  return data ? JSON.parse(data) : null;
+export const getConnectedNodes = (
+  parentInverter: Inverter,
+): Battery[] | null => {
+  const data = DeviceStorage.getString(parentInverter.id + 'connectedNodes');
+  return data ? (JSON.parse(data) as Battery[]) : null;
 };
 
-export const setConnectedInverterDevice = (inverter : Device) => {
-  storage.set('Device ' + inverter.id, JSON.stringify(inverter));
+export const setConnectedInverterDevice = (inverter: Device) => {
+  DeviceStorage.set('Device ' + inverter.id, JSON.stringify(inverter));
 };
 
-export const getConnectedInverterDevice = (inverterId: string): Device | null => {
-  const data = storage.getString('Device ' + inverterId);
+export const getConnectedInverterDevice = (
+  inverterId: string,
+): Device | null => {
+  const data = DeviceStorage.getString('Device ' + inverterId);
   return data ? JSON.parse(data) : null;
 };
 
 export const clearScannedDevices = () => {
-    storage.delete('inverters');
-    storage.delete('nodes');
-    storage.delete('selectedNodes');
-  };
+  DeviceStorage.delete('inverters');
+  DeviceStorage.delete('nodes');
+  DeviceStorage.delete('selectedNodes');
+};
 
 export const clearSelectedInverter = () => {
-    storage.delete('selectedInverter');
-  };
+  DeviceStorage.delete('selectedInverter');
+};
 
 export const clearSelectedNode = () => {
-    storage.delete('selectedNode');
-  };
+  DeviceStorage.delete('selectedNode');
+};

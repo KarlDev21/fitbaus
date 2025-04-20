@@ -1,9 +1,7 @@
-'use client';
-
-import React, {useEffect, useState} from 'react';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, FlatList } from 'react-native';
-import { Card, Text, useTheme, IconButton } from 'react-native-paper';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Card, Text, IconButton } from 'react-native-paper';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { AppStackParamList } from '../nav/AppNavigation';
@@ -11,6 +9,10 @@ import { showToast, ToastType } from '../components/Toast';
 import { getInverters, setSelectedInverter } from '../services/storage';
 import { Device } from 'react-native-ble-plx';
 import { connectToInverter } from '../services/InverterService';
+import { Inverter } from '../types/DeviceType';
+import { Colours } from '../styles/properties/colours';
+import { AppScreen } from '../components/AppScreen';
+import { useNavigation } from '@react-navigation/native';
 
 type InverterScreenNavigationProp = NativeStackNavigationProp<AppStackParamList, 'Devices'>
 
@@ -21,10 +23,9 @@ interface InverterScreenProps {
 export default function InverterScreen({ navigation }: InverterScreenProps) {
   const theme = useTheme();
   const [isLoading, setIsLoading] = useState(true);
-  const [inverters, setInverters] = useState<Device[]>([]);
+  const [inverters, setInverters] = useState<Inverter[]>([]);
 
   useEffect(() => {
-    // Get selected inverter from AsyncStorage
     const loadInverters = async () => {
       try {
         setIsLoading(true);
@@ -44,15 +45,13 @@ export default function InverterScreen({ navigation }: InverterScreenProps) {
   }, []);
 
   const handleSelectInverter = async (inverter: Device) => {
-    // Store selected inverter in AsyncStorage for the flow
     try {
       setSelectedInverter(inverter);
       showToast(ToastType.Success, 'Inverter selected successfully!');
-      console.log('Is connected before:', inverter.isConnected);
-      connectToInverter(inverter);
-      console.log('Is connected after:', inverter.isConnected);
+      await connectToInverter(inverter);
       navigation.navigate('Nodes');
     } catch (error) {
+      showToast(ToastType.Error, 'Failed to select inverter, please try again');
       console.error('Failed to save selected inverter', error);
     }
   };
@@ -60,8 +59,8 @@ export default function InverterScreen({ navigation }: InverterScreenProps) {
   const renderInverterItem = ({ item }: { item: Device }) => (
     <Card style={styles.inverterCard} onPress={() => handleSelectInverter(item)}>
       <Card.Content style={styles.inverterContent}>
-        <View style={[styles.iconContainer, { backgroundColor: theme.colors.primary + '20' }]}>
-          <MaterialCommunityIcons name="lightning-bolt" size={20} color={theme.colors.primary} />
+        <View style={[styles.iconContainer, { backgroundColor: Colours.secondary + '20' }]}>
+          <MaterialCommunityIcons name="lightning-bolt" size={20} color={Colours.secondary} />
         </View>
         <View style={styles.inverterInfo}>
           <Text variant="bodyLarge" style={styles.inverterName}>
@@ -76,28 +75,26 @@ export default function InverterScreen({ navigation }: InverterScreenProps) {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <AppScreen>
+
       <View style={styles.header}>
         <IconButton icon="camera" size={24} onPress={() => navigation.goBack()} />
         <Text variant="titleLarge" style={styles.headerTitle}>
           Available Inverters
         </Text>
       </View>
-        <FlatList
-          data={inverters}
-          renderItem={renderInverterItem}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
-        />
-    </SafeAreaView>
+
+      <FlatList
+        data={inverters}
+        renderItem={renderInverterItem}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContent}
+      />
+    </AppScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

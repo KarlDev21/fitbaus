@@ -1,5 +1,5 @@
-import React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
+import React,{ComponentType} from 'react';
+import { createStackNavigator, StackNavigationOptions } from '@react-navigation/stack';
 import HomeScreen from '../screens/HomeScreen';
 import InverterScreen from '../screens/InverterScreen';
 import NodeScreen from '../screens/NodeScreen';

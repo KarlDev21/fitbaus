@@ -1,53 +1,49 @@
-import { Device, ScanCallbackType } from 'react-native-ble-plx';
-import { showToast, ToastType } from '../components/Toast';
-import { BleManagerInstance } from '../helpers/BluetoothHelper';
-import { clearScannedDevices } from './storage';
-import { decodeManufacturerData, extractManufacturerData, parseNodeMetaV2 } from './NodeService';
+import {ScanCallbackType} from 'react-native-ble-plx';
+import {showToast, ToastType} from '../components/Toast';
+import {BleManagerInstance} from '../helpers/BluetoothHelper';
+import {clearScannedDevices} from './storage';
+import {Battery, Inverter} from '../types/DeviceType';
 
-
-//used on the HomeScreen and returns all available inverters and nodes.
-export async function scanDevices(): Promise<{ inverters: Device[]; nodes: Device[] }> {
+/**
+ * Scans for BLE devices and categorizes them into inverters and nodes.
+ * - Filters devices by name to identify inverters and nodes.
+ * - Automatically stops scanning after 4 seconds and returns the found devices.
+ *
+ * @returns Arrays of inverter and node devices.
+ */
+export async function scanDevices(): Promise<{
+  inverters: Inverter[];
+  nodes: Battery[];
+}> {
   return new Promise((resolve, reject) => {
-
-    // Clear existing devices first
     clearScannedDevices();
 
-    const inverters = new Map<string, Device>();
-    const nodes = new Map<string, Device>();
+    const inverters = new Map<string, Inverter>();
+    const nodes = new Map<string, Battery>();
 
-    // Start scanning
-    BleManagerInstance.startDeviceScan(null,
+    BleManagerInstance.startDeviceScan(
+      null,
       {allowDuplicates: false, callbackType: ScanCallbackType.AllMatches},
       (error, device) => {
-      if (error) {
-        showToast(ToastType.Error, 'Error scanning for devices');
-        reject(error);
-        return;
-      }
+        if (error) {
+          showToast(ToastType.Error, 'Error scanning for devices');
+          reject(error);
+          return;
+        }
 
-      if (device?.name && device.name.includes('Invert')) {
-        inverters.set(device.name, device);
-        // console.log('Scanned Inverter:', device);
-      } else if (device?.name && device.name.includes('Node')) {
-        nodes.set(device.name + device.id, device);
-        // console.log('Scanned Node:', device);
-      }
+        console.log('Scanned device:', device?.name, device?.id);
 
-    });
+        if (device?.name && device.name.includes('Invert')) {
+          device.requestMTU(23);
+          inverters.set(device.name, device);
+        }
 
-    //NOTE: Parse in the node manufacturer data (Inverter has nothing to parse)
-    const rawBytes = decodeManufacturerData(
-      'OQABBRf//BbhF3AAACBoAAAAAIAACWEDBAE=',
+        if (device?.name && device.name.includes('Node')) {
+          nodes.set(device.name + device.id, device);
+        }
+      },
     );
-    console.log('Decoded Bytes:', rawBytes.length);
-    const manufacturerData = extractManufacturerData(rawBytes);
-    console.log('Manufacturer Data:', manufacturerData);
-    if (manufacturerData) {
-      const nodeMetaData = parseNodeMetaV2(manufacturerData);
-      console.log('Parsed Node Metadata:', nodeMetaData);
-    }
 
-    // // Stop scanning after 3 seconds and resolve the devices
     setTimeout(() => {
       BleManagerInstance.stopDeviceScan();
       resolve({
@@ -57,3 +53,19 @@ export async function scanDevices(): Promise<{ inverters: Device[]; nodes: Devic
     }, 4000);
   });
 }
+
+export const getScanErrorMessage = (
+  nodesCount: number,
+  invertersCount: number,
+): string => {
+  if (nodesCount === 0 && invertersCount === 0) {
+    return 'No Batteries or Inverters found. Please try scanning again.';
+  }
+  if (nodesCount === 0) {
+    return 'No Batteries found. Please try scanning again.';
+  }
+  if (invertersCount === 0) {
+    return 'No Inverters found. Please try scanning again.';
+  }
+  return '';
+};

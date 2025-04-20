@@ -1,28 +1,29 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from './components/Toast';
 import { initBootstrapper } from './bootstrap/bootstrapper';
-import { requestBluetoothPermissions } from './helpers/AppHelper';
-import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
-import RootNavigator from './nav/RootNavigator';
+import { isConnectedAsync, requestBluetoothPermissions } from './helpers/AppHelper';
+import { createNavigationContainerRef, NavigationContainer } from '@react-navigation/native';
+import CreateDrawerNavigation from './nav/CreateDrawerNavigation';
+import { Provider as PaperProvider } from 'react-native-paper';
+import { getItemAsync } from './helpers/SecureStorageHelper';
+import NoInternetScreen from './screens/NoInternetScreen';
 
-const theme = {
-  ...MD3LightTheme,
-  colors: {
-    ...MD3LightTheme.colors,
-    primary: '#FFC107', // Blue
-    secondary: '#2196F3', // Yellow
-    secondaryContainer: '#FFF8E1',
-    background: '#FFFFFF',
-    surface: '#FFFFFF',
-  },
-};
+const navigationRef = createNavigationContainerRef<any>();
 
 function App(): React.JSX.Element {
+  const [hasInternet, setHasInternet] = useState<boolean>(true);
+
   const bootstrap = useCallback(async () => {
     async function init() {
       const isBluetoothEnabled = await requestBluetoothPermissions();
       if (isBluetoothEnabled) {
+        const isConnected = await isConnectedAsync();
+        if (!isConnected) {
+          setHasInternet(false);
+          return;
+        }
+        setHasInternet(true);
         await initBootstrapper();
       }
     }
@@ -32,7 +33,34 @@ function App(): React.JSX.Element {
 
   useEffect(() => {
     bootstrap();
+
   }, [bootstrap]);
+
+  useEffect(() => {
+    async function init() {
+      const user = await getItemAsync('UserProfile');
+      if (user) {
+        console.log('User found');
+        //TODO: Navigate to the Home screen
+        if (navigationRef.isReady()) {
+          console.log('User found #1');
+          navigationRef.navigate('HomeScreen');
+        }
+      }
+    }
+
+    init();
+  }, []);
+
+  const handleRetry = async () => {
+    const isConnected = await isConnectedAsync();
+    setHasInternet(isConnected);
+    await bootstrap();
+  };
+
+  if (!hasInternet) {
+    return <NoInternetScreen onRetry={handleRetry} />;
+  }
 
   return (
     <PaperProvider theme={theme}>
