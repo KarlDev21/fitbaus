@@ -3,9 +3,8 @@ import Toast from 'react-native-toast-message';
 import { toastConfig } from './components/Toast';
 import { initBootstrapper } from './bootstrap/bootstrapper';
 import { requestBluetoothPermissions } from './helpers/AppHelper';
-import { NavigationContainer } from '@react-navigation/native';
-import CreateDrawerNavigation from './nav/CreateDrawerNavigation';
 import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
+import RootNavigator from './nav/RootNavigator';
 
 const theme = {
   ...MD3LightTheme,
@@ -37,10 +36,11 @@ function App(): React.JSX.Element {
 
   return (
     <PaperProvider theme={theme}>
-      <NavigationContainer>
-        <CreateDrawerNavigation />
+      {/* <NavigationContainer> */}
+      <RootNavigator />
+        {/* <CreateDrawerNavigation /> */}
         <Toast config={toastConfig} topOffset={80} />
-      </NavigationContainer>
+      {/* </NavigationContainer> */}
     </PaperProvider>
   );
 }

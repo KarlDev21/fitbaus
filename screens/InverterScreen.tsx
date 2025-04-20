@@ -6,13 +6,13 @@ import { Card, Text, useTheme, IconButton } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import type { RootStackParamList } from '../nav/CreateStackNavigation';
+import type { AppStackParamList } from '../nav/AppNavigation';
 import { showToast, ToastType } from '../components/Toast';
 import { getInverters, setSelectedInverter } from '../services/storage';
 import { Device } from 'react-native-ble-plx';
 import { connectToInverter } from '../services/InverterService';
 
-type InverterScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Devices'>
+type InverterScreenNavigationProp = NativeStackNavigationProp<AppStackParamList, 'Devices'>
 
 interface InverterScreenProps {
   navigation: InverterScreenNavigationProp,

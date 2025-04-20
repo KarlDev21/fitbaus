@@ -1,5 +1,5 @@
-import React,{ComponentType} from 'react';
-import { createStackNavigator, StackNavigationOptions } from '@react-navigation/stack';
+import React from 'react';
+import { createStackNavigator } from '@react-navigation/stack';
 import HomeScreen from '../screens/HomeScreen';
 import InverterScreen from '../screens/InverterScreen';
 import NodeScreen from '../screens/NodeScreen';
@@ -7,8 +7,9 @@ import FinalizingScreen from '../screens/FinalizingScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import NodeInfoScreen from '../screens/NodeInfoScreen';
 import { Device } from 'react-native-ble-plx';
+import { NavStackScreenRegistry } from '../types/navigationTypes';
 
-export type RootStackParamList = {
+export type AppStackParamList = {
   Home: undefined
   Inverters: undefined
   Nodes: undefined
@@ -17,17 +18,7 @@ export type RootStackParamList = {
   NodeInfo: { nodeId: number }
 }
 
-type StackNavigationScreen = {
-    name: string;
-    component: ComponentType<any>;
-    options: StackNavigationOptions;
-  };
-
-type NavStackScreenRegistry = {
-    [key: string]: StackNavigationScreen;
-  }
-
-export const StackScreens: NavStackScreenRegistry = {
+export const AppStackScreens: NavStackScreenRegistry = {
     Home: {
       name: 'Home',
       component: HomeScreen,
@@ -64,10 +55,10 @@ export const StackScreens: NavStackScreenRegistry = {
 
 const Stack = createStackNavigator();
 
-const StackNavigator = () => {
+const AppNavigator = () => {
   return (
     <Stack.Navigator>
-        {Object.entries(StackScreens).map(([key, screen]) => (
+        {Object.entries(AppStackScreens).map(([key, screen]) => (
                 <Stack.Screen
                   key={key}
                   name={screen.name}
@@ -79,4 +70,4 @@ const StackNavigator = () => {
   );
 };
 
-export default StackNavigator;
+export default AppNavigator;

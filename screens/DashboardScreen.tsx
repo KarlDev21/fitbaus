@@ -7,14 +7,14 @@ import { SafeAreaView } from "react-native-safe-area-context"
 import type { DrawerNavigationProp } from "@react-navigation/drawer"
 import type { RouteProp } from "@react-navigation/native"
 import { MaterialCommunityIcons } from "@expo/vector-icons"
-import type { RootStackParamList } from "../nav/CreateStackNavigation"
+import type { AppStackParamList } from "../nav/AppNavigation"
 import { getConnectedInverterDevice, getConnectedNodes } from "../services/storage"
 import { fetchAndLogBatteryInfo, fetchAndLogChargeControllerStatus, fetchAndLogInverterStatus } from "../services/InverterService"
 import { showToast, ToastType } from "../components/Toast";
 import { BatteryInfo, ChargeControllerState, InverterState } from "../types/bleTypes"
 
-type DashboardScreenNavigationProp = DrawerNavigationProp<RootStackParamList, "Dashboard">
-type DashboardScreenRouteProp = RouteProp<RootStackParamList, "Dashboard">
+type DashboardScreenNavigationProp = DrawerNavigationProp<AppStackParamList, "Dashboard">
+type DashboardScreenRouteProp = RouteProp<AppStackParamList, "Dashboard">
 
 interface DashboardScreenProps {
   navigation: DashboardScreenNavigationProp

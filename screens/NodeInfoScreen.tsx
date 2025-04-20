@@ -6,13 +6,13 @@ import { Card, Text, Appbar, useTheme, Divider } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import type { RouteProp } from "@react-navigation/native"
 import { MaterialCommunityIcons } from "@expo/vector-icons"
-import type { RootStackParamList } from '../nav/CreateStackNavigation';
+import type { AppStackParamList } from '../nav/AppNavigation';
 import { fetchAndLogBatteryData } from "../services/InverterService"
 import { getConnectedInverter, getConnectedNodes } from "../services/storage"
 import { DrawerNavigationProp } from "@react-navigation/drawer"
 
-type NodeInfoScreenNavigationProp = DrawerNavigationProp<RootStackParamList, "NodeInfo">
-type NodeInfoScreenRouteProp = RouteProp<RootStackParamList, "NodeInfo">
+type NodeInfoScreenNavigationProp = DrawerNavigationProp<AppStackParamList, "NodeInfo">
+type NodeInfoScreenRouteProp = RouteProp<AppStackParamList, "NodeInfo">
 
 interface NodeInfoScreenProps {
   navigation: NodeInfoScreenNavigationProp

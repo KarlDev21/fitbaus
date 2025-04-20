@@ -6,13 +6,13 @@ import { Button, Card, Text, ActivityIndicator, useTheme } from 'react-native-pa
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import type { RootStackParamList } from '../nav/CreateStackNavigation';
+import type { AppStackParamList } from '../nav/AppNavigation';
 import { showToast, ToastType } from '../components/Toast';
 import { scanDevices } from '../services/BluetoothLowEnergyService';
 import { clearConnectedInverter, getConnectedInverter, setDevices } from '../services/storage';
 import { connectToInverter } from '../services/InverterService';
 
-type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>
+type HomeScreenNavigationProp = NativeStackNavigationProp<AppStackParamList, 'Home'>
 
 interface HomeScreenProps {
   navigation: HomeScreenNavigationProp

@@ -6,13 +6,13 @@ import { Card, Text, ActivityIndicator, IconButton, Checkbox, Button, useTheme }
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import type { RootStackParamList } from '../nav/CreateStackNavigation';
+import type { AppStackParamList } from '../nav/AppNavigation';
 import { showToast, ToastType } from '../components/Toast';
 import { Device } from 'react-native-ble-plx';
 import { getNodes, getSelectedInverter, setConnectedInverter, setConnectedNodes, setSelectedNodes } from '../services/storage';
 import { authenticateNode } from '../services/NodeService';
 
-type NodeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Nodes'>
+type NodeScreenNavigationProp = NativeStackNavigationProp<AppStackParamList, 'Nodes'>
 
 interface NodeScreenProps {
   navigation: NodeScreenNavigationProp,

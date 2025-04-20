@@ -5,11 +5,11 @@ import { View, StyleSheet } from "react-native"
 import { Text, ActivityIndicator, useTheme } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
-import type { RootStackParamList } from "../nav/CreateStackNavigation"
+import type { AppStackParamList } from "../nav/AppNavigation"
 import { authenticateInverter } from "../services/InverterService"
 import { getSelectedInverter, getSelectedNodes, setConnectedInverter, setConnectedInverterDevice } from "../services/storage"
 
-type FinalizingScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "Finalizing">
+type FinalizingScreenNavigationProp = NativeStackNavigationProp<AppStackParamList, "Finalizing">
 
 interface FinalizingScreenProps {
   navigation: FinalizingScreenNavigationProp
