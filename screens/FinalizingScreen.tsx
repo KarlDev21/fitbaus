@@ -7,20 +7,33 @@ import { getSelectedInverter, getSelectedNodes, setConnectedInverter, setConnect
 import { Colours } from '../styles/properties/colours';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../nav/CreateStackNavigation';
+import { AppStackParamList } from '../nav/AppNavigation';
 
 export default function FinalizingScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const finalizeConnection = async () => {
+      //hack workaround for now
+      const selectedInverter = getSelectedInverter();
+      const selectedNodes = getSelectedNodes();
+
+      if (selectedInverter && selectedNodes) {
+
+        setConnectedInverterDevice(selectedInverter);
+        setConnectedInverter(selectedInverter);
+      }
+
+      //issue here with the commison process
       try {
+        //might need to pass in inverter device from connected devices
         const selectedInverter = getSelectedInverter();
         const selectedNodes = getSelectedNodes();
 
         if (selectedInverter && selectedNodes) {
           await authenticateInverter(selectedInverter, selectedNodes);
+
           setConnectedInverterDevice(selectedInverter);
           setConnectedInverter(selectedInverter);
         }

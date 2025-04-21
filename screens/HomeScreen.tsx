@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text } from 'react-native-paper';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../nav/CreateStackNavigation';
+import type { AppStackParamList } from '../nav/AppNavigation';
 import { showToast, ToastType } from '../components/Toast';
 import { getScanErrorMessage, scanDevices } from '../services/BluetoothLowEnergyService';
 import { getConnectedInverter } from '../services/storage';
@@ -17,8 +17,13 @@ import { writeFiles, readFiles } from '../helpers/FileHelper';
 import { BleManagerInstance } from '../helpers/BluetoothHelper';
 import { useNavigation } from '@react-navigation/native';
 
-export default function HomeScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+type HomeScreenNavigationProp = NativeStackNavigationProp<AppStackParamList, 'Home'>
+
+interface HomeScreenProps {
+  navigation: HomeScreenNavigationProp
+}
+
+export default function HomeScreen({ navigation }: HomeScreenProps) {
   const [isScanning, setIsScanning] = useState(false);
   const savedInverter: Inverter | null = getConnectedInverter();
   const [isConnected, setIsConnected] = useState(false);
@@ -63,7 +68,7 @@ export default function HomeScreen() {
       } else {
         saveToStorage(STORAGE_KEYS.NODES, JSON.stringify(nodes));
         saveToStorage(STORAGE_KEYS.INVERTERS, JSON.stringify(inverters));
-        navigation.navigate('CommissionScreen', { screen: 'Inverters' });
+        navigation.navigate('Inverters');
       }
     } catch (error) {
       showToast(ToastType.Error, 'An error occurred while scanning. Please try again.');

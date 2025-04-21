@@ -5,6 +5,7 @@ import AuthNavigation from './AuthNavigation';
 import { getItemAsync } from '../helpers/SecureStorageHelper';
 import { useAuth } from '../providers/AuthProvider';
 import { ActivityIndicator, View } from 'react-native';
+import { useBluetooth } from '../providers/BluetoothProvider';
 
 
 export default function RootNavigation() {

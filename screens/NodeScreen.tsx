@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, FlatList } from 'react-native';
 import { Text, ActivityIndicator, Button } from 'react-native-paper';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../nav/CreateStackNavigation';
+import type { AppStackParamList } from '../nav/AppNavigation';
 import { showToast, ToastType } from '../components/Toast';
 import { Device } from 'react-native-ble-plx';
 import { setConnectedInverter, setConnectedNodes } from '../services/storage';
@@ -15,7 +15,7 @@ import { AppScreen } from '../components/AppScreen';
 import BatteryCard from '../components/Cards/BatteryCard';
 import InverterCard from '../components/Cards/InverterCard';
 
-type NodeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Nodes'>
+type NodeScreenNavigationProp = NativeStackNavigationProp<AppStackParamList, 'Nodes'>
 
 interface NodeScreenProps {
   navigation: NodeScreenNavigationProp,

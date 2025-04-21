@@ -3,6 +3,9 @@ import {
   createPaddedPayload,
   convertMacToBytes,
   generateDigest,
+  generateInverterDigest,
+  packInt64LE,
+  concatBytes,
 } from '../helpers/BluetoothHelper';
 import {Characteristic, Device} from 'react-native-ble-plx';
 import {
@@ -22,6 +25,8 @@ import {createDeedOfRegistrationAsync} from './DeviceUnitService';
 import {getItemAsync} from '../helpers/SecureStorageHelper';
 import {UserProfileResponse} from '../types/ApiResponse';
 import {Device as ApiDevice} from '../types/ApiResponse';
+import { Alert } from 'react-native/Libraries/Alert/Alert';
+import { showToast, ToastType } from '../components/Toast';
 
 const AUTHENTICATION_CHAR = '669a0c20-0008-d690-ec11-e214416ccb95';
 
@@ -52,32 +57,74 @@ export async function authenticateInverter(
   selectedInverter: Inverter,
   selectedNodes: Battery[],
 ): Promise<void> {
-  try {
-    await connectAndDiscoverServices(selectedInverter);
-    const digest = generateDigest(selectedInverter.id);
+    console.log('Selected Inverter:', selectedInverter);
 
-    await BleManagerInstance.writeCharacteristicWithResponseForDevice(
-      selectedInverter.id,
-      selectedInverter?.serviceUUIDs?.[0] ?? '',
-      AUTHENTICATION_CHAR,
-      Buffer.from(digest).toString('base64'),
-    );
-
-    await enrollBatteriesToInverter(selectedInverter, selectedNodes);
-
-    //TODO: Test this functionality
-    // const user = await getItemAsync<UserProfileResponse>('UserProfile');
-    // if (user) {
-    //   const devices = convertBleDevicesToApiDevices([
-    //     selectedInverter,
-    //     ...selectedNodes,
-    //   ]);
-    //   await createDeedOfRegistrationAsync(user.userID, devices);
+    // await connectToInverter(selectedInverter);
+  
+    // if (!selectedInverter.isConnected) {
+    //   console.error('Inverter was disconnected');
+    //   return;
     // }
-  } catch (error) {
-    console.error('Error authenticating:', error);
-    throw error;
+  
+    try {
+      const connectedDevice = await connectAndDiscoverServices(selectedInverter);
+      const authPayload = generateAuthPayload(selectedInverter.id);
+  
+      await sendAuthPayload(selectedInverter, authPayload);
+  
+      // await fetchAndLogInverterStatus(selectedInverter);
+      // await fetchAndLogChargeControllerStatus(selectedInverter);
+      console.log(selectedNodes.length + ' nodes found');
+  
+      let response = await enrollBatteriesToInverter(selectedInverter, selectedNodes, 0);
+  
+      console.log(response);
+  
+    } catch (error: any) {
+      console.error('Error authenticating:', error);
+      showToast(ToastType.Error, 'Auth Failed')
+      // Alert.alert('Error', 'Auth failed.', error);
+    }
+}
+
+  function generateAuthPayload(inverterId: string): Uint8Array {
+    const extime = Date.now();
+    const digest = generateInverterDigest(inverterId, extime);
+    console.log(`Authenticate len digest ${digest.length}`);
+  
+    console.log(
+      'Digest in hex:',
+      Array.from(digest)
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join(' ')
+    );
+  
+    const etime = packInt64LE(extime);
+    const badigest = concatBytes(digest, etime);
+  
+    console.log(
+      'Badigest in hex:',
+      Array.from(badigest)
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join(' ')
+    );
+  
+    return badigest;
   }
+  
+async function sendAuthPayload(inverter: Device, payload: Uint8Array): Promise<void> {
+  console.log('maybe missing uuid')
+  console.log(inverter?.serviceUUIDs?.[0])
+
+  // 669a0c20-0008-d690-ec11-e2143045cb95
+  // 669a0c20-0008-d690-ec11-e2143045cb95
+  const response = await BleManagerInstance.writeCharacteristicWithResponseForDevice(
+    inverter.id,
+    '669a0c20-0008-d690-ec11-e2143045cb95',
+    AUTHENTICATION_CHAR,
+    Buffer.from(payload).toString('base64'),
+  );
+  console.log('Authentication successful', response);
 }
 
 function convertBleDevicesToApiDevices(bleDevices: Device[]): ApiDevice[] {
@@ -226,9 +273,16 @@ export async function getInverterStatus(
   inverter: Device,
 ): Promise<InverterState | null> {
   try {
-    const connectedDevice = await BleManagerInstance.connectToDevice(
-      inverter.id,
-    );
+    // const connectedDevice = await BleManagerInstance.connectToDevice(
+    //   inverter.id,
+    // );
+    const connectedDevices = await BleManagerInstance.connectedDevices([inverter.serviceUUIDs?.[0] ?? '']);
+    const connectedDevice = connectedDevices.find(device => device.id === inverter.id);
+
+    if (!connectedDevice) {
+      throw new Error(`Device with ID ${inverter.id} is not connected.`);
+    }
+
     await connectedDevice.discoverAllServicesAndCharacteristics();
 
     const base64Data = await BleManagerInstance.readCharacteristicForDevice(
@@ -250,9 +304,13 @@ export async function getChargeControllerStatus(
   inverter: Device,
 ): Promise<ChargeControllerState | null> {
   try {
-    const connectedDevice = await BleManagerInstance.connectToDevice(
-      inverter.id,
-    );
+    const connectedDevices = await BleManagerInstance.connectedDevices([inverter.serviceUUIDs?.[0] ?? '']);
+    const connectedDevice = connectedDevices.find(device => device.id === inverter.id);
+
+    if (!connectedDevice) {
+      throw new Error(`Device with ID ${inverter.id} is not connected.`);
+    }
+
     await connectedDevice.discoverAllServicesAndCharacteristics();
 
     const base64Data = await BleManagerInstance.readCharacteristicForDevice(
@@ -331,7 +389,7 @@ export async function fetchAndLogBatteryInfo(
 }
 
 export async function fetchAndLogBatteryData(
-  batteryId: number,
+  batteryId: string,
   inverter: Inverter,
 ): Promise<BatteryData | null> {
   return fetchAndLog(
@@ -369,11 +427,11 @@ async function fetchAndLog<T>(
 
 //Note: This is the on the Node Screen
 export async function retrieveBatteryData(
-  nodeId: number,
+  nodeId: string,
   inverter: Device,
 ): Promise<BatteryData | null> {
   try {
-    const batts = [nodeId.toString()];
+    const batts = [nodeId];
 
     const batStatus: Record<string, BatteryData> = {};
     let batteryData: BatteryData = {

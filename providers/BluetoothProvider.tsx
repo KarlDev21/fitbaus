@@ -5,6 +5,7 @@ import { checkBluetoothConnection } from '../services/BluetoothLowEnergyService'
 
 
 type BluetoothContextType = {
+  isBTLoading: boolean;
   isBluetoothEnabled: boolean;
   permissionGranted: boolean;
 };
@@ -14,8 +15,11 @@ const BluetoothContext = createContext<BluetoothContextType | undefined>(undefin
 export const BluetoothProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isBluetoothEnabled, setIsBluetoothEnabled] = useState(false);
   const [permissionGranted, setPermissionGranted] = useState(true);
+  const [isBTLoading, setIsBTLoading] = useState<boolean>(true);
+  
 
   useEffect(() => {
+    setIsBTLoading(true)
     const checkBluetooth = async () => {
       if (Platform.OS === 'android') {
         
@@ -39,10 +43,11 @@ export const BluetoothProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
 
     checkBluetooth();
+    setIsBTLoading(false)
   }, []);
 
   return (
-    <BluetoothContext.Provider value={{ isBluetoothEnabled, permissionGranted }}>
+    <BluetoothContext.Provider value={{ isBTLoading, isBluetoothEnabled, permissionGranted }}>
       {children}
     </BluetoothContext.Provider>
   );

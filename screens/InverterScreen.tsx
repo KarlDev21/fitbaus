@@ -4,7 +4,7 @@ import { View, StyleSheet, FlatList } from 'react-native';
 import { Card, Text, IconButton } from 'react-native-paper';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import type { RootStackParamList } from '../nav/CreateStackNavigation';
+import type { AppStackParamList } from '../nav/AppNavigation';
 import { showToast, ToastType } from '../components/Toast';
 import { getInverters, setSelectedInverter } from '../services/storage';
 import { Device } from 'react-native-ble-plx';
@@ -15,7 +15,7 @@ import { AppScreen } from '../components/AppScreen';
 import { useNavigation } from '@react-navigation/native';
 
 export default function InverterScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const [isLoading, setIsLoading] = useState(true);
   const [inverters, setInverters] = useState<Inverter[]>([]);
 

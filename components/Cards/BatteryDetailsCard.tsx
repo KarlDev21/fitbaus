@@ -9,14 +9,14 @@ export const BatteryDetailsCard = ({ batteryData }: { batteryData: BatteryData }
             <Text variant="titleMedium" style={styles.sectionTitle}>
                 Battery Details
             </Text>
-
-            <DataRow label="Current" value={batteryData.Current} unit=" A" />
+            {/* there is a better way to do this */}
+            <DataRow label="Soh" value={(((batteryData.ProductLife/batteryData.CycleLife)/batteryData.ProductLife)*100).toPrecision(2)} unit=" %" />
             <Divider style={styles.divider} />
 
-            <DataRow label="Remaining Capacity" value={batteryData.RemainCapacity} unit=" Ah" />
+            <DataRow label="SOc" value={batteryData.RSOC} unit=" %" />
             <Divider style={styles.divider} />
 
-            <DataRow label="Total Capacity" value={batteryData.TotalCapacity} unit=" Ah" />
+            {/* <DataRow label="Total Capacity" value={batteryData.TotalCapacity} unit=" Ah" />
             <Divider style={styles.divider} />
 
             <DataRow label="Cycle Life" value={batteryData.CycleLife} unit=" cycles" />
@@ -46,7 +46,7 @@ export const BatteryDetailsCard = ({ batteryData }: { batteryData: BatteryData }
             <DataRow label="Cells in Series" value={batteryData.CellInSeries} />
             <Divider style={styles.divider} />
 
-            <DataRow label="Number of NTC" value={batteryData.N_NTC} />
+            <DataRow label="Number of NTC" value={batteryData.N_NTC} /> */}
         </Card.Content>
     </Card>
 );

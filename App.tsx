@@ -70,14 +70,13 @@ function App(): React.JSX.Element {
   return (
     <PaperProvider>
       <AuthProvider>
-        <ConnectivityProvider>
+        <ConnectivityProvider>  
           <BluetoothProvider>
             <OfflineBanner/>
             <BlockingGate>
               <RootNavigation />
               <Toast config={toastConfig} topOffset={80} />
             </BlockingGate>
-          
           </BluetoothProvider>
         </ConnectivityProvider>
       </AuthProvider>

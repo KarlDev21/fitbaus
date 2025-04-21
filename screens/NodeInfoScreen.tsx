@@ -3,7 +3,7 @@ import { View, StyleSheet, ScrollView } from 'react-native';
 import { Card, Text, Appbar } from 'react-native-paper';
 import type { RouteProp } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import type { RootStackParamList } from '../nav/CreateStackNavigation';
+import type { AppStackParamList } from '../nav/AppNavigation';
 import { checkAndConnectToInverter, connectAndDiscoverServices, fetchAndLogBatteryData } from '../services/InverterService';
 import { getConnectedInverter, getConnectedNodes } from '../services/storage';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
@@ -13,8 +13,8 @@ import { BatteryDetailsCard } from '../components/Cards/BatteryDetailsCard';
 import { BleManagerInstance } from '../helpers/BluetoothHelper';
 import { Inverter } from '../types/DeviceType';
 
-type NodeInfoScreenNavigationProp = DrawerNavigationProp<RootStackParamList, 'NodeInfo'>
-type NodeInfoScreenRouteProp = RouteProp<RootStackParamList, 'NodeInfo'>
+type NodeInfoScreenNavigationProp = DrawerNavigationProp<AppStackParamList, 'NodeInfo'>
+type NodeInfoScreenRouteProp = RouteProp<AppStackParamList, 'NodeInfo'>
 
 interface NodeInfoScreenProps {
   navigation: NodeInfoScreenNavigationProp
@@ -32,7 +32,7 @@ export default function NodeInfoScreen({ navigation, route }: NodeInfoScreenProp
         if (inverter) {
           const node = getConnectedNodes(inverter);
           if (node) {
-            const data = await fetchAndLogBatteryData(route.params.nodeId, inverter);
+            const data = await fetchAndLogBatteryData(route.params.nodeId.toString(), inverter);
             if (data) {
               setBatteryData(data);
             }
