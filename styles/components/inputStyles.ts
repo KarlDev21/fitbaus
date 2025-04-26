@@ -1,16 +1,20 @@
 import {StyleSheet} from 'react-native';
+import { GenericSize, Width } from '../properties/dimensions';
+import { textStyles } from './textStyles';
+import { Colours, FontSize } from '../properties';
 
 export const inputStyles = StyleSheet.create({
   container: {
-    width: '100%',
-    marginVertical: 8,
+    width: Width.full,
+    marginVertical: GenericSize.small,
   },
   input: {
-    backgroundColor: 'white',
+    color: Colours.textPrimary,
+    backgroundColor: Colours.backgroundPrimary,
   },
   errorText: {
-    color: 'red',
-    fontSize: 12,
-    marginTop: 4,
+    color: Colours.textError,
+    fontSize: FontSize.xsmall,
+    marginTop: GenericSize.xsmall,
   },
 });

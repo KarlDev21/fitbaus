@@ -3,6 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { Card, Text } from 'react-native-paper';
 import { Colours } from '../../styles/properties/colours';
 import { MaterialCommunityIcons } from '@expo/vector-icons'
+import { Flex } from '../../styles/properties/dimensions';
 
 export const MetricCard = ({
     title,
@@ -60,7 +61,7 @@ const styles = StyleSheet.create({
         marginRight: 12,
     },
     metricLabel: {
-        flex: 1,
+        flex: Flex.xsmall,
         fontWeight: '500',
     },
     metricValue: {

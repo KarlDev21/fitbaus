@@ -4,6 +4,7 @@ import { useConnectivity } from './ConnectivityProvider';
 import { useBluetooth } from './BluetoothProvider';
 import NoInternetScreen from '../screens/NoInternetScreen';
 import NoBluetoothScreen from '../screens/NoBluetoothScreen';
+import { Flex } from '../styles/properties/dimensions';
 
 type Props = {
   children: React.ReactNode;
@@ -16,7 +17,7 @@ export const BlockingGate: React.FC<Props> = ({ children }) => {
   if(isBTLoading){
      return (
           //replcae this with an actual proper splash screen
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <View style={{ flex: Flex.xsmall, justifyContent: 'center', alignItems: 'center' }}>
             <ActivityIndicator size="large" />
           </View>
         );

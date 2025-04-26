@@ -2,22 +2,23 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Text } from 'react-native-paper';
 import { Colours } from '../styles/properties/colours';
+import { Flex, GenericSize, Margin, Padding } from '../styles/properties/dimensions';
 
 export const FullScreenLoadingIndicator = () => {
     return (
         <View style={{
-            flex: 1,
+            flex: Flex.xsmall,
             justifyContent: 'center',
             alignItems: 'center',
             backgroundColor: '#f9f9f9',
         }}>
-            <ActivityIndicator animating={true} size={16} color={Colours.primary} />
+            <ActivityIndicator animating={true} size={GenericSize.medium} color={Colours.primary} />
         </View>
     )
 }
 export const LoadingIndicator = () => {
     return (
-        <ActivityIndicator animating={true} size={16} color="#fff" />
+        <ActivityIndicator animating={true} size={GenericSize.medium} color={Colours.backgroundPrimary} />
     )
 }
 
@@ -28,7 +29,7 @@ type LoadingIndicatorWithTextProps = {
 export const LoadingIndicatorWithText = ({ text }: LoadingIndicatorWithTextProps) => {
     return (
         <View style={styles.loadingContainer}>
-            <ActivityIndicator size={32} color={Colours.secondary} style={styles.loader} />
+            <ActivityIndicator size={GenericSize.large} color={Colours.secondary} style={styles.loader} />
             <Text variant="bodyMedium" style={styles.loadingText}>
                 {text}
             </Text>
@@ -39,15 +40,15 @@ export const LoadingIndicatorWithText = ({ text }: LoadingIndicatorWithTextProps
 const styles = StyleSheet.create({
 
     loadingContainer: {
-        flex: 1,
+        flex: Flex.xsmall,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 16,
+        padding: Padding.medium,
     },
     loader: {
-        marginBottom: 16,
+        marginBottom: Margin.medium,
     },
     loadingText: {
-        color: '#666',
+        color: Colours.textPrimary,
     },
 });

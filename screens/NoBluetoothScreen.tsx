@@ -4,17 +4,20 @@ import { Colours } from '../styles/properties/colours';
 import { useConnectivity } from '../providers/ConnectivityProvider';
 import { useBluetooth } from '../providers/BluetoothProvider';
 import { requestBluetoothPermissions } from '../helpers/AppHelper';
+import { Flex } from '../styles/properties/dimensions';
+import { textStyles } from '../styles/components/textStyles';
 
 const NoBluetoothScreen = () => {
 
-    const { isBluetoothEnabled, permissionGranted } = useBluetooth();
+    const { isBluetoothEnabled, permissionGranted, isBTLoading } = useBluetooth();
     const [checking, setChecking] = useState(false);
 
     const handleRequestPermissions = async () => {
+
         setChecking(true);
         const granted = await requestBluetoothPermissions();
         setChecking(false);
-    
+
         if (granted) {
         
         // Navigate or trigger re-check
@@ -25,70 +28,47 @@ const NoBluetoothScreen = () => {
     return (
         <View
             style={{
-                flex: 1,
+                flex: Flex.xsmall,
                 justifyContent: 'center',
                 alignItems: 'center',
                 backgroundColor: '#f9f9f9',
             }}
         >
-
-            <Image
-                source={require('../assets/logo-placeholder.png')}
-                style={{
-                    width: 150,
-                    height: 150,
-                    marginBottom: 24,
-                }}
-                resizeMode="contain"
-            />
+            {
+                isBluetoothEnabled === null &&
+                <>
+                <Text
+                style={textStyles.heading}
+            >
+                Checking Bluetooth Connection 
+            </Text>
+                </>
+            }
             {
                 !permissionGranted && 
                 <>
                 <Text
-                style={{
-                    fontSize: 18,
-                    fontWeight: 'bold',
-                    color: '#333',
-                    marginBottom: 16,
-                }}
+                style={textStyles.heading}
             >
                 Bluetooth Permission not granted 
             </Text>
             <Text
-                style={{
-                    fontSize: 14,
-                    color: '#666',
-                    marginBottom: 24,
-                    textAlign: 'center',
-                    paddingHorizontal: 20,
-                }}
+                style={textStyles.subtitle}
             >
             Please grant the required permissions.
             </Text>
-            <Button title="Request Bluetooth Permission" onPress={handleRequestPermissions} color={Colours.primary} />
                 </>
             }
             {
                 permissionGranted && !isBluetoothEnabled &&
                 <>
                 <Text
-                style={{
-                    fontSize: 18,
-                    fontWeight: 'bold',
-                    color: '#333',
-                    marginBottom: 16,
-                }}
+                style={textStyles.heading}
             >
-                No Bluetooth Connection
+              { isBTLoading ? 'Checking Bluetooth Connection' : 'No Bluetooth Connection' }
             </Text>
             <Text
-                style={{
-                    fontSize: 14,
-                    color: '#666',
-                    marginBottom: 24,
-                    textAlign: 'center',
-                    paddingHorizontal: 20,
-                }}
+                style={textStyles.subtitle}
             >
             Please enable Bluetooth to Continue.
             </Text>

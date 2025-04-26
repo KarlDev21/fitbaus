@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { AppScreen } from '../../components/AppScreen';
 import { Image, Text, View } from 'react-native';
 import { Logo, ScreenBase } from '../../styles';
-import { Colours, Padding } from '../../styles/properties';
+import { Colours, Flex, Padding } from '../../styles/properties';
 import { Input, PasswordInput } from '../../components/Input';
 import { ButtonLink, ButtonPrimary } from '../../components/Button';
 import { ScrollView } from 'react-native-gesture-handler';
@@ -12,6 +12,8 @@ import { registerAsync } from '../../services/UserProfileService';
 import { showToast, ToastType } from '../../components/Toast';
 import { SECURE_STORE_KEYS, setItemAsync } from '../../helpers/SecureStorageHelper';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
+import { Height, GenericSize, Width } from '../../styles/properties/dimensions';
+import { textStyles } from '../../styles/components/textStyles';
 
 const RegistrationScreen = () => {
     const navigation = useNavigation<NavigationProp<any>>();
@@ -57,6 +59,8 @@ const RegistrationScreen = () => {
 
         console.log("register working")
         await setItemAsync(SECURE_STORE_KEYS.USER_PROFILE, response.data);
+        showToast(ToastType.Success, 'Registration successful!');
+        navigation.navigate('Home');
         setIsLoading(false);
     };
 
@@ -66,23 +70,14 @@ const RegistrationScreen = () => {
 
     return (
         <AppScreen>
-            <ScrollView style={{ flex: 1, width: '100%', height: '100%' }}>
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <ScrollView style={{ flex: Flex.xsmall, width: Width.full, height: Height.full }}>
+                <View style={{ flex: Flex.xsmall, justifyContent: 'center', alignItems: 'center' }}>
                     <Image source={require('../../assets/logo-placeholder.png')} style={Logo.logo_container} />
-                    <Text style={{
-                        fontSize: 24,
-                        fontWeight: 'bold',
-                        color: Colours.primary,
-                        marginVertical: 8,
-                    }}>{'Register Now'}</Text>
-                    <Text style={{
-                        fontSize: 12,
-                        textAlign: 'center',
-                        marginVertical: 4,
-                    }}>{'Please register to continue using our app'}</Text>
+                    <Text style={textStyles.heading}>{'Register Now'}</Text>
+                    <Text style={textStyles.subtitle}>{'Please register to continue using our app'}</Text>
                 </View>
 
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: Padding.large, width: '100%' }}>
+                <View style={{ flex: Flex.xsmall, justifyContent: 'center', alignItems: 'center', padding: Padding.large, width: Width.full }}>
                     <Input
                         label={'Name'}
                         value={formState.values.name}
@@ -116,10 +111,10 @@ const RegistrationScreen = () => {
                         errorText={formState.errors.password}
                     />
 
-                    <ButtonPrimary label="Register" onPress={handleRegister} loading={isLoading} style={{ width: '100%', marginTop: 16 }} />
+                    <ButtonPrimary label="Register" onPress={handleRegister} loading={isLoading} style={{ width: Width.full, marginTop: GenericSize.medium }} />
 
                     <View style={ScreenBase.landing_screen_no_account_view}>
-                        <Text style={{ fontSize: 12, paddingRight: 8 }}>{'Already have an account?'}</Text>
+                        <Text style={[textStyles.subtitle, {paddingRight: Padding.small}]}>{'Already have an account?'}</Text>
                         <ButtonLink label={'Login'} onPress={navigateToLogin} />
                     </View>
                 </View>

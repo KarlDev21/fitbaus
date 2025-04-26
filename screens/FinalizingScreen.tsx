@@ -8,6 +8,8 @@ import { Colours } from '../styles/properties/colours';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AppStackParamList } from '../nav/AppNavigation';
+import { Flex, GenericSize, Margin, Padding } from '../styles/properties/dimensions';
+import { textStyles } from '../styles/components/textStyles';
 
 export default function FinalizingScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
@@ -15,30 +17,35 @@ export default function FinalizingScreen() {
 
   useEffect(() => {
     const finalizeConnection = async () => {
+
       //hack workaround for now
       const selectedInverter = getSelectedInverter();
       const selectedNodes = getSelectedNodes();
 
       if (selectedInverter && selectedNodes) {
-
         setConnectedInverterDevice(selectedInverter);
         setConnectedInverter(selectedInverter);
       }
 
       //issue here with the commison process
       try {
+        const timer = setTimeout( async () => {
+
         //might need to pass in inverter device from connected devices
         const selectedInverter = getSelectedInverter();
         const selectedNodes = getSelectedNodes();
 
         if (selectedInverter && selectedNodes) {
           await authenticateInverter(selectedInverter, selectedNodes);
-
+          
           setConnectedInverterDevice(selectedInverter);
           setConnectedInverter(selectedInverter);
         }
-
+      }, 5000)
         setIsLoading(false);
+      
+        return () => clearTimeout(timer)
+
       } catch (error) {
         console.error('Error during finalizing connection:', error);
         setIsLoading(false);
@@ -62,11 +69,11 @@ export default function FinalizingScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.content}>
-          <ActivityIndicator size={48} color={Colours.secondary} style={styles.loader} />
-          <Text variant="headlineSmall" style={styles.title}>
+          <ActivityIndicator size={GenericSize.large} color={Colours.primary} style={styles.loader} />
+          <Text variant="headlineSmall" style={textStyles.heading}>
             Finalizing Connection
           </Text>
-          <Text variant="bodyMedium" style={styles.description}>
+          <Text variant="bodyMedium" style={textStyles.subtitle}>
             Please wait while we complete the authentication process and establish the connection...
           </Text>
         </View>
@@ -79,27 +86,17 @@ export default function FinalizingScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#fff',
+    flex: Flex.xsmall,
+    backgroundColor: Colours.backgroundPrimary,
   },
   content: {
-    flex: 1,
+    flex: Flex.xsmall,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
+    padding: Padding.large,
   },
   loader: {
-    marginBottom: 24,
-  },
-  title: {
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  description: {
-    textAlign: 'center',
-    color: '#666',
-    maxWidth: 300,
+    marginBottom: Margin.large,
   },
 });
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text } from 'react-native';
 import { TextInput } from 'react-native-paper';
 import { inputStyles } from '../styles/components/inputStyles';
+import { Colours } from '../styles/properties';
 
 interface TextInputProps {
     label: string;
@@ -28,6 +29,7 @@ export const Input: React.FC<TextInputProps> = ({
                 onChangeText={onChangeText}
                 keyboardType={keyboardType}
                 mode="outlined"
+                activeOutlineColor={Colours.primary}
                 error={error}
                 style={inputStyles.input}
             />
@@ -54,6 +56,7 @@ export const PasswordInput: React.FC<TextInputProps> = ({
                 onChangeText={onChangeText}
                 keyboardType={keyboardType}
                 mode="outlined"
+                activeOutlineColor={Colours.primary}
                 error={error}
                 style={inputStyles.input}
                 secureTextEntry={showPassword}

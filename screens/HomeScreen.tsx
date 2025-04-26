@@ -6,7 +6,6 @@ import type { AppStackParamList } from '../nav/AppNavigation';
 import { showToast, ToastType } from '../components/Toast';
 import { getScanErrorMessage, scanDevices } from '../services/BluetoothLowEnergyService';
 import { getConnectedInverter } from '../services/storage';
-import { connectToInverter } from '../services/InverterService';
 import { AppScreen } from '../components/AppScreen';
 import { ScanCard } from '../components/Cards/ScanCard';
 import { SavedInverterCard } from '../components/Cards/SavedInverterCard';
@@ -15,7 +14,9 @@ import { StowerInverter } from '../logs/InverterLogService';
 import { Inverter } from '../types/DeviceType';
 import { writeFiles, readFiles } from '../helpers/FileHelper';
 import { BleManagerInstance } from '../helpers/BluetoothHelper';
-import { useNavigation } from '@react-navigation/native';
+import { Flex, Colours } from '../styles/properties';
+import { GenericSize } from '../styles/properties/dimensions';
+import { textStyles } from '../styles/components/textStyles';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<AppStackParamList, 'Home'>
 
@@ -32,9 +33,19 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
 
   useEffect(() => {
     const checkConnection = async () => {
-      // if (savedInverter) {
-      //   setNewInverter(savedInverter as Inverter);
-      // }
+
+      if(!savedInverter){
+        setIsConnected(false)
+        return
+      }
+
+      const connectedDevices = await BleManagerInstance.connectedDevices(["669a0c20-0008-d690-ec11-e2143045cb95"]);
+      console.log("Connected devices: ", connectedDevices);
+      if(connectedDevices.length === 0){
+        setIsConnected(false)
+        return
+      }
+      setIsConnected(true)
       const connection = await savedInverter?.isConnected();
       if (connection) {
         setIsConnected(connection);
@@ -43,17 +54,17 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     };
 
     checkConnection();
-  }, [isConnected, savedInverter]);
+  });
 
-  useEffect(() => {
-    const init = async () => {
-      if (isConnected) {
-        // await uploadFiles();
-      }
-    }
+  // useEffect(() => {
+  //   const init = async () => {
+  //     if (isConnected) {
+  //       // await uploadFiles();
+  //     }
+  //   }
 
-    init()
-  }, [isConnected, savedInverter])
+  //   init()
+  // }, [isConnected, savedInverter])
 
   const handleScan = async () => {
     setIsScanning(true);
@@ -83,12 +94,13 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     setIsConnecting(true);
 
     try {
-      const connection = await connectToInverter(savedInverter);
-
-      if (connection) {
-        setIsConnected(true);
-        showToast(ToastType.Success, 'Connected to Inverter');
-      }
+      const devices = await BleManagerInstance.discoverAllServicesAndCharacteristicsForDevice(savedInverter.id);
+      console.log("discover inverter: ", devices)
+      console.log(devices)
+   
+      setIsConnected(true);
+      setIsConnecting(false);
+      showToast(ToastType.Success, 'Connected to Inverter');
     } catch (error) {
       showToast(ToastType.Error, 'An error occurred while connecting to the inverter.');
       setIsConnecting(false);
@@ -145,7 +157,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   return (
     <AppScreen>
       <View style={styles.content}>
-        <Text variant="headlineMedium" style={styles.title}>
+        <Text variant="headlineMedium" style={textStyles.title}>
           Inverter Scanner
         </Text>
 
@@ -154,7 +166,6 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         {savedInverter && (
           <SavedInverterCard
             handleInverter={handleInverter}
-            // handleInverter={() => { console.log('Clied Dashboard') }}
             inverter={savedInverter}
             isConnected={isConnected}
             isConnecting={isConnecting}
@@ -168,13 +179,8 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
 
 const styles = StyleSheet.create({
   content: {
-    flex: 1,
-    padding: 16,
-  },
-  title: {
-    textAlign: "center",
-    marginBottom: 24,
-    fontWeight: "bold",
+    flex: Flex.xsmall,
+    padding: GenericSize.medium,
   }
 })
 

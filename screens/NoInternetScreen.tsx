@@ -1,7 +1,9 @@
 import React from 'react';
-import { View, Text, Button, Image } from 'react-native';
+import { View, Text, Button } from 'react-native';
 import { Colours } from '../styles/properties/colours';
 import { useConnectivity } from '../providers/ConnectivityProvider';
+import { Flex, Padding } from '../styles/properties/dimensions';
+import { textStyles } from '../styles/components/textStyles';
 
 const NoInternetScreen = () => {
 
@@ -14,40 +16,19 @@ const NoInternetScreen = () => {
     return (
         <View
             style={{
-                flex: 1,
+                flex: Flex.xsmall,
                 justifyContent: 'center',
                 alignItems: 'center',
-                backgroundColor: '#f9f9f9',
+                backgroundColor: Colours.backgroundPrimary,
             }}
         >
-
-            <Image
-                source={require('../assets/logo-placeholder.png')}
-                style={{
-                    width: 150,
-                    height: 150,
-                    marginBottom: 24,
-                }}
-                resizeMode="contain"
-            />
             <Text
-                style={{
-                    fontSize: 18,
-                    fontWeight: 'bold',
-                    color: '#333',
-                    marginBottom: 16,
-                }}
+                style={textStyles.heading}
             >
                 No Internet Connection
             </Text>
             <Text
-                style={{
-                    fontSize: 14,
-                    color: '#666',
-                    marginBottom: 24,
-                    textAlign: 'center',
-                    paddingHorizontal: 20,
-                }}
+                style={[textStyles.subtitle, {paddingVertical : Padding.medium}]}
             >
             You can continue using the app without an internet connection.
             </Text>

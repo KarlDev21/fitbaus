@@ -1,9 +1,9 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, { useState } from 'react';
 import { AppScreen } from '../../components/AppScreen';
-import { Image, Text, View } from 'react-native';
-import { Logo, ScreenBase } from '../../styles';
-import { Padding } from '../../styles/properties';
+import { Text, View } from 'react-native';
+import { ScreenBase } from '../../styles';
+import { Colours, Padding } from '../../styles/properties';
 import { Input, PasswordInput } from '../../components/Input';
 import { ButtonLink, ButtonPrimary } from '../../components/Button';
 import { ScrollView } from 'react-native-gesture-handler';
@@ -12,6 +12,9 @@ import { loginAsync } from '../../services/UserProfileService';
 import { showToast, ToastType } from '../../components/Toast';
 import { SECURE_STORE_KEYS, setItemAsync } from '../../helpers/SecureStorageHelper';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
+import LogoComponent from '../../components/Logo';
+import { textStyles } from '../../styles/components/textStyles';
+import { Width, Height, GenericSize, Flex } from '../../styles/properties/dimensions';
 
 const LoginScreen = () => {
     const navigation = useNavigation<NavigationProp<any>>();
@@ -29,18 +32,15 @@ const LoginScreen = () => {
             return;
         }
 
+        //Will need to revert back to this on BE integration
         // const response = await loginAsync(formState.values.email, formState.values.loginPassword);
-
-        
         //mocking this for now to get in 
         const response = {
             success: true,
             error: "an error occurred",
             data: {
-                // name: formState.values.name,
                 email: formState.values.email,
                 loginPassword: formState.values.loginPassword,
-                // phone: formState.values.phone,
             },
         };
         
@@ -52,7 +52,8 @@ const LoginScreen = () => {
 
         await setItemAsync(SECURE_STORE_KEYS.USER_PROFILE, response.data);
         setIsLoading(false);
-        navigation.navigate('HomeScreen');
+        showToast(ToastType.Success, 'Login successful!');
+        navigation.navigate('Home');
     };
 
     function navigateToRegister() {
@@ -61,24 +62,15 @@ const LoginScreen = () => {
 
     return (
         <AppScreen>
-            <ScrollView style={{ flex: 1, width: '100%', height: '100%' }}>
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                    <Image source={require('../../assets/logo-placeholder.png')} style={Logo.logo_container} />
+            <ScrollView style={{ flex: Flex.xsmall, width: Width.full, height: Height.full }}>
+                <View style={{ flex: Flex.xsmall, justifyContent: 'center', alignItems: 'center' }}>
+                    <LogoComponent/>
                     {/* Login Form */}
-                    <Text style={{
-                        fontSize: 24,
-                        fontWeight: 'bold',
-                        color: 'red',
-                        marginVertical: 8,
-                    }}>{'Log In Now'}</Text>
-                    <Text style={{
-                        fontSize: 12,
-                        textAlign: 'center',
-                        marginVertical: 4,
-                    }}>{'Please login to continue using our app'}</Text>
+                    <Text style={textStyles.heading}>{'Log In Now'}</Text>
+                    <Text style={textStyles.subtitle}>{'Please login to continue using our app'}</Text>
                 </View>
 
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: Padding.large, width: '100%' }}>
+                <View style={{ flex: Flex.xsmall, justifyContent: 'center', alignItems: 'center', padding: Padding.large, width: Width.full }}>
                     <Input
                         label={'Email'}
                         value={formState.values.email}
@@ -97,10 +89,10 @@ const LoginScreen = () => {
                         errorText={formState.errors.loginPassword}
                     />
 
-                    <ButtonPrimary label="Login" onPress={handleLogin} loading={isLoading} style={{ width: '100%', marginTop: 16 }} />
+                    <ButtonPrimary label="Login" onPress={handleLogin} loading={isLoading} style={{ width: Width.full, marginTop: GenericSize.medium }} />
 
                     <View style={ScreenBase.landing_screen_no_account_view}>
-                        <Text style={{ fontSize: 12, paddingRight: 8 }}>{"Don't have an account?"}</Text>
+                        <Text style={[textStyles.subtitle, {paddingRight: Padding.small}]}>{"Don't have an account?"}</Text>
                         <ButtonLink label={'Register account'} onPress={navigateToRegister} />
                     </View>
                 </View>

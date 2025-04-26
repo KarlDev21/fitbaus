@@ -13,7 +13,7 @@ type BluetoothContextType = {
 const BluetoothContext = createContext<BluetoothContextType | undefined>(undefined);
 
 export const BluetoothProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isBluetoothEnabled, setIsBluetoothEnabled] = useState(false);
+  const [isBluetoothEnabled, setIsBluetoothEnabled] = useState(true);
   const [permissionGranted, setPermissionGranted] = useState(true);
   const [isBTLoading, setIsBTLoading] = useState<boolean>(true);
   
@@ -41,10 +41,14 @@ export const BluetoothProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setIsBluetoothEnabled(false);
       }
     };
-
-    checkBluetooth();
     setIsBTLoading(false)
+
+    const interval = setInterval(checkBluetooth, 1000);
+    return () => clearInterval(interval);
+
+    
   }, []);
+
 
   return (
     <BluetoothContext.Provider value={{ isBTLoading, isBluetoothEnabled, permissionGranted }}>

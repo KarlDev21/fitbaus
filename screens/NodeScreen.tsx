@@ -14,6 +14,9 @@ import { LoadingIndicatorWithText } from '../components/LoadingIndicator';
 import { AppScreen } from '../components/AppScreen';
 import BatteryCard from '../components/Cards/BatteryCard';
 import InverterCard from '../components/Cards/InverterCard';
+import { buttonStyles } from '../styles/components/buttonStyles';
+import { Flex, GenericSize, Margin, Padding } from '../styles/properties/dimensions';
+import { textStyles } from '../styles/components/textStyles';
 
 type NodeScreenNavigationProp = NativeStackNavigationProp<AppStackParamList, 'Nodes'>
 
@@ -132,7 +135,7 @@ export default function NodeScreen({ navigation }: NodeScreenProps) {
       {/* Header with back button and title */}
       <View style={styles.header}>
         {/* <IconButton icon="account-arrow-left-outline" size={24} onPress={() => navigation.goBack()} /> */}
-        <Text variant="titleLarge" style={styles.headerTitle}>
+        <Text variant="titleLarge" style={textStyles.title}>
           Select Batteries
         </Text>
       </View>
@@ -163,20 +166,22 @@ export default function NodeScreen({ navigation }: NodeScreenProps) {
             mode="contained"
             onPress={handleAuthenticate}
             disabled={selectedBatteries.length === 0 || isAuthenticating}
-            style={styles.button}
-            labelStyle={styles.buttonLabel}
+            style={buttonStyles.primaryButton}
+            labelStyle={buttonStyles.buttonLabel}
           >
             {isAuthenticating ? 'Authenticating...' : 'Authenticate Batteries'}
-            {isAuthenticating && <ActivityIndicator size={16} color="#fff" style={{ marginLeft: 8 }} />}
+            {isAuthenticating && <ActivityIndicator size={GenericSize.medium} color="#fff" style={{ marginLeft: Margin.small }} />}
           </Button>
         ) : (
           <View style={styles.buttonRow}>
             <Button
-              mode="outlined"
+              mode="contained"
               onPress={() => {
                 setShowResults(false);
               }}
-              style={[styles.button, styles.outlineButton]}
+              style={[buttonStyles.primaryButton, styles.outlineButton]}
+              labelStyle={buttonStyles.buttonLabel}
+
             >
               Change Selection
             </Button>
@@ -184,7 +189,9 @@ export default function NodeScreen({ navigation }: NodeScreenProps) {
               mode="contained"
               onPress={handleContinue}
               disabled={Object.values(authenticatedBatteries).filter(Boolean).length === 0}
-              style={[styles.button, styles.primaryButton]}
+              style={[buttonStyles.primaryButton, styles.outlineButton]}
+              labelStyle={buttonStyles.buttonLabel}
+
             >
               Continue
             </Button>
@@ -197,48 +204,37 @@ export default function NodeScreen({ navigation }: NodeScreenProps) {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: Colours.white,
+    flex: Flex.xsmall,
+    backgroundColor: Colours.backgroundPrimary,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 8,
-  },
-  headerTitle: {
-    fontWeight: 'bold',
-    marginLeft: 8,
+    paddingHorizontal: Padding.small,
+    paddingVertical: Padding.medium,
   },
   listContent: {
-    padding: 16,
-    paddingBottom: 80,
+    padding: Padding.medium,
+    paddingBottom: Padding.large,
   },
   buttonContainer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    padding: 16,
+    padding: Padding.medium,
     backgroundColor: '#fff',
     borderTopWidth: 1,
     borderTopColor: '#eee',
-  },
-  button: {
-    paddingVertical: 6,
+    
   },
   buttonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   outlineButton: {
-    flex: 1,
-    marginRight: 8,
+    flex: Flex.xsmall,
+    marginRight: Margin.small,
   },
-  primaryButton: {
-    flex: 1,
-  },
-  buttonLabel: {
-    fontSize: 16,
-  },
+
 });

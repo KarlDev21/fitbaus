@@ -1,19 +1,13 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import { Device } from 'react-native-ble-plx';
 import { NavStackScreenRegistry } from '../types/NavTypes';
 import LandingScreen from '../screens/Auth/LandingScreen';
 import LoginScreen from '../screens/Auth/LoginScreen';
 import RegistrationScreen from '../screens/Auth/RegistrationScreen';
+import HomeScreen from '../screens/HomeScreen';
 
 export type AuthStackParamList = {
   Home: undefined;
-  Inverters: undefined;
-  Nodes: undefined;
-  Finalizing: undefined;
-  Dashboard: { inverter: Device };
-  NodeInfo: { nodeId: number };
-  CommissionScreen: { screen: string };
 };
 
 export const AuthStackScreens: NavStackScreenRegistry = {
@@ -31,6 +25,11 @@ export const AuthStackScreens: NavStackScreenRegistry = {
     name: 'RegistrationScreen',
     component: RegistrationScreen,
     options: {headerShown: false},
+  },
+  Home: {
+    name: 'Home',
+    component: HomeScreen,
+    options: { headerShown: false },
   },
 };
 

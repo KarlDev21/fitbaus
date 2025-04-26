@@ -13,6 +13,10 @@ import { Inverter } from '../types/DeviceType';
 import { Colours } from '../styles/properties/colours';
 import { AppScreen } from '../components/AppScreen';
 import { useNavigation } from '@react-navigation/native';
+import { Flex } from '../styles/properties';
+import { Dimensions, GenericSize, Margin, Padding } from '../styles/properties/dimensions';
+import { fontWeight } from '../styles/properties/fontWeight';
+import { textStyles } from '../styles/components/textStyles';
 
 export default function InverterScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
@@ -53,8 +57,8 @@ export default function InverterScreen() {
   const renderInverterItem = ({ item }: { item: Device }) => (
     <Card style={styles.inverterCard} onPress={() => handleSelectInverter(item)}>
       <Card.Content style={styles.inverterContent}>
-        <View style={[styles.iconContainer, { backgroundColor: Colours.secondary + '20' }]}>
-          <MaterialCommunityIcons name="lightning-bolt" size={20} color={Colours.secondary} />
+        <View style={[styles.iconContainer, { backgroundColor: Colours.backgroundSecondary}]}>
+          <MaterialCommunityIcons name="lightning-bolt" size={GenericSize.large} color={Colours.primary} />
         </View>
         <View style={styles.inverterInfo}>
           <Text variant="bodyLarge" style={styles.inverterName}>
@@ -72,8 +76,8 @@ export default function InverterScreen() {
     <AppScreen>
 
       <View style={styles.header}>
-        <IconButton icon="camera" size={24} onPress={() => navigation.goBack()} />
-        <Text variant="titleLarge" style={styles.headerTitle}>
+        <IconButton icon="camera" size={GenericSize.large} onPress={() => navigation.goBack()} />
+        <Text variant="titleLarge" style={textStyles.title}>
           Available Inverters
         </Text>
       </View>
@@ -92,61 +96,65 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 8,
+    paddingHorizontal: Padding.small,
+    paddingVertical: Padding.small,
   },
   headerTitle: {
     fontWeight: 'bold',
-    marginLeft: 20,
+    marginLeft: Margin.medium,
+    color: Colours.textPrimary,
   },
   loadingContainer: {
-    flex: 1,
+    flex: Flex.xsmall,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 16,
+    padding: Padding.medium,
   },
   loader: {
-    marginBottom: 16,
+    marginBottom: Margin.medium,
   },
   loadingText: {
-    color: '#666',
+    color: Colours.textPrimary,
   },
   listContent: {
-    padding: 16,
+    padding: GenericSize.medium,
   },
   inverterCard: {
-    marginBottom: 12,
-    elevation: 1,
+    marginBottom: Margin.medium,
+    elevation: GenericSize.ssmall,
+    backgroundColor: Colours.backgroundPrimary,
   },
   inverterContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 8,
+    padding: Padding.small,
   },
   iconContainer: {
-    padding: 10,
-    borderRadius: 50,
-    marginRight: 16,
+    padding: Padding.medium,
+    borderRadius: Dimensions.border_radius_icon,
+    marginRight: Margin.medium,
+
   },
   inverterInfo: {
-    flex: 1,
+    flex: Flex.xsmall,
   },
   inverterName: {
-    fontWeight: '500',
+    fontWeight: fontWeight.large,
+    color: Colours.textPrimary,
   },
   inverterStatus: {
-    color: '#666',
+    color: Colours.textPrimary,
   },
   emptyContainer: {
-    flex: 1,
+    flex: Flex.xsmall,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 16,
+    padding: Padding.medium,
   },
   emptyText: {
-    color: '#666',
+    color: Colours.textPrimary,
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: Margin.medium,
   },
 });
 

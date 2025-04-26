@@ -2,9 +2,9 @@ import {PermissionsAndroid, Platform} from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 
 export async function requestBluetoothPermissions(): Promise<boolean> {
-  //Need to come back and double check this is the case
   if (Platform.OS === 'android') {
     try {
+      
       const granted = await PermissionsAndroid.requestMultiple([
         PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
         PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
@@ -46,6 +46,8 @@ export async function requestBluetoothPermissions(): Promise<boolean> {
 export async function isConnectedAsync(): Promise<boolean> {
   try {
     const state = await NetInfo.fetch();
+    console.log("--------------------------INTERNET STATE---------------------------")
+    console.log(state)
     return state.isConnected ?? false;
   } catch (error) {
     return false;

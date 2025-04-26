@@ -3,12 +3,13 @@ import {Colours, Dimensions, FontSize, Margin, Padding} from '../properties';
 
 export const buttonStyles = StyleSheet.create({
   primaryButton: {
-    borderRadius: Dimensions.border_radius,
+    backgroundColor: Colours.primary,
+    borderRadius: Dimensions.border_radius_button,
     paddingVertical: Padding.xsmall,
   },
   primaryText: {
-    fontSize: FontSize.normal,
-    color: Colours.white,
+    fontSize: FontSize.medium,
+    color: Colours.primaryButtonText,
   },
   linkButton: {
     marginVertical: Margin.medium,
@@ -17,4 +18,8 @@ export const buttonStyles = StyleSheet.create({
     fontSize: FontSize.small,
     textDecorationLine: 'underline',
   },
+  buttonLabel: {
+    fontSize: FontSize.medium,
+    color: 'white',
+  }
 });

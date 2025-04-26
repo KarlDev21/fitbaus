@@ -67,7 +67,9 @@ export interface DashboardData {
   alerts: string[]
 }
 
-export type BatteryInfo = Record<string, BatteryData>;
+export type BatteryInfo = {
+  nodeId : string, 
+  nodeData: BatteryData};
 
 
 

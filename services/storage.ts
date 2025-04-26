@@ -40,6 +40,7 @@ export const clearConnectedInverter = () => {
   DeviceStorage.delete('connectedInverter');
 };
 
+
 export const setSelectedNodes = (node: Device[]) => {
   DeviceStorage.set('selectedNodes', JSON.stringify(node));
 };

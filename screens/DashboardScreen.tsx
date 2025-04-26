@@ -7,16 +7,14 @@ import type { DrawerNavigationProp } from '@react-navigation/drawer';
 import type { RouteProp } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { AppStackParamList } from '../nav/AppNavigation';
-import { getConnectedInverter, getConnectedInverterDevice, getConnectedNodes } from '../services/storage';
-import { connectAndDiscoverServices, fetchAndLogBatteryData, fetchAndLogBatteryInfo, fetchAndLogChargeControllerStatus, fetchAndLogInverterStatus } from '../services/InverterService';
+import { getConnectedInverterDevice, getConnectedNodes } from '../services/storage';
+import { fetchAndLogBatteryInfo, fetchAndLogChargeControllerStatus, fetchAndLogInverterStatus } from '../services/InverterService';
 import { showToast, ToastType } from '../components/Toast';
 import { BatteryData, BatteryInfo, ChargeControllerState, InverterState } from '../types/BleTypes';
 import { Colours } from '../styles/properties/colours';
 import { AppScreen } from '../components/AppScreen';
-import { MetricCard } from '../components/Cards/MetricCard';
-import { Battery, Inverter } from '../types/DeviceType';
-import {Device} from 'react-native-ble-plx';
 import { BatteryDetailsCard } from '../components/Cards/BatteryDetailsCard';
+import { Flex } from '../styles/properties/dimensions';
 
 type DashboardScreenNavigationProp = DrawerNavigationProp<AppStackParamList, 'Dashboard'>
 type DashboardScreenRouteProp = RouteProp<AppStackParamList, 'Dashboard'>
@@ -65,77 +63,83 @@ export default function DashboardScreen({ navigation, route }: DashboardScreenPr
   const [nodeDataList, setNodeDataList] = useState<BatteryInfo[]>([]);
   const [batteryData, setBatteryData] = useState<BatteryData[]>([]);
 
+  // useEffect(() => {
+  //   const loadBatteryData = async () => {
+
+  //     let batteryDatalist: BatteryData[] = []
+  //     try {
+  //       const inverter = getConnectedInverter();
+  //       if (inverter) {
+  //         const node = getConnectedNodes(inverter);
+  //         console.log("battery Id " + connectedNodeIds)
+
+  //         if (node) {
+  //           for(const batId in connectedNodeIds){
+  //             console.log("battery Id " + batId)
+  //             const data = await fetchAndLogBatteryData(batId, inverter);
+  //             if (data) {
+  //               batteryDatalist.push(data)
+  //             }
+  //           }
+
+  //         }
+
+  //         setBatteryData(batteryDatalist)
+
+  //       }
+
+  //       setIsLoading(false);
+  //     } catch (error) {
+  //       console.error('Failed to load battery data', error);
+  //       setIsLoading(false);
+  //     }
+  //   };
+
+  //   loadBatteryData();
+  // });
+
   useEffect(() => {
-    const loadBatteryData = async () => {
 
-      let batteryDatalist: BatteryData[] = []
-      try {
-        const inverter = getConnectedInverter();
-        if (inverter) {
-          const node = getConnectedNodes(inverter);
 
-          if (node) {
-            for(const batId in connectedNodeIds){
-              const data = await fetchAndLogBatteryData(batId, inverter);
-              if (data) {
-                batteryDatalist.push(data)
-              }
-            }
-        
-          }
-
-          setBatteryData(batteryDatalist)
-
-        }
-
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Failed to load battery data', error);
-        setIsLoading(false);
-      }
-    };
-
-    loadBatteryData();
-  });
-
-  useEffect(() => {
     const loadData = async () => {
       try {
-        setTimeout(async () => {
-          console.log("loaded inverter")
-          console.log(inverter)
-          if (inverter) {
-            const chargeControllerInfo = await fetchAndLogChargeControllerStatus(inverter);
-            const inverterState = await fetchAndLogInverterStatus(inverter);
+        console.log("loaded inverter")
+        console.log(inverter)
+
+        if (inverter) {
+          // console.log("checking connection")
+          // checkAndConnectToInverter(inverter)
+          const chargeControllerInfo = await fetchAndLogChargeControllerStatus(inverter);
+          const inverterState = await fetchAndLogInverterStatus(inverter);
+
+          if (chargeControllerInfo && inverterState) {
+
+            setChargeControllerState(chargeControllerInfo);
+            setInverterState(inverterState);
             let list: BatteryInfo[] = []
 
-            if (chargeControllerInfo && inverterState) {
+            const nodes = getConnectedNodes(inverter);
+            if (nodes && nodes.length > 0) {
+              setConnectedNodeIds(nodes.map((node) => node.id));
 
-              setChargeControllerState(chargeControllerInfo);
-              setInverterState(inverterState);
+              const batteryInfoList = await Promise.all(
+                nodes.map(async (node) => {
+                  const batteryInfo = await fetchAndLogBatteryInfo(node, inverter);
+                  return batteryInfo; // can be null, will be filtered
+                })
+              );
 
-              const nodes = getConnectedNodes(inverter);
-
-              if (nodes) {
-                nodes.forEach(async (node) => {
-                  const batteryData = await fetchAndLogBatteryInfo(node, inverter);
-                  if (batteryData) {
-                    list.push(batteryData);
-                  }
-                });
-
-                setConnectedNodeIds(nodes.map(node => node.id));
-                setNodeDataList(list);
-              }
+              const validBatteryInfo = batteryInfoList.filter(Boolean) as BatteryInfo[];
+              setNodeDataList(validBatteryInfo);
             }
 
             setIsLoading(false);
           }
-          else {
-            showToast(ToastType.Error, 'Failed to load dashboard data. Please try again.');
-            setIsLoading(false);
-          }
-        }, 3000);
+        }
+        else {
+          showToast(ToastType.Error, 'No Inverter found.');
+          setIsLoading(false);
+        }
       } catch (error) {
         console.error('Failed to load dashboard data', error);
         setIsLoading(false);
@@ -160,13 +164,6 @@ export default function DashboardScreen({ navigation, route }: DashboardScreenPr
     return 'battery-outline';
   };
 
-  const handleInfoPress = (nodeId: string) => {
-    if (nodeId) {
-      // eslint-disable-next-line radix
-      navigation.navigate('NodeInfo', { nodeId: parseInt(nodeId) });
-    }
-  };
-
   return (
     <AppScreen isLoading={isLoading}>
       <Appbar.Header>
@@ -176,45 +173,62 @@ export default function DashboardScreen({ navigation, route }: DashboardScreenPr
 
       <ScrollView style={styles.scrollView} >
 
-      <Card style={styles.batteryCard}>
-            <Card.Content>
-              <View style={styles.batteryHeader}>
-                <View
-                  style={[styles.iconContainer, { backgroundColor: getBatteryStatusColor(inverterState.HeatsinkTemperature/100) + '20' }]}
-                >
-                  <MaterialCommunityIcons
-                    name={'temperature-celsius'}
-                    size={32}
-                    color={getBatteryStatusColor(inverterState.HeatsinkTemperature/100)}
-                  />
-                </View>
-                <View style={styles.batteryHeaderInfo}>
-                  <Text variant="titleLarge" style={styles.batteryTitle}>
-                    Inverter Temperature
-                  </Text>
-                  <Text
-                    variant="bodyLarge"
-                    style={[styles.batteryStatus, { color: getBatteryStatusColor(inverterState.HeatsinkTemperature/100) }]}
-                  >
-                    {inverterState.HeatsinkTemperature/100}°C
-                  </Text>
-                </View>
+        <Card style={styles.batteryCard}>
+          <Card.Content>
+            <View style={styles.batteryHeader}>
+              <View
+                style={[styles.iconContainer, { backgroundColor: getBatteryStatusColor(inverterState.HeatsinkTemperature / 100) + '20' }]}
+              >
+                <MaterialCommunityIcons
+                  name={'temperature-celsius'}
+                  size={32}
+                  color={getBatteryStatusColor(inverterState.HeatsinkTemperature / 100)}
+                />
               </View>
-            </Card.Content>
-          </Card>
-
-
-        {connectedNodeIds && (
-          connectedNodeIds.map((nodeId) => (
-            <BatteryCard key={nodeId} nodeId={nodeId} onPress={handleInfoPress} />
-          ))
-        )}
-
-          {batteryData.map((data, index) => (
-            <BatteryDetailsCard key={index} batteryData={data} />
-          ))}
-
-
+              <View style={styles.batteryHeaderInfo}>
+                <Text variant="titleLarge" style={styles.batteryTitle}>
+                  Inverter Temperature
+                </Text>
+                <Text
+                  variant="bodyLarge"
+                  style={[styles.batteryStatus, { color: getBatteryStatusColor(inverterState.HeatsinkTemperature / 100) }]}
+                >
+                  {inverterState.HeatsinkTemperature / 100}°C
+                </Text>
+              </View>
+            </View>
+          </Card.Content>
+        </Card>
+        <Card style={styles.batteryCard}>
+          <Card.Content>
+            <View style={styles.batteryHeader}>
+              <View
+                style={[styles.iconContainer, { backgroundColor: getBatteryStatusColor(inverterState.HeatsinkTemperature / 100) + '20' }]}
+              >
+                <MaterialCommunityIcons
+                  name={'power-plug'}
+                  size={32}
+                  color={Colours.primary}
+                />
+              </View>
+              <View style={styles.batteryHeaderInfo}>
+                <Text variant="titleLarge" style={styles.batteryTitle}>
+                  Inverter Output
+                </Text>
+                <Text
+                  variant="bodyLarge"
+                  style={styles.batteryStatus}
+                >
+                  {inverterState.LoadOutputVoltage / 100}%
+                </Text>
+              </View>
+            </View>
+          </Card.Content>
+        </Card>
+        {nodeDataList.length === 0 && <Text >No battery data available.</Text>}
+        {nodeDataList.map((data, index) => (
+          <BatteryDetailsCard key={index} batteryInfo={data} />
+        ))}
         <View style={styles.spacer} />
       </ScrollView>
     </AppScreen>
@@ -236,7 +250,7 @@ const BatteryCard = ({ nodeId, onPress }: { nodeId: string; onPress: (nodeId: st
 
 const styles = StyleSheet.create({
   scrollView: {
-    flex: 1,
+    flex: Flex.xsmall,
     padding: 16,
   },
   inverterCard: {
@@ -275,7 +289,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   metricLabel: {
-    flex: 1,
+    flex: Flex.xsmall,
     fontWeight: '500',
   },
   metricValue: {

@@ -5,6 +5,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Inverter } from '../../types/DeviceType';
 import { LoadingIndicator } from '../LoadingIndicator';
 import { Colours } from '../../styles/properties/colours';
+import { buttonStyles } from '../../styles/components/buttonStyles';
+import { Flex } from '../../styles/properties/dimensions';
 
 interface SavedInverterCardProps {
     inverter: Inverter;
@@ -41,10 +43,12 @@ const styles = StyleSheet.create({
     card: {
         marginBottom: 16,
         elevation: 2,
+        backgroundColor:'white'
     },
     cardTitle: {
         marginBottom: 8,
         fontWeight: 'bold',
+        color:'black'
     },
 });
 
@@ -66,8 +70,8 @@ export const InverterRow: React.FC<InverterRowProps> = ({
     onConnect,
 }) => (
     <View style={inverterRowStyles.inverterRow}>
-        <View style={[inverterRowStyles.iconContainer, { backgroundColor: Colours.secondary + '20' }]}>
-            <MaterialCommunityIcons name="lightning-bolt" size={24} color={Colours.secondary} />
+        <View style={[inverterRowStyles.iconContainer, { backgroundColor: Colours.primary + '20' }]}>
+          <MaterialCommunityIcons name="lightning-bolt" size={20} color={Colours.primary} />
         </View>
         <View style={inverterRowStyles.inverterInfo}>
             <Text variant="bodyLarge" style={inverterRowStyles.inverterName}>
@@ -94,7 +98,7 @@ const inverterRowStyles = StyleSheet.create({
     inverterRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginTop: 8,
+        marginTop: 5,
     },
     iconContainer: {
         padding: 12,
@@ -102,19 +106,22 @@ const inverterRowStyles = StyleSheet.create({
         marginRight: 16,
     },
     inverterInfo: {
-        flex: 1,
+        flex: Flex.xsmall,
     },
     inverterName: {
+        color:'black',
+        marginVertical: 4,
         fontWeight: '500',
     },
     inverterStatus: {
-        color: '#666',
+        marginBottom: 12,
+        color:'black'
+
     },
-    button: {
-        marginTop: 8,
-        paddingVertical: 6,
-    },
+    button: buttonStyles.primaryButton,
+
     buttonLabel: {
         fontSize: 16,
+        color:'white'
     },
 });

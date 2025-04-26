@@ -12,12 +12,12 @@ interface InverterCardProps {
 const InverterCard: React.FC<InverterCardProps> = ({ inverter }) => (
     <Card style={styles.card}>
         <Card.Content style={styles.content}>
-            <View style={[styles.iconContainer, { backgroundColor: Colours.secondary + '20' }]}>
-                <MaterialCommunityIcons name="lightning-bolt" size={16} color={Colours.secondary} />
+        <View style={[styles.iconContainer, { backgroundColor: Colours.primary + '20' }]}>
+          <MaterialCommunityIcons name="lightning-bolt" size={20} color={Colours.primary} />
             </View>
             <View>
                 <Text style={styles.label}>Selected Inverter</Text>
-                <Text>{inverter.name + ' ' + inverter.id}</Text>
+                <Text style={styles.label}>{inverter.name + ' ' + inverter.id}</Text>
             </View>
         </Card.Content>
     </Card>
@@ -28,19 +28,20 @@ const styles = StyleSheet.create({
         marginHorizontal: 16,
         marginBottom: 16,
         elevation: 1,
+        backgroundColor: '#fff',
     },
     content: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 12,
+        padding: 8,
     },
     iconContainer: {
-        padding: 8,
-        borderRadius: 50,
-        marginRight: 12,
+        padding: 10,
+        borderRadius: 60,
+        marginRight: 16,
     },
     label: {
-        color: '#666',
+        color: 'black',
         fontWeight: '500',
     },
 });

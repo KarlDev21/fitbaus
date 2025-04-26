@@ -4,6 +4,7 @@ import { View, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Battery } from '../../types/DeviceType';
 import { Colours } from '../../styles/properties/colours';
+import { Flex } from '../../styles/properties/dimensions';
 
 interface BatteryCardProps {
     battery: Battery;
@@ -13,7 +14,6 @@ interface BatteryCardProps {
     onToggle: () => void;
 }
 
-//Note: Check if the card colours are correct
 const BatteryCard: React.FC<BatteryCardProps> = ({
     battery,
     isSelected,
@@ -38,14 +38,16 @@ const BatteryCard: React.FC<BatteryCardProps> = ({
         <Card style={cardStyle}>
             <Card.Content style={styles.content}>
                 <View style={styles.row}>
-                    <MaterialCommunityIcons name="battery" size={20} color={Colours.secondary} />
-                    <Text style={styles.name}>{battery.name}</Text>
-                    {statusIcon}
-                    <Checkbox
-                        status={isSelected ? 'checked' : 'unchecked'}
-                        onPress={onToggle}
-                        color={Colours.primary}
-                    />
+                    <View style={[ styles.iconContainer, { backgroundColor: Colours.primary + '20' }]}>
+                    <MaterialCommunityIcons name="battery" size={20} color={Colours.primary} />
+                    </View>
+                    <Text style={styles.name}> {battery.name}  {battery.id}</Text>
+                        {statusIcon}
+                        <Checkbox
+                            status={isSelected ? 'checked' : 'unchecked'}
+                            onPress={onToggle}
+                            color={Colours.primary}
+                        />
                 </View>
             </Card.Content>
         </Card>
@@ -53,8 +55,14 @@ const BatteryCard: React.FC<BatteryCardProps> = ({
 };
 
 const styles = StyleSheet.create({
+        iconContainer: {
+        padding: 10,
+        borderRadius: 60,
+        marginRight: 16,
+    },
     card: {
         marginBottom: 12,
+        backgroundColor: '#fff',
     },
     authenticatedCard: {
         borderColor: '#4CAF50',
@@ -73,8 +81,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     name: {
-        flex: 1,
+        flex: Flex.xsmall,
         marginLeft: 8,
+        color:'black'
     },
 });
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { SafeAreaView } from 'react-native';
 import { FullScreenLoadingIndicator } from './LoadingIndicator';
+import { Width, Height, Flex } from '../styles/properties/dimensions';
 
 type ScreenComponentProps = {
     children: React.ReactNode;
@@ -15,8 +16,7 @@ export function AppScreen(props: ScreenComponentProps) {
     }, [props.isLoading]);
 
     return (
-        // TODO: Fix styling issues
-        <SafeAreaView style={{ width: '100%', height: '100%', flex: 1 }}>
+        <SafeAreaView style={{ width: Width.full, height: Height.full, flex: Flex.xsmall }}>
             {isLoading && <FullScreenLoadingIndicator />}
             {!isLoading && props.children}
         </SafeAreaView>
