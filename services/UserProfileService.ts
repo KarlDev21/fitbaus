@@ -1,3 +1,4 @@
+import {getItemAsync, SECURE_STORE_KEYS} from '../helpers/SecureStorageHelper';
 import {ApiResponse, UserProfileResponse} from '../types/ApiResponse';
 
 export const API_BASE_URL = 'http://192.168.10.141:3000/api/v1';
@@ -83,4 +84,31 @@ export async function registerAsync(
   }
 }
 
+/**
+ * Builds the headers for API requests.
+ *
+ * @returns {Promise<Headers>} - A promise that resolves to the headers object.
+ */
+type Headers = {
+  [key: string]: string;
+};
 
+export async function buildHeaders(): Promise<Headers> {
+  try {
+    const userProfile = await getItemAsync<UserProfileResponse>(
+      SECURE_STORE_KEYS.USER_PROFILE,
+    );
+
+    const headers: Headers = {
+      'Content-Type': 'application/json',
+    };
+
+    if (userProfile) {
+      headers.Authorization = userProfile.token;
+    }
+
+    return headers;
+  } catch (error) {
+    throw new Error('Failed to build headers');
+  }
+}

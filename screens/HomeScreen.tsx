@@ -31,6 +31,9 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   const [isConnecting, setIsConnecting] = useState(false);
   const [newInverter, setNewInverter] = useState<Inverter | null>(null);
 
+  // This hook is used to keep the screen awake for performing log-related operations
+  useKeepAwake();
+
   useEffect(() => {
     const checkConnection = async () => {
 
@@ -183,4 +186,8 @@ const styles = StyleSheet.create({
     padding: GenericSize.medium,
   }
 })
+
+function useKeepAwake() {
+  throw new Error('Function not implemented.');
+}
 

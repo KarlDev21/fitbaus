@@ -6,7 +6,7 @@ import {
   FetchAllDeviceUnitsResponse,
   UploadFileResponse,
 } from '../types/ApiResponse';
-import {API_BASE_URL} from './UserProfileService';
+import {API_BASE_URL, buildHeaders} from './UserProfileService';
 
 export async function createDeedOfRegistrationAsync(
   userID: string,
@@ -18,11 +18,11 @@ export async function createDeedOfRegistrationAsync(
       devices,
     };
 
+    const headers = await buildHeaders();
+
     const response = await fetch(`${API_BASE_URL}/device/add`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(payload),
     });
 
@@ -46,11 +46,11 @@ export async function fetchAllDeviceUnitsAsync(
   userID: string,
 ): Promise<ApiResponse<FetchAllDeviceUnitsResponse>> {
   try {
+    const headers = await buildHeaders();
+
     const response = await fetch(`${API_BASE_URL}/device/${userID}`, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
     });
 
     if (!response.ok) {
@@ -74,11 +74,11 @@ export async function uploadFileToServerAsync(
   request: UploadFileRequest,
 ): Promise<ApiResponse<UploadFileResponse>> {
   try {
+    const headers = await buildHeaders();
+
     const response = await fetch(`${API_BASE_URL}/device/log/upload`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(request),
     });
 
