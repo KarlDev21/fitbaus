@@ -60,20 +60,34 @@ export async function authenticateInverter(
     console.log('Selected Inverter:', selectedInverter);
 
     try {
-      await BleManagerInstance.discoverAllServicesAndCharacteristicsForDevice(selectedInverter.id)
+      await BleManagerInstance.discoverAllServicesAndCharacteristicsForDevice(
+        selectedInverter.id,
+      );
       const authPayload = generateAuthPayload(selectedInverter.id);
-  
+
       await sendAuthPayload(selectedInverter, authPayload);
-  
+
       console.log(selectedNodes.length + ' nodes found');
-  
-      let response = await enrollBatteriesToInverter(selectedInverter, selectedNodes, 0);
-  
-      console.log(response);
-  
+
+      let response = await enrollBatteriesToInverter(
+        selectedInverter,
+        selectedNodes,
+        0,
+      );
+
+      if(response ) {
+      const user = await getItemAsync<UserProfileResponse>('UserProfile');
+        if (user) {
+          const devices = convertBleDevicesToApiDevices([
+            selectedInverter,
+            ...selectedNodes,
+          ]);
+          await createDeedOfRegistrationAsync(user.userID, devices);
+        }
+    }
     } catch (error: any) {
       console.error('Error authenticating:', error);
-      showToast(ToastType.Error, 'Auth Failed')
+      showToast(ToastType.Error, 'Authentication Failed')
     }
 }
 

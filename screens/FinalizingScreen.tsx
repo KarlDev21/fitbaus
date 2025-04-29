@@ -5,14 +5,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { authenticateInverter } from '../services/InverterService';
 import { getSelectedInverter, getSelectedNodes, setConnectedInverter, setConnectedInverterDevice } from '../services/storage';
 import { Colours } from '../styles/properties/colours';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { AppStackParamList } from '../nav/AppNavigation';
 import { Flex, GenericSize, Margin, Padding } from '../styles/properties/dimensions';
 import { textStyles } from '../styles/components/textStyles';
+import { navigationRefAuthenticated } from '../nav/ScreenDefinitions';
 
 export default function FinalizingScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -29,21 +26,21 @@ export default function FinalizingScreen() {
 
       //issue here with the commison process
       try {
-        const timer = setTimeout( async () => {
+        const timer = setTimeout(async () => {
 
-        //might need to pass in inverter device from connected devices
-        const selectedInverter = getSelectedInverter();
-        const selectedNodes = getSelectedNodes();
+          //might need to pass in inverter device from connected devices
+          const selectedInverter = getSelectedInverter();
+          const selectedNodes = getSelectedNodes();
 
-        if (selectedInverter && selectedNodes) {
-          await authenticateInverter(selectedInverter, selectedNodes);
-          
-          setConnectedInverterDevice(selectedInverter);
-          setConnectedInverter(selectedInverter);
-        }
-      }, 5000)
+          if (selectedInverter && selectedNodes) {
+            await authenticateInverter(selectedInverter, selectedNodes);
+
+            setConnectedInverterDevice(selectedInverter);
+            setConnectedInverter(selectedInverter);
+          }
+        }, 5000)
         setIsLoading(false);
-      
+
         return () => clearTimeout(timer)
 
       } catch (error) {
@@ -57,13 +54,9 @@ export default function FinalizingScreen() {
 
   useEffect(() => {
     if (!isLoading) {
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Home', params: { from: 'Finalizing', success: true } }],
-
-      });
+      navigationRefAuthenticated.navigate('Home')
     }
-  }, [isLoading, navigation]);
+  }, [isLoading, navigationRefAuthenticated]);
 
   if (isLoading) {
     return (

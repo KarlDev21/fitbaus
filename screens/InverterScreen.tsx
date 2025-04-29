@@ -2,9 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, FlatList } from 'react-native';
 import { Card, Text, IconButton } from 'react-native-paper';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import type { AppStackParamList } from '../nav/AppNavigation';
 import { showToast, ToastType } from '../components/Toast';
 import { getInverters, setSelectedInverter } from '../services/storage';
 import { Device } from 'react-native-ble-plx';
@@ -17,9 +15,9 @@ import { Flex } from '../styles/properties';
 import { Dimensions, GenericSize, Margin, Padding } from '../styles/properties/dimensions';
 import { fontWeight } from '../styles/properties/fontWeight';
 import { textStyles } from '../styles/components/textStyles';
+import { navigationRefAuthenticated } from '../nav/ScreenDefinitions';
 
 export default function InverterScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const [isLoading, setIsLoading] = useState(true);
   const [inverters, setInverters] = useState<Inverter[]>([]);
 
@@ -47,7 +45,7 @@ export default function InverterScreen() {
       setSelectedInverter(inverter);
       showToast(ToastType.Success, 'Inverter selected successfully!');
       await connectToInverter(inverter);
-      navigation.navigate('Nodes');
+      navigationRefAuthenticated.navigate('Nodes');
     } catch (error) {
       showToast(ToastType.Error, 'Failed to select inverter, please try again');
       console.error('Failed to save selected inverter', error);
@@ -57,7 +55,7 @@ export default function InverterScreen() {
   const renderInverterItem = ({ item }: { item: Device }) => (
     <Card style={styles.inverterCard} onPress={() => handleSelectInverter(item)}>
       <Card.Content style={styles.inverterContent}>
-        <View style={[styles.iconContainer, { backgroundColor: Colours.backgroundSecondary}]}>
+        <View style={[styles.iconContainer, { backgroundColor: Colours.backgroundSecondary }]}>
           <MaterialCommunityIcons name="lightning-bolt" size={GenericSize.large} color={Colours.primary} />
         </View>
         <View style={styles.inverterInfo}>
@@ -76,7 +74,7 @@ export default function InverterScreen() {
     <AppScreen>
 
       <View style={styles.header}>
-        <IconButton icon="camera" size={GenericSize.large} onPress={() => navigation.goBack()} />
+        <IconButton icon="camera" size={GenericSize.large} onPress={() => navigationRefAuthenticated.goBack()} />
         <Text variant="titleLarge" style={textStyles.title}>
           Available Inverters
         </Text>

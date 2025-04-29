@@ -6,6 +6,8 @@ import {
   FetchAllDeviceUnitsResponse,
   UploadFileResponse,
 } from '../types/ApiResponse';
+import {BatteryInfo, InverterState} from '../types/BleTypes';
+import {getSelectedInverter} from './storage';
 import {API_BASE_URL, buildHeaders} from './UserProfileService';
 
 export async function createDeedOfRegistrationAsync(
@@ -91,6 +93,41 @@ export async function uploadFileToServerAsync(
     }
 
     const data: ApiResponse<UploadFileResponse> = await response.json();
+
+    return data;
+  } catch (error: any) {
+    return {success: false, error: 'Network error'};
+  }
+}
+
+export async function uploadInverterAndBatteryDataAsync(
+  inverter: InverterState,
+  batteries: BatteryInfo[],
+): Promise<ApiResponse<{message: string}>> {
+  try {
+    const headers = await buildHeaders();
+    const deviceID = getSelectedInverter()?.id;
+
+    const inverterData = {
+      ...inverter,
+      deviceID: deviceID,
+    };
+
+    const response = await fetch(`${API_BASE_URL}/device`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({inverterData, ...batteries}),
+    });
+
+    if (!response.ok) {
+      const errorResponse = await response.json();
+      return {
+        success: errorResponse.success,
+        error: errorResponse.errMessage,
+      };
+    }
+
+    const data: ApiResponse<{message: string}> = await response.json();
 
     return data;
   } catch (error: any) {

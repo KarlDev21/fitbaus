@@ -3,26 +3,25 @@ import { AppScreen } from '../../components/AppScreen';
 import { Text, View } from 'react-native';
 import { ScreenBase } from '../../styles';
 import { ButtonLink, ButtonPrimary } from '../../components/Button';
-import { NavigationProp, useNavigation } from '@react-navigation/native';
 import DeviceInfo from 'react-native-device-info';
 import { FontSize, Padding } from '../../styles/properties';
 import LogoComponent from '../../components/Logo';
+import { navigationRefUnauthenticated } from '../../nav/ScreenDefinitions';
 
 const LandingScreen = () => {
-    const navigation = useNavigation<NavigationProp<any>>();
 
     function navigateToLogin() {
-        navigation.navigate('LoginScreen');
+        navigationRefUnauthenticated.navigate('LoginScreen')
     }
 
-    async function navigateToRegister() {
-        navigation.navigate('RegistrationScreen');
+    function navigateToRegister() {
+        navigationRefUnauthenticated.navigate('RegistrationScreen')
     }
 
 
     return (
         <AppScreen>
-            <LogoComponent/>
+            <LogoComponent />
 
             <View style={ScreenBase.landing_screen_container}>
                 <ButtonPrimary label="Login" onPress={navigateToLogin} />

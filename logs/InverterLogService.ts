@@ -12,6 +12,7 @@ import {
   STORAGE_KEYS,
 } from '../helpers/StorageHelper';
 import {Inverter} from '../types/DeviceType';
+import {UploadFileRequest} from '../types/ApiRequest';
 
 // Stower Inverter class that handles BLE communication
 export class StowerInverter {
@@ -193,7 +194,7 @@ export class StowerInverter {
     }
   }
 
-  async uploadFiles(sensor: StowerInverter, fileList: string[]): Promise<void> {
+  async uploadFiles(fileList: string[]): Promise<void> {
     const dirPath = `${RNFS.DocumentDirectoryPath}/stower_files`;
 
     try {
@@ -207,10 +208,10 @@ export class StowerInverter {
         console.log(`Starting download of file: ${f}`);
 
         // Send the GET command to request the file
-        await sensor.sendFileCmd('GET', f);
+        await this.sendFileCmd('GET', f);
 
         // First response is the file size
-        const fileSizeBuffer = await sensor.waitFileResults();
+        const fileSizeBuffer = await this.waitFileResults();
         const fileSize = fileSizeBuffer.readUInt32LE(0);
         console.log(`File size: ${fileSize} bytes`);
 
@@ -224,7 +225,7 @@ export class StowerInverter {
         // Keep receiving chunks until we have the complete file
         while (contents.length < fileSize) {
           // Wait for next chunk of data
-          const chunk = await sensor.waitFileResultsTimer();
+          const chunk = await this.waitFileResultsTimer();
 
           // Add chunk to our buffer
           contents = Buffer.concat([contents, chunk]);
@@ -245,21 +246,7 @@ export class StowerInverter {
         // Convert the file contents to Base64
         const base64File = contents.toString('base64');
 
-        // Upload the file to the server
-        const response = await fetch('', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json', // Use 'application/octet-stream' if sending blob
-          },
-          body: JSON.stringify({
-            fileName: f,
-            fileData: base64File,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error(`Failed to upload file ${f}: ${response.statusText}`);
-        }
+        await this.uploadAndDeleteFile(f, base64File);
 
         console.log(`File ${f} uploaded successfully`);
       }
@@ -268,17 +255,6 @@ export class StowerInverter {
     } catch (error) {
       console.error('Error in getFiles:', error);
       throw error;
-    }
-  }
-
-  async deleteFiles(fileList: string[]): Promise<void> {
-    for (const f of fileList) {
-      await this.sendFileCmd('RM', f);
-
-      const resultBuffer = await this.waitFileResults();
-      const result = resultBuffer.readUInt32LE(0);
-
-      console.log(`Delete ${f} result ${result}`);
     }
   }
 
@@ -291,7 +267,7 @@ export class StowerInverter {
     console.log(`Delete ${file} result ${result}`);
   }
 
-  async uploadAndDeleteFile(fileName: string, fileData: string) {
+  private async uploadAndDeleteFile(fileName: string, fileData: string) {
     try {
       const user = await getItemAsync<UserProfileResponse>(
         SECURE_STORE_KEYS.USER_PROFILE,
@@ -302,14 +278,14 @@ export class StowerInverter {
       );
 
       const response = await uploadFileToServerAsync({
-        userID: user?.userID ?? '',
         inverterID: inverter.id,
         fileName: fileName,
         fileData: fileData,
       });
 
       if (response.success) {
-        this.deleteFile(fileName);
+        //TODO: Uncomment this when the inverter issue is fixed
+        // this.deleteFile(fileName);
 
         removeFileFromStorage(fileName);
       } else {
@@ -322,7 +298,7 @@ export class StowerInverter {
   }
 }
 
-export function removeFileFromStorage(fileName: string) {
+function removeFileFromStorage(fileName: string) {
   const files: string[] = getFromStorage(STORAGE_KEYS.FILE) || [];
 
   // Remove the deleted file from the list

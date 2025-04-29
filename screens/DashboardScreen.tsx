@@ -1,12 +1,7 @@
-'use client';
-
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Card, Text, Appbar } from 'react-native-paper';
-import type { DrawerNavigationProp } from '@react-navigation/drawer';
-import type { RouteProp } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import type { AppStackParamList } from '../nav/AppNavigation';
 import { getConnectedInverterDevice, getConnectedNodes } from '../services/storage';
 import { fetchAndLogBatteryInfo, fetchAndLogChargeControllerStatus, fetchAndLogInverterStatus } from '../services/InverterService';
 import { showToast, ToastType } from '../components/Toast';
@@ -15,17 +10,12 @@ import { Colours } from '../styles/properties/colours';
 import { AppScreen } from '../components/AppScreen';
 import { BatteryDetailsCard } from '../components/Cards/BatteryDetailsCard';
 import { Flex } from '../styles/properties/dimensions';
+import { uploadInverterAndBatteryDataAsync } from '../services/DeviceUnitService';
+import { AuthenticatedScreenDefinitions, navigationRefAuthenticated } from '../nav/ScreenDefinitions';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-type DashboardScreenNavigationProp = DrawerNavigationProp<AppStackParamList, 'Dashboard'>
-type DashboardScreenRouteProp = RouteProp<AppStackParamList, 'Dashboard'>
-
-interface DashboardScreenProps {
-  navigation: DashboardScreenNavigationProp
-  route: DashboardScreenRouteProp
-}
-
-export default function DashboardScreen({ navigation, route }: DashboardScreenProps) {
-  const inverterId = route.params.inverter.id;
+export default function DashboardScreen(props: NativeStackScreenProps<AuthenticatedScreenDefinitions, 'Dashboard'>) {
+  const inverterId = props.route.params.inverter.id;
   const inverter = getConnectedInverterDevice(inverterId);
   const [isLoading, setIsLoading] = useState(true);
   const [connectedNodeIds, setConnectedNodeIds] = useState<string[]>([]);
@@ -58,45 +48,7 @@ export default function DashboardScreen({ navigation, route }: DashboardScreenPr
     SolarVoltage: 0,
     SolarCurrent: 0,
   });
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [nodeDataList, setNodeDataList] = useState<BatteryInfo[]>([]);
-  const [batteryData, setBatteryData] = useState<BatteryData[]>([]);
-
-  // useEffect(() => {
-  //   const loadBatteryData = async () => {
-
-  //     let batteryDatalist: BatteryData[] = []
-  //     try {
-  //       const inverter = getConnectedInverter();
-  //       if (inverter) {
-  //         const node = getConnectedNodes(inverter);
-  //         console.log("battery Id " + connectedNodeIds)
-
-  //         if (node) {
-  //           for(const batId in connectedNodeIds){
-  //             console.log("battery Id " + batId)
-  //             const data = await fetchAndLogBatteryData(batId, inverter);
-  //             if (data) {
-  //               batteryDatalist.push(data)
-  //             }
-  //           }
-
-  //         }
-
-  //         setBatteryData(batteryDatalist)
-
-  //       }
-
-  //       setIsLoading(false);
-  //     } catch (error) {
-  //       console.error('Failed to load battery data', error);
-  //       setIsLoading(false);
-  //     }
-  //   };
-
-  //   loadBatteryData();
-  // });
 
   useEffect(() => {
 
@@ -107,8 +59,6 @@ export default function DashboardScreen({ navigation, route }: DashboardScreenPr
         console.log(inverter)
 
         if (inverter) {
-          // console.log("checking connection")
-          // checkAndConnectToInverter(inverter)
           const chargeControllerInfo = await fetchAndLogChargeControllerStatus(inverter);
           const inverterState = await fetchAndLogInverterStatus(inverter);
 
@@ -116,7 +66,6 @@ export default function DashboardScreen({ navigation, route }: DashboardScreenPr
 
             setChargeControllerState(chargeControllerInfo);
             setInverterState(inverterState);
-            let list: BatteryInfo[] = []
 
             const nodes = getConnectedNodes(inverter);
             if (nodes && nodes.length > 0) {
@@ -131,6 +80,9 @@ export default function DashboardScreen({ navigation, route }: DashboardScreenPr
 
               const validBatteryInfo = batteryInfoList.filter(Boolean) as BatteryInfo[];
               setNodeDataList(validBatteryInfo);
+
+              //TODO: Send Request here to post the battery data
+              // await uploadInverterAndBatteryDataAsync(inverterState, validBatteryInfo);
             }
 
             setIsLoading(false);
@@ -156,18 +108,10 @@ export default function DashboardScreen({ navigation, route }: DashboardScreenPr
     return '#F44336'; // Red
   };
 
-  // Helper function to get battery icon based on RSOC
-  const getBatteryIcon = (rsoc: number) => {
-    if (rsoc >= 80) { return 'battery-high'; }
-    if (rsoc >= 50) { return 'battery-medium'; }
-    if (rsoc >= 20) { return 'battery-low'; }
-    return 'battery-outline';
-  };
-
   return (
     <AppScreen isLoading={isLoading}>
       <Appbar.Header>
-        <Appbar.BackAction onPress={() => navigation.navigate('Home')} />
+        <Appbar.BackAction onPress={() => navigationRefAuthenticated.navigate('Home')} />
         <Appbar.Content title="System Dashboard" />
       </Appbar.Header>
 
@@ -234,19 +178,6 @@ export default function DashboardScreen({ navigation, route }: DashboardScreenPr
     </AppScreen>
   );
 }
-
-const BatteryCard = ({ nodeId, onPress }: { nodeId: string; onPress: (nodeId: string) => void }) => (
-  <Card style={styles.inverterCard} onPress={() => onPress(nodeId)}>
-    <Card.Content>
-      <View style={styles.inverterHeader}>
-        <MaterialCommunityIcons name="battery" size={24} color={Colours.secondary} />
-        <Text variant="titleLarge" style={styles.inverterTitle}>
-          Battery {nodeId}
-        </Text>
-      </View>
-    </Card.Content>
-  </Card>
-);
 
 const styles = StyleSheet.create({
   scrollView: {

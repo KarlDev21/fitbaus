@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { AppScreen } from '../../components/AppScreen';
 import { Image, Text, View } from 'react-native';
 import { Logo, ScreenBase } from '../../styles';
-import { Colours, Flex, Padding } from '../../styles/properties';
+import { Flex, Padding } from '../../styles/properties';
 import { Input, PasswordInput } from '../../components/Input';
 import { ButtonLink, ButtonPrimary } from '../../components/Button';
 import { ScrollView } from 'react-native-gesture-handler';
@@ -33,29 +33,23 @@ const RegistrationScreen = () => {
             return;
         }
 
-        // const response = await registerAsync(formState.values.name, formState.values.email, formState.values.password, formState.values.phone);
-        // if (!response.success) {
-        //     showToast(ToastType.Error, response.error!);
-        //     setIsLoading(false);
-        //     return;
-        // }
-
-        //mocking this for now to get in 
-        const response = {
-            success: true,
-            error: "an error occurred",
-            data: {
-                name: formState.values.name,
-                email: formState.values.email,
-                phone: formState.values.phone,
-            },
-        };
-        
+        const response = await registerAsync(formState.values.name, formState.values.email, formState.values.password, formState.values.phone);
         if (!response.success) {
             showToast(ToastType.Error, response.error!);
             setIsLoading(false);
             return;
         }
+
+        //mocking this for now to get in 
+        // const response = {
+        //     success: true,
+        //     error: "an error occurred",
+        //     data: {
+        //         name: formState.values.name,
+        //         email: formState.values.email,
+        //         phone: formState.values.phone,
+        //     },
+        // };
 
         console.log("register working")
         await setItemAsync(SECURE_STORE_KEYS.USER_PROFILE, response.data);
@@ -114,7 +108,7 @@ const RegistrationScreen = () => {
                     <ButtonPrimary label="Register" onPress={handleRegister} loading={isLoading} style={{ width: Width.full, marginTop: GenericSize.medium }} />
 
                     <View style={ScreenBase.landing_screen_no_account_view}>
-                        <Text style={[textStyles.subtitle, {paddingRight: Padding.small}]}>{'Already have an account?'}</Text>
+                        <Text style={[textStyles.subtitle, { paddingRight: Padding.small }]}>{'Already have an account?'}</Text>
                         <ButtonLink label={'Login'} onPress={navigateToLogin} />
                     </View>
                 </View>

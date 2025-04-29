@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, FlatList } from 'react-native';
 import { Text, ActivityIndicator, Button } from 'react-native-paper';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { AppStackParamList } from '../nav/AppNavigation';
 import { showToast, ToastType } from '../components/Toast';
 import { Device } from 'react-native-ble-plx';
 import { setConnectedInverter, setConnectedNodes } from '../services/storage';
@@ -17,14 +15,9 @@ import InverterCard from '../components/Cards/InverterCard';
 import { buttonStyles } from '../styles/components/buttonStyles';
 import { Flex, GenericSize, Margin, Padding } from '../styles/properties/dimensions';
 import { textStyles } from '../styles/components/textStyles';
+import { navigationRefAuthenticated } from '../nav/ScreenDefinitions';
 
-type NodeScreenNavigationProp = NativeStackNavigationProp<AppStackParamList, 'Nodes'>
-
-interface NodeScreenProps {
-  navigation: NodeScreenNavigationProp,
-}
-
-export default function NodeScreen({ navigation }: NodeScreenProps) {
+export default function NodeScreen() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
   const [selectedBatteries, setSelectedBatteries] = useState<string[]>([]);
@@ -120,7 +113,7 @@ export default function NodeScreen({ navigation }: NodeScreenProps) {
         setConnectedNodes(authenticatedNodes, selectedInverter);
       }
 
-      navigation.navigate('Finalizing');
+      navigationRefAuthenticated.navigate('Finalizing');
     } catch (error) {
       showToast(ToastType.Error, 'An error occurred while saving authenticated batteries.');
     }
@@ -226,7 +219,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopWidth: 1,
     borderTopColor: '#eee',
-    
+
   },
   buttonRow: {
     flexDirection: 'row',
