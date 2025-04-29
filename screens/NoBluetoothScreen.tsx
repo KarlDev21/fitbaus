@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Button, Image } from 'react-native';
-import { Colours } from '../styles/properties/colours';
-import { useConnectivity } from '../providers/ConnectivityProvider';
+import { View, Text } from 'react-native';
 import { useBluetooth } from '../providers/BluetoothProvider';
 import { requestBluetoothPermissions } from '../helpers/AppHelper';
 import { Flex } from '../styles/properties/dimensions';
@@ -19,11 +17,11 @@ const NoBluetoothScreen = () => {
         setChecking(false);
 
         if (granted) {
-        
-        // Navigate or trigger re-check
+
+            // Navigate or trigger re-check
         }
-      };
-    
+    };
+
 
     return (
         <View
@@ -37,45 +35,45 @@ const NoBluetoothScreen = () => {
             {
                 isBluetoothEnabled === null &&
                 <>
-                <Text
-                style={textStyles.heading}
-            >
-                Checking Bluetooth Connection 
-            </Text>
+                    <Text
+                        style={textStyles.heading}
+                    >
+                        Checking Bluetooth Connection
+                    </Text>
                 </>
             }
             {
-                !permissionGranted && 
+                !permissionGranted &&
                 <>
-                <Text
-                style={textStyles.heading}
-            >
-                Bluetooth Permission not granted 
-            </Text>
-            <Text
-                style={textStyles.subtitle}
-            >
-            Please grant the required permissions.
-            </Text>
+                    <Text
+                        style={textStyles.heading}
+                    >
+                        Bluetooth Permission not granted
+                    </Text>
+                    <Text
+                        style={textStyles.subtitle}
+                    >
+                        Please grant the required permissions.
+                    </Text>
                 </>
             }
             {
                 permissionGranted && !isBluetoothEnabled &&
                 <>
-                <Text
-                style={textStyles.heading}
-            >
-              { isBTLoading ? 'Checking Bluetooth Connection' : 'No Bluetooth Connection' }
-            </Text>
-            <Text
-                style={textStyles.subtitle}
-            >
-            Please enable Bluetooth to Continue.
-            </Text>
+                    <Text
+                        style={textStyles.heading}
+                    >
+                        {isBTLoading ? 'Checking Bluetooth Connection' : 'No Bluetooth Connection'}
+                    </Text>
+                    <Text
+                        style={textStyles.subtitle}
+                    >
+                        Please enable Bluetooth to Continue.
+                    </Text>
                 </>
             }
 
-            
+
         </View>
     );
 };

@@ -1,18 +1,10 @@
 import React from 'react';
 import { View, Text, Button } from 'react-native';
 import { Colours } from '../styles/properties/colours';
-import { useConnectivity } from '../providers/ConnectivityProvider';
 import { Flex, Padding } from '../styles/properties/dimensions';
 import { textStyles } from '../styles/components/textStyles';
 
-const NoInternetScreen = () => {
-
-    const { setContinueOffline } = useConnectivity();
-
-    const handleContinueOffline = () => {
-        setContinueOffline(true);
-      };
-
+const NoInternetScreen = ({ onContinueOffline }: { onContinueOffline: () => void }) => {
     return (
         <View
             style={{
@@ -28,11 +20,11 @@ const NoInternetScreen = () => {
                 No Internet Connection
             </Text>
             <Text
-                style={[textStyles.subtitle, {paddingVertical : Padding.medium}]}
+                style={[textStyles.subtitle, { paddingVertical: Padding.medium }]}
             >
-            You can continue using the app without an internet connection.
+                You can continue using the app without an internet connection.
             </Text>
-            <Button title="Continue Offline" onPress={handleContinueOffline} color={Colours.primary} />
+            <Button title="Continue Offline" onPress={onContinueOffline} color={Colours.primary} />
         </View>
     );
 };
