@@ -1,3 +1,4 @@
+import {getSelectedInverter} from '../helpers/BluetoothHelper';
 import {UploadFileRequest} from '../types/ApiRequest';
 import {
   ApiResponse,
@@ -6,8 +7,7 @@ import {
   FetchAllDeviceUnitsResponse,
   UploadFileResponse,
 } from '../types/ApiResponse';
-import {BatteryData, BatteryInfo, InverterState} from '../types/BleTypes';
-import {getSelectedInverter} from './storage';
+import {BatteryData, InverterState} from '../types/BleTypes';
 import {API_BASE_URL, buildHeaders} from './UserProfileService';
 
 export async function createDeedOfRegistrationAsync(

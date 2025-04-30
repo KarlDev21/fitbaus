@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Card, Text, Appbar } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { getConnectedInverterDevice, getConnectedNodes } from '../services/storage';
 import { fetchAndLogBatteryInfo, fetchAndLogChargeControllerStatus, fetchAndLogInverterStatus } from '../services/InverterService';
 import { showToast, ToastType } from '../components/Toast';
-import { BatteryData, BatteryInfo, ChargeControllerState, InverterState } from '../types/BleTypes';
+import { BatteryData, ChargeControllerState, InverterState } from '../types/BleTypes';
 import { Colours } from '../styles/properties/colours';
 import { AppScreen } from '../components/AppScreen';
 import { BatteryDetailsCard } from '../components/Cards/BatteryDetailsCard';
@@ -13,6 +12,7 @@ import { Flex } from '../styles/properties/dimensions';
 import { uploadInverterAndBatteryDataAsync } from '../services/DeviceUnitService';
 import { AuthenticatedScreenDefinitions, navigationRefAuthenticated } from '../nav/ScreenDefinitions';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { getConnectedInverterDevice, getConnectedNodes } from '../helpers/BluetoothHelper';
 
 export default function DashboardScreen(props: NativeStackScreenProps<AuthenticatedScreenDefinitions, 'Dashboard'>) {
   const inverterId = props.route.params.inverter.id;

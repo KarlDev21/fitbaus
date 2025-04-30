@@ -57,18 +57,6 @@ export interface InverterState {
   deviceID?: string;
 }
 
-export interface DashboardData {
-  batterySoC: number;
-  inverterOutput: number;
-  solarInput: number;
-  temperature: number;
-  kWhGenerated: number;
-  kWhConsumed: number;
-  co2Savings: number;
-  leaseProgress: number;
-  alerts: string[];
-}
-
 export type BatteryInfo = {
   nodeId: string;
   nodeData: BatteryData;

@@ -2,6 +2,8 @@
 import {BleManager} from 'react-native-ble-plx';
 import {Buffer} from 'buffer';
 import CryptoJS from 'crypto-js';
+import {getFromStorage, saveToStorage, STORAGE_KEYS} from './StorageHelper';
+import {Battery, Inverter} from '../types/DeviceType';
 
 export const BleManagerInstance = new BleManager();
 
@@ -205,3 +207,38 @@ function hexStringToUint8Array(hex: string): Uint8Array {
   }
   return result;
 }
+
+export function getSelectedInverter(): Inverter | null {
+  return getFromStorage<Inverter>(STORAGE_KEYS.SELECTED_INVERTER) ?? null;
+}
+
+export function setConnectedInverter(inverter: Inverter) {
+  saveToStorage(STORAGE_KEYS.CONNECTED_INVERTER, JSON.stringify(inverter));
+}
+
+export function getConnectedInverter(): Inverter | null {
+  return getFromStorage<Inverter>(STORAGE_KEYS.CONNECTED_INVERTER) ?? null;
+}
+
+export const setConnectedNodes = async (
+  nodes: Battery[],
+  parentInverter: Inverter,
+) => {
+  const key = `${parentInverter.id} ${STORAGE_KEYS.CONNECTED_NODES}`;
+  saveToStorage(key, JSON.stringify(nodes));
+};
+
+export const getConnectedNodes = (parentInverter: Inverter) => {
+  const key = `${parentInverter.id} ${STORAGE_KEYS.CONNECTED_NODES}`;
+  return getFromStorage<Battery[]>(key) as Battery[];
+};
+
+export const setConnectedInverterDevice = (inverter: Inverter) => {
+  const key = `Device ${inverter.id}`;
+  saveToStorage(key, JSON.stringify(inverter));
+};
+
+export const getConnectedInverterDevice = (inverterId: string) => {
+  const key = `Device ${inverterId}`;
+  return getFromStorage<Inverter>(key) ?? null;
+};

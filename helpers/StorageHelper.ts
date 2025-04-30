@@ -25,7 +25,7 @@ export const saveToStorage = (key: string, value: string): void => {
  * @param {string} key - The key of the value to retrieve.
  * @returns {any} - The stored value. If it's a JSON string, it will be parsed into an object or array.
  */
-export const getFromStorage = (key: string): any => {
+export function getFromStorage<T>(key: string): T | null {
   try {
     const data = storage.getString(key);
     return data ? JSON.parse(data) : null;
@@ -33,7 +33,7 @@ export const getFromStorage = (key: string): any => {
     console.error(`Error retrieving key "${key}" from storage:`, error);
     return null;
   }
-};
+}
 
 /**
  * Retrieves a string value from MMKV storage.
@@ -64,4 +64,6 @@ export const STORAGE_KEYS = {
   INVERTERS: 'inverters',
   SELECTED_NODES: 'selectedNodes',
   SELECTED_INVERTER: 'selectedInverter',
+  CONNECTED_INVERTER: 'connectedInverter',
+  CONNECTED_NODES: 'connectedNodes',
 };

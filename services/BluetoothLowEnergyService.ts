@@ -1,8 +1,8 @@
 import {ScanCallbackType} from 'react-native-ble-plx';
 import {showToast, ToastType} from '../components/Toast';
 import {BleManagerInstance} from '../helpers/BluetoothHelper';
-import {clearScannedDevices} from './storage';
 import {Battery, Inverter} from '../types/DeviceType';
+import {removeFromStorage, STORAGE_KEYS} from '../helpers/StorageHelper';
 
 /**
  * Scans for BLE devices and categorizes them into inverters and nodes.
@@ -52,6 +52,12 @@ export async function scanDevices(): Promise<{
       });
     }, 4000);
   });
+}
+
+function clearScannedDevices() {
+  removeFromStorage(STORAGE_KEYS.INVERTERS);
+  removeFromStorage(STORAGE_KEYS.SELECTED_NODES);
+  removeFromStorage(STORAGE_KEYS.NODES);
 }
 
 export const getScanErrorMessage = (

@@ -3,14 +3,13 @@ import { View, StyleSheet } from 'react-native';
 import { Appbar } from 'react-native-paper';
 import { showToast, ToastType } from '../components/Toast';
 import { getScanErrorMessage, scanDevices } from '../services/BluetoothLowEnergyService';
-import { getConnectedInverter } from '../services/storage';
 import { AppScreen } from '../components/AppScreen';
 import { ScanCard } from '../components/Cards/ScanCard';
 import { SavedInverterCard } from '../components/Cards/SavedInverterCard';
 import { saveToStorage, STORAGE_KEYS } from '../helpers/StorageHelper';
 import { Inverter } from '../types/DeviceType';
-import { BleManagerInstance } from '../helpers/BluetoothHelper';
-import {Flex } from '../styles/properties';
+import { BleManagerInstance, getConnectedInverter } from '../helpers/BluetoothHelper';
+import { Flex } from '../styles/properties';
 import { GenericSize } from '../styles/properties/dimensions';
 import { textStyles } from '../styles/components/textStyles';
 import { useKeepAwake } from 'expo-keep-awake';
@@ -101,7 +100,7 @@ export default function HomeScreen() {
     <AppScreen>
       <View style={styles.content}>
 
-        <Appbar.Header mode='center-aligned' style={textStyles.AppHeader} > 
+        <Appbar.Header mode='center-aligned' style={textStyles.AppHeader} >
           <Appbar.Content titleStyle={textStyles.AppContent} title="Inverter Scanner" />
         </Appbar.Header>
 

@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, FlatList } from 'react-native';
-import { ActivityIndicator, Button, Appbar } from 'react-native-paper';
+import { Button, Appbar } from 'react-native-paper';
 import { showToast, ToastType } from '../components/Toast';
 import { Device } from 'react-native-ble-plx';
-import { setConnectedInverter, setConnectedNodes } from '../services/storage';
 import { authenticateNode } from '../services/NodeService';
 import { Colours } from '../styles/properties/colours';
 import { getFromStorage, saveToStorage, STORAGE_KEYS } from '../helpers/StorageHelper';
@@ -17,6 +16,7 @@ import { Flex, GenericSize, Margin, Padding, Width } from '../styles/properties/
 import { textStyles } from '../styles/components/textStyles';
 import { navigationRefAuthenticated } from '../nav/ScreenDefinitions';
 import { ButtonPrimary } from '../components/Button';
+import { setConnectedInverter, setConnectedNodes } from '../helpers/BluetoothHelper';
 
 export default function NodeScreen() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -126,7 +126,7 @@ export default function NodeScreen() {
 
   return (
     <AppScreen>
-      <Appbar.Header mode='center-aligned' style={textStyles.AppHeader} > 
+      <Appbar.Header mode='center-aligned' style={textStyles.AppHeader} >
         <Appbar.BackAction onPress={() => navigationRefAuthenticated.navigate('Finalizing')} />
         <Appbar.Content titleStyle={textStyles.AppContent} title="Select Batteries" />
       </Appbar.Header>
@@ -153,7 +153,7 @@ export default function NodeScreen() {
       {/* Buttons for authentication and continuation */}
       <View style={styles.buttonContainer}>
         {!showResults ? (
-          <ButtonPrimary label="Authenticate Batteries" onPress={handleAuthenticate} loading={isAuthenticating}  style={{ width: Width.full, marginTop: GenericSize.medium }}/>
+          <ButtonPrimary label="Authenticate Batteries" onPress={handleAuthenticate} loading={isAuthenticating} style={{ width: Width.full, marginTop: GenericSize.medium }} />
         ) : (
           <View style={styles.buttonRow}>
             <Button

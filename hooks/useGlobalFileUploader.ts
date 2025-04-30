@@ -1,8 +1,10 @@
 import {useEffect} from 'react';
-import {BleManagerInstance} from '../helpers/BluetoothHelper';
+import {
+  BleManagerInstance,
+  getConnectedInverter,
+} from '../helpers/BluetoothHelper';
 import {StowerInverter} from '../logs/InverterLogService';
 import {writeFiles, readLogFiles} from '../helpers/FileHelper';
-import {getConnectedInverter} from '../services/storage';
 
 export function useGlobalFileUploader() {
   useEffect(() => {

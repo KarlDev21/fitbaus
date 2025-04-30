@@ -4,7 +4,6 @@ import { View, StyleSheet, FlatList } from 'react-native';
 import { Card, Text, Appbar } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { showToast, ToastType } from '../components/Toast';
-import { getInverters, setSelectedInverter } from '../services/storage';
 import { Device } from 'react-native-ble-plx';
 import { connectToInverter } from '../services/InverterService';
 import { Inverter } from '../types/DeviceType';
@@ -15,6 +14,7 @@ import { Dimensions, GenericSize, Margin, Padding } from '../styles/properties/d
 import { fontWeight } from '../styles/properties/fontWeight';
 import { textStyles } from '../styles/components/textStyles';
 import { navigationRefAuthenticated } from '../nav/ScreenDefinitions';
+import { getFromStorage, saveToStorage, STORAGE_KEYS } from '../helpers/StorageHelper';
 
 export default function InverterScreen() {
   const [isLoading, setIsLoading] = useState(true);
@@ -25,7 +25,7 @@ export default function InverterScreen() {
       try {
         setIsLoading(true);
 
-        const invertersData = getInverters();
+        const invertersData = getFromStorage<Inverter[]>(STORAGE_KEYS.INVERTERS);
         if (invertersData) {
           setInverters(invertersData);
         }
@@ -41,7 +41,7 @@ export default function InverterScreen() {
 
   const handleSelectInverter = async (inverter: Device) => {
     try {
-      setSelectedInverter(inverter);
+      saveToStorage(STORAGE_KEYS.SELECTED_INVERTER, JSON.stringify(inverter));
       showToast(ToastType.Success, 'Inverter selected successfully!');
       await connectToInverter(inverter);
       navigationRefAuthenticated.navigate('Nodes');
@@ -72,7 +72,7 @@ export default function InverterScreen() {
   return (
     <AppScreen>
 
-      <Appbar.Header mode='center-aligned' style={textStyles.AppHeader} > 
+      <Appbar.Header mode='center-aligned' style={textStyles.AppHeader} >
         <Appbar.BackAction onPress={() => navigationRefAuthenticated.navigate('Home')} />
         <Appbar.Content titleStyle={textStyles.AppContent} title="Inverter Scanner" />
       </Appbar.Header>
