@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Text } from 'react-native-paper';
+import { Appbar } from 'react-native-paper';
 import { showToast, ToastType } from '../components/Toast';
 import { getScanErrorMessage, scanDevices } from '../services/BluetoothLowEnergyService';
 import { getConnectedInverter } from '../services/storage';
@@ -10,7 +10,7 @@ import { SavedInverterCard } from '../components/Cards/SavedInverterCard';
 import { saveToStorage, STORAGE_KEYS } from '../helpers/StorageHelper';
 import { Inverter } from '../types/DeviceType';
 import { BleManagerInstance } from '../helpers/BluetoothHelper';
-import { Flex } from '../styles/properties';
+import {Flex } from '../styles/properties';
 import { GenericSize } from '../styles/properties/dimensions';
 import { textStyles } from '../styles/components/textStyles';
 import { useKeepAwake } from 'expo-keep-awake';
@@ -65,6 +65,7 @@ export default function HomeScreen() {
         navigationRefAuthenticated.navigate('Inverters');
       }
     } catch (error) {
+      console.log(error)
       showToast(ToastType.Error, 'An error occurred while scanning. Please try again.');
     } finally {
       setIsScanning(false);
@@ -99,9 +100,10 @@ export default function HomeScreen() {
   return (
     <AppScreen>
       <View style={styles.content}>
-        <Text variant="headlineMedium" style={textStyles.title}>
-          Inverter Scanner
-        </Text>
+
+        <Appbar.Header mode='center-aligned' style={textStyles.AppHeader} > 
+          <Appbar.Content titleStyle={textStyles.AppContent} title="Inverter Scanner" />
+        </Appbar.Header>
 
         <ScanCard isScanning={isScanning} onScan={handleScan} />
 

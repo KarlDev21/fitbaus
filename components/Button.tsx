@@ -20,11 +20,11 @@ export const ButtonPrimary: React.FC<BaseButtonProps> = ({ label, onPress, disab
             loading={loading}
             disabled={disabled}
             style={[buttonStyles.primaryButton, style]}
-            labelStyle={buttonStyles.primaryText}
+            labelStyle={ loading ? buttonStyles.primaryLoadingText : buttonStyles.primaryText}
             accessibilityLabel={label}
             buttonColor={Colours.primary}
         >
-            {label}
+            { !loading && label}
         </Button>
     )
 }

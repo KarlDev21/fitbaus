@@ -69,7 +69,7 @@ const LoginScreen = () => {
         <AppScreen>
             {/* <ScrollView style={{ flex: Flex.xsmall, width: Width.full, height: Height.full }}> */}
             <View style={{ flex: Flex.xsmall, justifyContent: 'center', alignItems: 'center' }}>
-                <LogoComponent />
+            <LogoComponent containerStyle={{flex: Flex.xsmall}}/>
                 {/* Login Form */}
                 <Text style={textStyles.heading}>{'Log In Now'}</Text>
                 <Text style={textStyles.subtitle}>{'Please login to continue using our app'}</Text>

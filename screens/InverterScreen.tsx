@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, FlatList } from 'react-native';
-import { Card, Text, IconButton } from 'react-native-paper';
+import { Card, Text, Appbar } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { showToast, ToastType } from '../components/Toast';
 import { getInverters, setSelectedInverter } from '../services/storage';
@@ -10,7 +10,6 @@ import { connectToInverter } from '../services/InverterService';
 import { Inverter } from '../types/DeviceType';
 import { Colours } from '../styles/properties/colours';
 import { AppScreen } from '../components/AppScreen';
-import { useNavigation } from '@react-navigation/native';
 import { Flex } from '../styles/properties';
 import { Dimensions, GenericSize, Margin, Padding } from '../styles/properties/dimensions';
 import { fontWeight } from '../styles/properties/fontWeight';
@@ -73,12 +72,10 @@ export default function InverterScreen() {
   return (
     <AppScreen>
 
-      <View style={styles.header}>
-        <IconButton icon="camera" size={GenericSize.large} onPress={() => navigationRefAuthenticated.goBack()} />
-        <Text variant="titleLarge" style={textStyles.title}>
-          Available Inverters
-        </Text>
-      </View>
+      <Appbar.Header mode='center-aligned' style={textStyles.AppHeader} > 
+        <Appbar.BackAction onPress={() => navigationRefAuthenticated.navigate('Home')} />
+        <Appbar.Content titleStyle={textStyles.AppContent} title="Inverter Scanner" />
+      </Appbar.Header>
 
       <FlatList
         data={inverters}

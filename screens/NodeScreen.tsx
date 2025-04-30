@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, FlatList } from 'react-native';
-import { Text, ActivityIndicator, Button } from 'react-native-paper';
+import { ActivityIndicator, Button, Appbar } from 'react-native-paper';
 import { showToast, ToastType } from '../components/Toast';
 import { Device } from 'react-native-ble-plx';
 import { setConnectedInverter, setConnectedNodes } from '../services/storage';
@@ -125,13 +125,10 @@ export default function NodeScreen() {
 
   return (
     <AppScreen>
-      {/* Header with back button and title */}
-      <View style={styles.header}>
-        {/* <IconButton icon="account-arrow-left-outline" size={24} onPress={() => navigation.goBack()} /> */}
-        <Text variant="titleLarge" style={textStyles.title}>
-          Select Batteries
-        </Text>
-      </View>
+      <Appbar.Header mode='center-aligned' style={textStyles.AppHeader} > 
+        <Appbar.BackAction onPress={() => navigationRefAuthenticated.navigate('Finalizing')} />
+        <Appbar.Content titleStyle={textStyles.AppContent} title="Select Batteries" />
+      </Appbar.Header>
 
       {/* Display the selected inverter */}
       {selectedInverter && <InverterCard inverter={selectedInverter} />}

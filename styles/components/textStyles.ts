@@ -21,5 +21,14 @@ export const textStyles = StyleSheet.create({
     marginBottom: Margin.large,
     fontWeight: "bold",
     color : Colours.textPrimary
+  },
+  AppHeader:{
+    backgroundColor: 'transparent',
+    marginVertical: Spacing.small,
+  },
+  AppContent:{
+    fontSize: FontSize.xlarge,
+    color: Colours.textPrimary,
+    fontWeight: 'bold',
   }
 });

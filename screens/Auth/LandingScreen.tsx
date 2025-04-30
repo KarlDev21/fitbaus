@@ -4,7 +4,7 @@ import { Text, View } from 'react-native';
 import { ScreenBase } from '../../styles';
 import { ButtonLink, ButtonPrimary } from '../../components/Button';
 import DeviceInfo from 'react-native-device-info';
-import { FontSize, Padding } from '../../styles/properties';
+import { Flex, FontSize, Padding } from '../../styles/properties';
 import LogoComponent from '../../components/Logo';
 import { navigationRefUnauthenticated } from '../../nav/ScreenDefinitions';
 
@@ -21,7 +21,7 @@ const LandingScreen = () => {
 
     return (
         <AppScreen>
-            <LogoComponent />
+            <LogoComponent containerStyle={{flex: Flex.xsmall}}/>
 
             <View style={ScreenBase.landing_screen_container}>
                 <ButtonPrimary label="Login" onPress={navigateToLogin} />

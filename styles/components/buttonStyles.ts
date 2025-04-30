@@ -1,5 +1,6 @@
 import {StyleSheet} from 'react-native';
 import {Colours, Dimensions, FontSize, Margin, Padding} from '../properties';
+import { GenericSize } from '../properties/dimensions';
 
 export const buttonStyles = StyleSheet.create({
   primaryButton: {
@@ -10,6 +11,11 @@ export const buttonStyles = StyleSheet.create({
   primaryText: {
     fontSize: FontSize.medium,
     color: Colours.primaryButtonText,
+  },
+  primaryLoadingText:{
+    fontSize: FontSize.medium,
+    color: Colours.primaryButtonText,
+    marginRight: GenericSize.ssmall,
   },
   linkButton: {
     marginVertical: Margin.medium,

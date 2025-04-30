@@ -1,34 +1,34 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import { Colours } from '../styles/properties/colours';
-import { Flex, Padding } from '../styles/properties/dimensions';
+import { Flex } from '../styles/properties/dimensions';
 import { textStyles } from '../styles/components/textStyles';
 import LogoComponent from '../components/Logo';
 
-const NoInternetScreen = () => {
+const NoPermissionScreen = () => {
+
     return (
         <View
             style={{
                 flex: Flex.xsmall,
                 justifyContent: 'center',
                 alignItems: 'center',
-                backgroundColor: Colours.backgroundPrimary,
+                backgroundColor: '#f9f9f9',
             }}
         >
-            <LogoComponent containerStyle={{ flex: 0 }}/>
-
+            <LogoComponent/>
+            
             <Text
                 style={textStyles.heading}
             >
-                No Internet Connection
+                Bluetooth Permission not granted
             </Text>
             <Text
-                style={[textStyles.subtitle, { paddingVertical: Padding.medium }]}
+                style={textStyles.subtitle}
             >
-                You can not continue using the app without an internet connection.
+                Please grant the required permissions.
             </Text>
         </View>
     );
 };
 
-export default NoInternetScreen;
+export default NoPermissionScreen;
