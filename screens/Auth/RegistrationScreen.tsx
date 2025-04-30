@@ -1,12 +1,11 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, { useState } from 'react';
 import { AppScreen } from '../../components/AppScreen';
-import { Image, Text, View } from 'react-native';
+import { Image, ScrollView, Text, View } from 'react-native';
 import { Logo, ScreenBase } from '../../styles';
 import { Flex, Padding } from '../../styles/properties';
 import { Input, PasswordInput } from '../../components/Input';
 import { ButtonLink, ButtonPrimary } from '../../components/Button';
-import { ScrollView } from 'react-native-gesture-handler';
 import { useForm } from '../../validation/useForm';
 import { registerAsync } from '../../services/UserProfileService';
 import { showToast, ToastType } from '../../components/Toast';
