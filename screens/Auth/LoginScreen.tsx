@@ -42,6 +42,11 @@ const LoginScreen = () => {
         //     data: {
         //         email: formState.values.email,
         //         loginPassword: formState.values.loginPassword,
+        //         userID: 'mockUserID',
+        //         name: 'Mock User',
+        //         phone: '1234567890',
+        //         token: 'mockToken',
+        //         role: 'user',
         //     },
         // };
 

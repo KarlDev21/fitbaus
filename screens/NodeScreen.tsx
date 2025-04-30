@@ -13,9 +13,10 @@ import { AppScreen } from '../components/AppScreen';
 import BatteryCard from '../components/Cards/BatteryCard';
 import InverterCard from '../components/Cards/InverterCard';
 import { buttonStyles } from '../styles/components/buttonStyles';
-import { Flex, GenericSize, Margin, Padding } from '../styles/properties/dimensions';
+import { Flex, GenericSize, Margin, Padding, Width } from '../styles/properties/dimensions';
 import { textStyles } from '../styles/components/textStyles';
 import { navigationRefAuthenticated } from '../nav/ScreenDefinitions';
+import { ButtonPrimary } from '../components/Button';
 
 export default function NodeScreen() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -152,16 +153,7 @@ export default function NodeScreen() {
       {/* Buttons for authentication and continuation */}
       <View style={styles.buttonContainer}>
         {!showResults ? (
-          <Button
-            mode="contained"
-            onPress={handleAuthenticate}
-            disabled={selectedBatteries.length === 0 || isAuthenticating}
-            style={buttonStyles.primaryButton}
-            labelStyle={buttonStyles.buttonLabel}
-          >
-            {isAuthenticating ? 'Authenticating...' : 'Authenticate Batteries'}
-            {isAuthenticating && <ActivityIndicator size={GenericSize.medium} color="#fff" style={{ marginLeft: Margin.small }} />}
-          </Button>
+          <ButtonPrimary label="Authenticate Batteries" onPress={handleAuthenticate} loading={isAuthenticating}  style={{ width: Width.full, marginTop: GenericSize.medium }}/>
         ) : (
           <View style={styles.buttonRow}>
             <Button
