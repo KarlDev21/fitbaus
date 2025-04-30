@@ -81,7 +81,6 @@ export default function DashboardScreen(props: NativeStackScreenProps<Authentica
               setNodeDataList(validBatteryInfo);
             }
 
-            //TODO: Send Request here to post the battery data
             const response = await uploadInverterAndBatteryDataAsync(inverterState, nodeDataList);
             console.log('Battery data uploaded successfully:', response);
             setIsLoading(false);
@@ -94,6 +93,7 @@ export default function DashboardScreen(props: NativeStackScreenProps<Authentica
       } catch (error) {
         console.error('Failed to load dashboard data', error);
         setIsLoading(false);
+        navigationRefAuthenticated.navigate('Home');
       }
     };
 
