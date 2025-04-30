@@ -191,6 +191,7 @@ export class StowerInverter {
       console.log('All files downloaded successfully');
     } catch (error) {
       console.error('Error in getFiles:', error);
+      this.unsubscribe();
       throw error;
     }
   }
@@ -255,6 +256,7 @@ export class StowerInverter {
       console.log('All files uploaded successfully');
     } catch (error) {
       console.error('Error in getFiles:', error);
+      this.unsubscribe();
       throw error;
     }
   }
@@ -306,6 +308,8 @@ function removeFileFromStorage(fileName: string) {
 
   // Remove the deleted file from the list
   const updatedFiles = files.filter(file => file !== fileName);
+
+  console.log('Files after deletion: ', updatedFiles);
 
   // Save the updated list back to storage
   saveToStorage(STORAGE_KEYS.LOG_FILES, JSON.stringify(updatedFiles));

@@ -34,7 +34,7 @@ export async function scanDevices(): Promise<{
         console.log('Scanned device:', device?.name, device?.id);
 
         if (device?.name && device.name.includes('Invert')) {
-          device.requestMTU(23);
+          device.requestMTU(255);
           inverters.set(device.name, device);
         }
 
@@ -71,15 +71,15 @@ export const getScanErrorMessage = (
 };
 
 export async function checkBluetoothConnection(): Promise<boolean> {
-
-    try {
-      const state = await BleManagerInstance.state();
-      console.log("-------------------------BLE STATE---------------------------")
-      console.log(state)
-      return state === 'PoweredOn';
-    } catch (error) {
-      console.error('Error checking Bluetooth state:', error);
-      return false;
-    }
-
+  try {
+    const state = await BleManagerInstance.state();
+    console.log(
+      '-------------------------BLE STATE---------------------------',
+    );
+    console.log(state);
+    return state === 'PoweredOn';
+  } catch (error) {
+    console.error('Error checking Bluetooth state:', error);
+    return false;
+  }
 }

@@ -14,8 +14,10 @@ export function useGlobalFileUploader() {
           const connectedDevice = await BleManagerInstance.connectToDevice(
             savedInverter.id,
           );
+          connectedDevice.requestMTU(255);
           await connectedDevice.discoverAllServicesAndCharacteristics();
-          connectedDevice.requestMTU(512);
+
+          console.log('Connected to device: ', connectedDevice.mtu);
 
           const inverter = new StowerInverter(connectedDevice);
           inverter.subscribe();

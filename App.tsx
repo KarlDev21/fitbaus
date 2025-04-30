@@ -46,11 +46,11 @@ function App(): React.JSX.Element {
 
   return (
     <PaperProvider>
-      {/* <BluetoothProvider>
-        <OfflineBanner isConnected={isConnected} continueOffline={continueOffline} /> */}
-      {getNavigationContainer()}
-      <Toast config={toastConfig} topOffset={80} />
-      {/* </BluetoothProvider> */}
+      <BluetoothProvider>
+        <OfflineBanner isConnected={isConnected} continueOffline={continueOffline} />
+        {getNavigationContainer()}
+        <Toast config={toastConfig} topOffset={80} />
+      </BluetoothProvider>
     </PaperProvider>
   );
 }
