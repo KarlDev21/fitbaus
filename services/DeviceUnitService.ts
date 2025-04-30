@@ -6,7 +6,7 @@ import {
   FetchAllDeviceUnitsResponse,
   UploadFileResponse,
 } from '../types/ApiResponse';
-import {BatteryInfo, InverterState} from '../types/BleTypes';
+import {BatteryData, BatteryInfo, InverterState} from '../types/BleTypes';
 import {getSelectedInverter} from './storage';
 import {API_BASE_URL, buildHeaders} from './UserProfileService';
 
@@ -102,7 +102,7 @@ export async function uploadFileToServerAsync(
 
 export async function uploadInverterAndBatteryDataAsync(
   inverter: InverterState,
-  batteries: BatteryInfo[],
+  batteries: BatteryData[],
 ): Promise<ApiResponse<{message: string}>> {
   try {
     const headers = await buildHeaders();
@@ -113,10 +113,12 @@ export async function uploadInverterAndBatteryDataAsync(
       deviceID: deviceID,
     };
 
+    console.log('DATA:: ', {inverterState: inverterData, batteries: batteries});
+
     const response = await fetch(`${API_BASE_URL}/device`, {
       method: 'POST',
       headers,
-      body: JSON.stringify({inverterData, ...batteries}),
+      body: JSON.stringify({inverterState: inverterData, batteries: batteries}),
     });
 
     if (!response.ok) {
@@ -131,6 +133,7 @@ export async function uploadInverterAndBatteryDataAsync(
 
     return data;
   } catch (error: any) {
+    console.error('Error uploading inverter and battery data:', error);
     return {success: false, error: 'Network error'};
   }
 }

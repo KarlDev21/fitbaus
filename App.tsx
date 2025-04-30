@@ -24,25 +24,20 @@ export const AuthenticatedNavigationStack = new StackNavigationContainer<Authent
 function App(): React.JSX.Element {
   const user = useAtomValue(userAtom);
   const { isConnected } = useNetInfo();
-  const [ isGranted, setIsGranted ] = useState(true)
+  const [isGranted, setIsGranted] = useState(true)
 
   const loadPermission = async () => {
-
     const isPermissionGranted = await requestBluetoothPermissions()
-
     setIsGranted(isPermissionGranted)
-    
   }
 
   useGlobalFileUploader();
 
   const getNavigationContainer = useCallback(() => {
-
     loadPermission()
-
-    if ( !isGranted ){
+    if (!isGranted) {
       return (
-        <NoPermissionScreen/>
+        <NoPermissionScreen />
       );
     }
 
@@ -53,16 +48,16 @@ function App(): React.JSX.Element {
     }
   }, [user, isGranted])
 
-  if (isConnected === false ) {
+  if (isConnected === false) {
     return (
-      <NoInternetScreen/>
+      <NoInternetScreen />
     );
   }
 
   return (
     <PaperProvider>
-        {getNavigationContainer()}
-        <Toast config={toastConfig} topOffset={80} />
+      {getNavigationContainer()}
+      <Toast config={toastConfig} topOffset={80} />
     </PaperProvider>
   );
 }

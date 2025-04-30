@@ -8,19 +8,19 @@ export function parseInverterState(data: Uint8Array): InverterState {
   const buffer = Buffer.from(data);
 
   return {
-    LoadInputVoltage: buffer.readUInt16LE(0),
-    LoadInputCurrent: buffer.readUInt16LE(2),
-    LoadInputPower: buffer.readUInt32LE(4),
-    LoadOutputVoltage: buffer.readUInt16LE(8),
-    LoadOutputCurrent: buffer.readUInt16LE(10),
-    LoadOutputPower: buffer.readUInt32LE(12),
-    DeviceTemperature: buffer.readUInt16LE(16),
-    HeatsinkTemperature: buffer.readUInt16LE(18),
-    LoadStatus: buffer.readUInt16LE(20),
-    Version: buffer.readUInt16LE(22),
-    InverterOn: buffer.readUInt8(24),
-    SolarVoltage: buffer.readUInt16LE(25),
-    SolarCurrent: buffer.readUInt16LE(27),
+    loadInputVoltage: buffer.readUInt16LE(0),
+    loadInputCurrent: buffer.readUInt16LE(2),
+    loadInputPower: buffer.readUInt32LE(4),
+    loadOutputVoltage: buffer.readUInt16LE(8),
+    loadOutputCurrent: buffer.readUInt16LE(10),
+    loadOutputPower: buffer.readUInt32LE(12),
+    deviceTemperature: buffer.readUInt16LE(16),
+    heatsinkTemperature: buffer.readUInt16LE(18),
+    loadStatus: buffer.readUInt16LE(20),
+    version: buffer.readUInt16LE(22),
+    inverterOn: buffer.readUInt8(24),
+    solarVoltage: buffer.readUInt16LE(25),
+    solarCurrent: buffer.readUInt16LE(27),
   };
 }
 
@@ -48,19 +48,19 @@ export function parseBatteryData(data: Uint8Array): BatteryData {
   const buffer = Buffer.from(data);
 
   return {
-    // TotalVoltage: buffer.readUInt16BE(0),
-    Current: buffer.readInt16BE(2),
-    RemainCapacity: buffer.readUInt16BE(4),
-    TotalCapacity: buffer.readUInt16BE(6),
-    CycleLife: buffer.readUInt16BE(8),
-    ProductLife: buffer.readUInt16BE(10),
-    BalanceStatusLow: buffer.readUInt16BE(12),
-    BalanceStatusHigh: buffer.readUInt16BE(14),
-    ProtectionStatus: buffer.readUInt16BE(16),
-    Version: buffer.readUInt8(18),
-    RSOC: buffer.readUInt8(19),
-    FetStatus: buffer.readUInt8(20),
-    CellInSeries: buffer.readUInt8(21),
-    N_NTC: buffer.readUInt8(22),
+    totalVoltage: buffer.readUInt16BE(0),
+    current: buffer.readInt16BE(2),
+    remainCapacity: buffer.readUInt16BE(4),
+    totalCapacity: buffer.readUInt16BE(6),
+    cycleLife: buffer.readUInt16BE(8),
+    productLife: buffer.readUInt16BE(10),
+    balanceStatusLow: buffer.readUInt16BE(12),
+    balanceStatusHigh: buffer.readUInt16BE(14),
+    protectionStatus: buffer.readUInt16BE(16),
+    version: buffer.readUInt8(18),
+    rsoc: buffer.readUInt8(19),
+    fetStatus: buffer.readUInt8(20),
+    cellInSeries: buffer.readUInt8(21),
+    nNtc: buffer.readUInt8(22),
   };
 }

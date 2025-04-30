@@ -16,7 +16,6 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 export default function DashboardScreen(props: NativeStackScreenProps<AuthenticatedScreenDefinitions, 'Dashboard'>) {
   const inverterId = props.route.params.inverter.id;
-  const inverter = getConnectedInverterDevice(inverterId);
   const [isLoading, setIsLoading] = useState(true);
   const [connectedNodeIds, setConnectedNodeIds] = useState<string[]>([]);
 
@@ -34,24 +33,24 @@ export default function DashboardScreen(props: NativeStackScreenProps<Authentica
   });
 
   const [inverterState, setInverterState] = useState<InverterState>({
-    LoadInputVoltage: 0,
-    LoadInputCurrent: 0,
-    LoadInputPower: 0,
-    LoadOutputVoltage: 0,
-    LoadOutputCurrent: 0,
-    LoadOutputPower: 0,
-    DeviceTemperature: 0,
-    HeatsinkTemperature: 0,
-    LoadStatus: 0,
-    Version: 0,
-    InverterOn: 0,
-    SolarVoltage: 0,
-    SolarCurrent: 0,
+    loadInputVoltage: 0,
+    loadInputCurrent: 0,
+    loadInputPower: 0,
+    loadOutputVoltage: 0,
+    loadOutputCurrent: 0,
+    loadOutputPower: 0,
+    deviceTemperature: 0,
+    heatsinkTemperature: 0,
+    loadStatus: 0,
+    version: 0,
+    inverterOn: 0,
+    solarVoltage: 0,
+    solarCurrent: 0,
   });
-  const [nodeDataList, setNodeDataList] = useState<BatteryInfo[]>([]);
+  const [nodeDataList, setNodeDataList] = useState<BatteryData[]>([]);
 
   useEffect(() => {
-
+    const inverter = getConnectedInverterDevice(inverterId);
 
     const loadData = async () => {
       try {
@@ -78,13 +77,13 @@ export default function DashboardScreen(props: NativeStackScreenProps<Authentica
                 })
               );
 
-              const validBatteryInfo = batteryInfoList.filter(Boolean) as BatteryInfo[];
+              const validBatteryInfo = batteryInfoList.filter(Boolean) as BatteryData[];
               setNodeDataList(validBatteryInfo);
-
-              //TODO: Send Request here to post the battery data
-              // await uploadInverterAndBatteryDataAsync(inverterState, validBatteryInfo);
             }
 
+            //TODO: Send Request here to post the battery data
+            const response = await uploadInverterAndBatteryDataAsync(inverterState, nodeDataList);
+            console.log('Battery data uploaded successfully:', response);
             setIsLoading(false);
           }
         }
@@ -99,7 +98,7 @@ export default function DashboardScreen(props: NativeStackScreenProps<Authentica
     };
 
     loadData();
-  }, [inverter]);
+  }, [inverterId]);
 
   const getBatteryStatusColor = (rsoc: number) => {
     if (rsoc >= 80) { return '#4CAF50'; } // Green
@@ -121,12 +120,12 @@ export default function DashboardScreen(props: NativeStackScreenProps<Authentica
           <Card.Content>
             <View style={styles.batteryHeader}>
               <View
-                style={[styles.iconContainer, { backgroundColor: getBatteryStatusColor(inverterState.HeatsinkTemperature / 100) + '20' }]}
+                style={[styles.iconContainer, { backgroundColor: getBatteryStatusColor(inverterState.heatsinkTemperature / 100) + '20' }]}
               >
                 <MaterialCommunityIcons
                   name={'temperature-celsius'}
                   size={32}
-                  color={getBatteryStatusColor(inverterState.HeatsinkTemperature / 100)}
+                  color={getBatteryStatusColor(inverterState.heatsinkTemperature / 100)}
                 />
               </View>
               <View style={styles.batteryHeaderInfo}>
@@ -135,9 +134,9 @@ export default function DashboardScreen(props: NativeStackScreenProps<Authentica
                 </Text>
                 <Text
                   variant="bodyLarge"
-                  style={[styles.batteryStatus, { color: getBatteryStatusColor(inverterState.HeatsinkTemperature / 100) }]}
+                  style={[styles.batteryStatus, { color: getBatteryStatusColor(inverterState.heatsinkTemperature / 100) }]}
                 >
-                  {inverterState.HeatsinkTemperature / 100}°C
+                  {inverterState.heatsinkTemperature / 100}°C
                 </Text>
               </View>
             </View>
@@ -147,7 +146,7 @@ export default function DashboardScreen(props: NativeStackScreenProps<Authentica
           <Card.Content>
             <View style={styles.batteryHeader}>
               <View
-                style={[styles.iconContainer, { backgroundColor: getBatteryStatusColor(inverterState.HeatsinkTemperature / 100) + '20' }]}
+                style={[styles.iconContainer, { backgroundColor: getBatteryStatusColor(inverterState.heatsinkTemperature / 100) + '20' }]}
               >
                 <MaterialCommunityIcons
                   name={'power-plug'}
@@ -163,7 +162,7 @@ export default function DashboardScreen(props: NativeStackScreenProps<Authentica
                   variant="bodyLarge"
                   style={styles.batteryStatus}
                 >
-                  {inverterState.LoadOutputVoltage / 100}%
+                  {inverterState.loadOutputVoltage / 100}%
                 </Text>
               </View>
             </View>

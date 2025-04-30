@@ -1,18 +1,18 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Card, Divider, Text } from 'react-native-paper';
-import { BatteryInfo } from '../../types/BleTypes';
+import { BatteryData, BatteryInfo } from '../../types/BleTypes';
 import { Flex } from '../../styles/properties';
 
-export const BatteryDetailsCard = ({ batteryInfo }: { batteryInfo: BatteryInfo }) => (
+export const BatteryDetailsCard = ({ batteryInfo }: { batteryInfo: BatteryData }) => (
     <Card style={styles.detailsCard}>
         <Card.Content>
             <Text variant="titleMedium" style={styles.sectionTitle}>
-                Battery Details {batteryInfo.nodeId}
+                Battery Details {batteryInfo.deviceID}
             </Text>
-            <DataRow label="SoH (State of Health)" value={(batteryInfo.nodeData.CycleLife / 2000) * 100} unit=" %" />
+            <DataRow label="SoH (State of Health)" value={(batteryInfo.cycleLife / 2000) * 100} unit=" %" />
             <Divider style={styles.divider} />
-            <DataRow label="SoC (State of Consumption)" value={batteryInfo.nodeData.RSOC} unit=" %" />
+            <DataRow label="SoC (State of Consumption)" value={batteryInfo.rsoc} unit=" %" />
         </Card.Content>
     </Card>
 );
