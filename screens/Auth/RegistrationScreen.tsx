@@ -11,13 +11,15 @@ import { useForm } from '../../validation/useForm';
 import { registerAsync } from '../../services/UserProfileService';
 import { showToast, ToastType } from '../../components/Toast';
 import { SECURE_STORE_KEYS, setItemAsync } from '../../helpers/SecureStorageHelper';
-import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { Height, GenericSize, Width } from '../../styles/properties/dimensions';
 import { textStyles } from '../../styles/components/textStyles';
+import { useSetAtom } from 'jotai';
+import { userAtom } from '../../state/atom/userAtom';
+import { navigationRefAuthenticated, navigationRefUnauthenticated } from '../../nav/ScreenDefinitions';
 
 const RegistrationScreen = () => {
-    const navigation = useNavigation<NavigationProp<any>>();
     const [isLoading, setIsLoading] = useState(false);
+    const setUser = useSetAtom(userAtom);
     const { formState, handleChange, validateForm } = useForm({
         name: '',
         email: '',
@@ -53,13 +55,17 @@ const RegistrationScreen = () => {
 
         console.log("register working")
         await setItemAsync(SECURE_STORE_KEYS.USER_PROFILE, response.data);
+        setUser(response.data)
         showToast(ToastType.Success, 'Registration successful!');
-        navigation.navigate('Home');
         setIsLoading(false);
+
+        if (navigationRefAuthenticated.isReady()) {
+            navigationRefAuthenticated.navigate('Home');
+        }
     };
 
     function navigateToLogin() {
-        navigation.navigate('LoginScreen');
+        navigationRefUnauthenticated.navigate('LoginScreen');
     }
 
     return (
