@@ -13,6 +13,7 @@ import {
 } from '../helpers/StorageHelper';
 import {Inverter} from '../types/DeviceType';
 import {UploadFileRequest} from '../types/ApiRequest';
+import {readLogFiles} from '../helpers/FileHelper';
 
 // Stower Inverter class that handles BLE communication
 export class StowerInverter {
@@ -299,11 +300,13 @@ export class StowerInverter {
 }
 
 function removeFileFromStorage(fileName: string) {
-  const files: string[] = getFromStorage(STORAGE_KEYS.FILE) || [];
+  const files: string[] = readLogFiles();
+
+  console.log('Files before deletion: ', files);
 
   // Remove the deleted file from the list
   const updatedFiles = files.filter(file => file !== fileName);
 
   // Save the updated list back to storage
-  saveToStorage(STORAGE_KEYS.FILE, JSON.stringify(updatedFiles));
+  saveToStorage(STORAGE_KEYS.LOG_FILES, JSON.stringify(updatedFiles));
 }

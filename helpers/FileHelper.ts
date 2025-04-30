@@ -1,4 +1,4 @@
-import {getFromStorage, saveToStorage} from './StorageHelper';
+import {getFromStorage, saveToStorage, STORAGE_KEYS} from './StorageHelper';
 
 /**
  * Writes a list of file names to persistent storage.
@@ -20,9 +20,9 @@ export function writeFiles(files: string[]): void {
  *
  * @returns {string[]} - An array of file names, or an empty array if no files are found.
  */
-export function readFiles(): string[] {
+export function readLogFiles(): string[] {
   try {
-    const fileData = getFromStorage('files');
+    const fileData = getFromStorage(STORAGE_KEYS.LOG_FILES);
     console.log('Retrieved file data:', fileData);
 
     if (fileData) {

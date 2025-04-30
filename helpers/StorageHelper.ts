@@ -59,7 +59,7 @@ export const removeFromStorage = (key: string): void => {
 };
 
 export const STORAGE_KEYS = {
-  FILE: 'files',
+  LOG_FILES: 'files',
   NODES: 'nodes',
   INVERTERS: 'inverters',
   SELECTED_NODES: 'selectedNodes',

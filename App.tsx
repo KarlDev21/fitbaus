@@ -10,6 +10,7 @@ import { UnauthenticatedScreenDefinitions, AuthenticatedScreenDefinitions, Unaut
 import { userAtom } from './state/atom/userAtom';
 import { useNetInfo } from "@react-native-community/netinfo";
 import NoInternetScreen from './screens/NoInternetScreen';
+import { useGlobalFileUploader } from './hooks/useGlobalFileUploader';
 
 export const UnauthenticatedNavigationStack = new StackNavigationContainer<UnauthenticatedScreenDefinitions>(
   UnauthenticatedStackScreens,
@@ -24,6 +25,8 @@ function App(): React.JSX.Element {
   const user = useAtomValue(userAtom);
   const { isConnected } = useNetInfo();
   const [continueOffline, setContinueOffline] = useState(false);
+
+  useGlobalFileUploader();
 
   const getNavigationContainer = useCallback(() => {
     if (user) {
@@ -43,11 +46,11 @@ function App(): React.JSX.Element {
 
   return (
     <PaperProvider>
-      <BluetoothProvider>
-        <OfflineBanner isConnected={isConnected} continueOffline={continueOffline} />
-        {getNavigationContainer()}
-        <Toast config={toastConfig} topOffset={80} />
-      </BluetoothProvider>
+      {/* <BluetoothProvider>
+        <OfflineBanner isConnected={isConnected} continueOffline={continueOffline} /> */}
+      {getNavigationContainer()}
+      <Toast config={toastConfig} topOffset={80} />
+      {/* </BluetoothProvider> */}
     </PaperProvider>
   );
 }
