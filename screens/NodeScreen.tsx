@@ -126,11 +126,6 @@ export default function NodeScreen() {
 
   return (
     <AppScreen>
-      <Appbar.Header mode='center-aligned' style={textStyles.AppHeader} >
-        <Appbar.BackAction onPress={() => navigationRefAuthenticated.navigate('Finalizing')} />
-        <Appbar.Content titleStyle={textStyles.AppContent} title="Select Batteries" />
-      </Appbar.Header>
-
       {/* Display the selected inverter */}
       {selectedInverter && <InverterCard inverter={selectedInverter} />}
 

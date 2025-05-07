@@ -11,6 +11,9 @@ import NoInternetScreen from './screens/NoInternetScreen';
 import { useGlobalFileUploader } from './hooks/useGlobalFileUploader';
 import { requestBluetoothPermissions } from './helpers/AppHelper';
 import NoPermissionScreen from './screens/NoPermissionScreen';
+import { getItem, SECURE_STORE_KEYS } from './helpers/SecureStorageHelper';
+import DashboardScreen from './screens/DashboardScreen';
+import HomeScreen from './screens/HomeScreen';
 
 export const UnauthenticatedNavigationStack = new StackNavigationContainer<UnauthenticatedScreenDefinitions>(
   UnauthenticatedStackScreens,
@@ -23,6 +26,7 @@ export const AuthenticatedNavigationStack = new StackNavigationContainer<Authent
 )
 function App(): React.JSX.Element {
   const user = useAtomValue(userAtom);
+  const storedUser = getItem(SECURE_STORE_KEYS.USER_PROFILE);
   const { isConnected } = useNetInfo();
   const [isGranted, setIsGranted] = useState(true)
 
@@ -41,12 +45,12 @@ function App(): React.JSX.Element {
       );
     }
 
-    if (user) {
+    if (user || storedUser) {
       return AuthenticatedNavigationStack.getContainer();
     } else {
       return UnauthenticatedNavigationStack.getContainer();
     }
-  }, [user, isGranted])
+  }, [user, isGranted, storedUser])
 
   if (isConnected === false) {
     return (

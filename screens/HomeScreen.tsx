@@ -99,11 +99,6 @@ export default function HomeScreen() {
   return (
     <AppScreen>
       <View style={styles.content}>
-
-        <Appbar.Header mode='center-aligned' style={textStyles.AppHeader} >
-          <Appbar.Content titleStyle={textStyles.AppContent} title="Inverter Scanner" />
-        </Appbar.Header>
-
         <ScanCard isScanning={isScanning} onScan={handleScan} />
 
         {savedInverter && (

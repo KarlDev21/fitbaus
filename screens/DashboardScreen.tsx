@@ -109,13 +109,7 @@ export default function DashboardScreen(props: NativeStackScreenProps<Authentica
 
   return (
     <AppScreen isLoading={isLoading}>
-      <Appbar.Header>
-        <Appbar.BackAction onPress={() => navigationRefAuthenticated.navigate('Home')} />
-        <Appbar.Content title="System Dashboard" />
-      </Appbar.Header>
-
       <ScrollView style={styles.scrollView} >
-
         <Card style={styles.batteryCard}>
           <Card.Content>
             <View style={styles.batteryHeader}>

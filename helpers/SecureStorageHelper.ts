@@ -21,6 +21,16 @@ export async function getItemAsync<T>(key: string): Promise<T | null> {
   }
 }
 
+export function getItem<T>(key: string): T | null {
+  try {
+    const jsonValue = SecureStore.getItem(key);
+    return jsonValue != null ? JSON.parse(jsonValue) : null;
+  } catch (error) {
+    console.error('Error getting item from secure storage', error);
+    return null;
+  }
+}
+
 export async function removeItemAsync(key: string): Promise<boolean> {
   try {
     await SecureStore.deleteItemAsync(key);

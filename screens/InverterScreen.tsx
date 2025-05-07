@@ -71,12 +71,6 @@ export default function InverterScreen() {
 
   return (
     <AppScreen>
-
-      <Appbar.Header mode='center-aligned' style={textStyles.AppHeader} >
-        <Appbar.BackAction onPress={() => navigationRefAuthenticated.navigate('Home')} />
-        <Appbar.Content titleStyle={textStyles.AppContent} title="Inverter Scanner" />
-      </Appbar.Header>
-
       <FlatList
         data={inverters}
         renderItem={renderInverterItem}
