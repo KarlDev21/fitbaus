@@ -12,6 +12,7 @@ import { BleManagerInstance, getConnectedInverter } from '../helpers/BluetoothHe
 import { textStyles } from '../styles/components/textStyles';
 import { useKeepAwake } from 'expo-keep-awake';
 import { navigationRefAuthenticated } from '../nav/ScreenDefinitions';
+import { AUTHENTICATION_SERVICE } from '../services/constants/BleUuids';
 
 export default function HomeScreen() {
   const [isScanning, setIsScanning] = useState(false);
@@ -24,13 +25,12 @@ export default function HomeScreen() {
 
   useEffect(() => {
     const checkConnection = async () => {
-
       if (!savedInverter) {
         setIsConnected(false)
         return
       }
 
-      const connectedDevices = await BleManagerInstance.connectedDevices(["AUTHENTICATION_SERVICE"]);
+      const connectedDevices = await BleManagerInstance.connectedDevices([AUTHENTICATION_SERVICE]);
       console.log("Connected devices: ", connectedDevices);
       if (connectedDevices.length === 0) {
         setIsConnected(false)
@@ -44,11 +44,10 @@ export default function HomeScreen() {
     };
 
     checkConnection();
-  });
+  }, []);
 
   const handleScan = async () => {
     setIsScanning(true);
-    navigationRefAuthenticated.navigate('Inverters');
 
     try {
       const { inverters, nodes } = await scanDevices();
