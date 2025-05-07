@@ -25,10 +25,19 @@ import {createDeedOfRegistrationAsync} from './DeviceUnitService';
 import {getItemAsync} from '../helpers/SecureStorageHelper';
 import {UserProfileResponse} from '../types/ApiResponse';
 import {Device as ApiDevice} from '../types/ApiResponse';
+import {Alert} from 'react-native/Libraries/Alert/Alert';
 import {showToast, ToastType} from '../components/Toast';
-import { AUTHENTICATION_CHAR, AUTHENTICATION_SERVICE, BATTERY_CHAR, CHARGE_CONTROLLER_STATE_CHAR, INVERTER_STATE_CHAR, RETR_BATTERY_CHAR, SET_BATT_RETR_CHAR } from './constants/BleUuids';
 
+const AUTHENTICATION_CHAR = '669a0c20-0008-d690-ec11-e214416ccb95';
 
+//THIS IS READING INVERTER STATE
+const INVERTER_STATE_CHAR = '669a0c20-0008-d690-ec11-e214406ccb95';
+//THIS IS READING BATERRY CONTROLLER STATE
+const CHARGE_CONTROLLER_STATE_CHAR = '669a0c20-0008-d690-ec11-e214486ccb95';
+//THIS IS READING BATTERIES STATE
+const SET_BATT_RETR_CHAR = '669a0c20-0008-d690-ec11-e214436ccb95';
+const RETR_BATTERY_CHAR = '669a0c20-0008-d690-ec11-e214446ccb95';
+const BATTERY_CHAR = '669a0c20-0008-d690-ec11-e214426ccb95';
 
 /**
  * Authenticates the selected inverter and enrolls the associated batteries.
@@ -115,10 +124,12 @@ async function sendAuthPayload(
     console.log('maybe missing uuid');
     console.log(inverter?.serviceUUIDs?.[0]);
     console.log(inverter.id);
+    // 669a0c20-0008-d690-ec11-e2143045cb95
+    // 669a0c20-0008-d690-ec11-e2143045cb95
     const response =
       await BleManagerInstance.writeCharacteristicWithResponseForDevice(
-        inverter.id, 
-        AUTHENTICATION_SERVICE,
+        '48:CA:43:59:BA:D9',
+        '669a0c20-0008-d690-ec11-e2143045cb95',
         AUTHENTICATION_CHAR,
         Buffer.from(payload).toString('base64'),
       );

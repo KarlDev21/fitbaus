@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { View, StyleSheet } from 'react-native';
 import { Appbar } from 'react-native-paper';
 import { showToast, ToastType } from '../components/Toast';
 import { getScanErrorMessage, scanDevices } from '../services/BluetoothLowEnergyService';
@@ -8,7 +9,8 @@ import { SavedInverterCard } from '../components/Cards/SavedInverterCard';
 import { saveToStorage, STORAGE_KEYS } from '../helpers/StorageHelper';
 import { Inverter } from '../types/DeviceType';
 import { BleManagerInstance, getConnectedInverter } from '../helpers/BluetoothHelper';
-
+import { Flex } from '../styles/properties';
+import { GenericSize } from '../styles/properties/dimensions';
 import { textStyles } from '../styles/components/textStyles';
 import { useKeepAwake } from 'expo-keep-awake';
 import { navigationRefAuthenticated } from '../nav/ScreenDefinitions';
@@ -30,7 +32,7 @@ export default function HomeScreen() {
         return
       }
 
-      const connectedDevices = await BleManagerInstance.connectedDevices(["AUTHENTICATION_SERVICE"]);
+      const connectedDevices = await BleManagerInstance.connectedDevices(["669a0c20-0008-d690-ec11-e2143045cb95"]);
       console.log("Connected devices: ", connectedDevices);
       if (connectedDevices.length === 0) {
         setIsConnected(false)
@@ -48,7 +50,6 @@ export default function HomeScreen() {
 
   const handleScan = async () => {
     setIsScanning(true);
-    navigationRefAuthenticated.navigate('Inverters');
 
     try {
       const { inverters, nodes } = await scanDevices();
@@ -97,17 +98,27 @@ export default function HomeScreen() {
 
   return (
     <AppScreen>
-      <ScanCard isScanning={isScanning} onScan={handleScan} />
+      <View style={styles.content}>
+        <ScanCard isScanning={isScanning} onScan={handleScan} />
 
-      {savedInverter && (
-        <SavedInverterCard
-          handleInverter={handleInverter}
-          inverter={savedInverter}
-          isConnected={isConnected}
-          isConnecting={isConnecting}
-          onConnect={handleConnect}
-        />
-      )}
+        {savedInverter && (
+          <SavedInverterCard
+            handleInverter={handleInverter}
+            inverter={savedInverter}
+            isConnected={isConnected}
+            isConnecting={isConnecting}
+            onConnect={handleConnect}
+          />
+        )}
+      </View>
     </AppScreen>
   )
 }
+
+const styles = StyleSheet.create({
+  content: {
+    flex: Flex.xsmall,
+    padding: GenericSize.medium,
+  }
+})
+

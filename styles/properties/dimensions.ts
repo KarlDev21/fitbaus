@@ -49,7 +49,7 @@ export enum Height {
 }
 
 export enum GenericSize {
-  xlarge = 36,
+
   large = 24,
   medium = 16,
   small = 8,

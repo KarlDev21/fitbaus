@@ -1,16 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Text, ActivityIndicator } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { authenticateInverter } from '../services/InverterService';
 import { Colours } from '../styles/properties/colours';
-import { GenericSize, Margin, Padding } from '../styles/properties/dimensions';
+import { Flex, GenericSize, Margin, Padding } from '../styles/properties/dimensions';
 import { textStyles } from '../styles/components/textStyles';
 import { navigationRefAuthenticated } from '../nav/ScreenDefinitions';
 import { getSelectedInverter, setConnectedInverter, setConnectedInverterDevice } from '../helpers/BluetoothHelper';
 import { getFromStorage, STORAGE_KEYS } from '../helpers/StorageHelper';
 import { Battery } from '../types/DeviceType';
-import { layout } from '../styles/base';
-import { AppScreen } from '../components/AppScreen';
 
 export default function FinalizingScreen() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -40,9 +39,8 @@ export default function FinalizingScreen() {
             setConnectedInverterDevice(selectedInverter);
             setConnectedInverter(selectedInverter);
           }
-
-          setIsLoading(false);
-        }, 3000)
+        }, 5000)
+        setIsLoading(false);
 
         return () => clearTimeout(timer)
 
@@ -63,20 +61,36 @@ export default function FinalizingScreen() {
 
   if (isLoading) {
     return (
-      <AppScreen>
-        <View style={layout.content}>
-          <ActivityIndicator size={GenericSize.large} color={Colours.primary} style={{marginBottom: Margin.large}} />
+      <SafeAreaView style={styles.container}>
+        <View style={styles.content}>
+          <ActivityIndicator size={GenericSize.large} color={Colours.primary} style={styles.loader} />
           <Text variant="headlineSmall" style={textStyles.heading}>
             Finalizing Connection
           </Text>
-          <Text variant="bodyMedium" style={textStyles.title}>
+          <Text variant="bodyMedium" style={textStyles.subtitle}>
             Please wait while we complete the authentication process and establish the connection...
           </Text>
         </View>
-      </AppScreen>
+      </SafeAreaView>
     );
   }
 
   return null; // This will never render because navigation happens when `isLoading` is false
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: Flex.xsmall,
+    backgroundColor: Colours.backgroundPrimary,
+  },
+  content: {
+    flex: Flex.xsmall,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Padding.large,
+  },
+  loader: {
+    marginBottom: Margin.large,
+  },
+});
 

@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { FlatList } from 'react-native';
-import { Appbar } from 'react-native-paper';
+import { View, StyleSheet, FlatList } from 'react-native';
+import { Button, Appbar } from 'react-native-paper';
 import { showToast, ToastType } from '../components/Toast';
 import { Device } from 'react-native-ble-plx';
 import { authenticateNode } from '../services/NodeService';
+import { Colours } from '../styles/properties/colours';
 import { getFromStorage, saveToStorage, STORAGE_KEYS } from '../helpers/StorageHelper';
 import { Battery, Inverter } from '../types/DeviceType';
 import { LoadingIndicatorWithText } from '../components/LoadingIndicator';
 import { AppScreen } from '../components/AppScreen';
 import BatteryCard from '../components/Cards/BatteryCard';
+import InverterCard from '../components/Cards/InverterCard';
+import { buttonStyles } from '../styles/components/buttonStyles';
+import { Flex, GenericSize, Margin, Padding, Width } from '../styles/properties/dimensions';
 import { textStyles } from '../styles/components/textStyles';
 import { navigationRefAuthenticated } from '../nav/ScreenDefinitions';
+import { ButtonPrimary } from '../components/Button';
 import { setConnectedInverter, setConnectedNodes } from '../helpers/BluetoothHelper';
-import { InverterListItem } from '../components/Cards/InverterListItem';
-import { NodeScreenButtons } from '../components/NodeScreen/NodeScreenButtons';
 
 export default function NodeScreen() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -94,7 +97,7 @@ export default function NodeScreen() {
 
     // Ensure all selected batteries are authenticated
     if (authenticatedNodeIds.length !== selectedBatteries.length) {
-      showToast(ToastType.Error, 'Please authenticate all batteries before continuing');
+      showToast(ToastType.Error, 'Please authenticate all batteries before continuing!');
       return;
     }
 
@@ -124,7 +127,7 @@ export default function NodeScreen() {
   return (
     <AppScreen>
       {/* Display the selected inverter */}
-      {selectedInverter && <InverterListItem item={selectedInverter} />}
+      {selectedInverter && <InverterCard inverter={selectedInverter} />}
 
       {/* List of batteries with selection and authentication status */}
       <FlatList
@@ -139,17 +142,76 @@ export default function NodeScreen() {
           />
         )}
         keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContent}
       />
 
       {/* Buttons for authentication and continuation */}
-      <NodeScreenButtons
-        showResults={showResults}
-        onAuthenticate={handleAuthenticate}
-        onChangeSelection={() => setShowResults(false)}
-        onContinue={handleContinue}
-        isAuthenticating={isAuthenticating}
-      />
+      <View style={styles.buttonContainer}>
+        {!showResults ? (
+          <ButtonPrimary label="Authenticate Batteries" onPress={handleAuthenticate} loading={isAuthenticating} style={{ width: Width.full, marginTop: GenericSize.medium }} />
+        ) : (
+          <View style={styles.buttonRow}>
+            <Button
+              mode="contained"
+              onPress={() => {
+                setShowResults(false);
+              }}
+              style={[buttonStyles.primaryButton, styles.outlineButton]}
+              labelStyle={buttonStyles.buttonLabel}
 
+            >
+              Change Selection
+            </Button>
+            <Button
+              mode="contained"
+              onPress={handleContinue}
+              disabled={Object.values(authenticatedBatteries).filter(Boolean).length === 0}
+              style={[buttonStyles.primaryButton, styles.outlineButton]}
+              labelStyle={buttonStyles.buttonLabel}
+
+            >
+              Continue
+            </Button>
+          </View>
+        )}
+      </View>
     </AppScreen >
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: Flex.xsmall,
+    backgroundColor: Colours.backgroundPrimary,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Padding.small,
+    paddingVertical: Padding.medium,
+  },
+  listContent: {
+    padding: Padding.medium,
+    paddingBottom: Padding.large,
+  },
+  buttonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: Padding.medium,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  outlineButton: {
+    flex: Flex.xsmall,
+    marginRight: Margin.small,
+  },
+
+});

@@ -8,12 +8,12 @@ import { UnauthenticatedScreenDefinitions, AuthenticatedScreenDefinitions, Unaut
 import { userAtom } from './state/atom/userAtom';
 import { useNetInfo } from "@react-native-community/netinfo";
 import NoInternetScreen from './screens/NoInternetScreen';
-import NoBluetoothScreen from './screens/NoBluetoothScreen';
 import { useGlobalFileUploader } from './hooks/useGlobalFileUploader';
 import { requestBluetoothPermissions } from './helpers/AppHelper';
 import NoPermissionScreen from './screens/NoPermissionScreen';
 import { getItem, SECURE_STORE_KEYS } from './helpers/SecureStorageHelper';
-import { useBluetoothConnection } from './hooks/useBluetoothConnection';
+import DashboardScreen from './screens/DashboardScreen';
+import HomeScreen from './screens/HomeScreen';
 
 export const UnauthenticatedNavigationStack = new StackNavigationContainer<UnauthenticatedScreenDefinitions>(
   UnauthenticatedStackScreens,
@@ -24,13 +24,11 @@ export const AuthenticatedNavigationStack = new StackNavigationContainer<Authent
   AuthenticatedStackScreen,
   navigationRefAuthenticated
 )
-
 function App(): React.JSX.Element {
   const user = useAtomValue(userAtom);
   const storedUser = getItem(SECURE_STORE_KEYS.USER_PROFILE);
   const { isConnected } = useNetInfo();
-  const [isGranted, setIsGranted] = useState(true);
-  const { isBluetoothEnabled } = useBluetoothConnection();
+  const [isGranted, setIsGranted] = useState(true)
 
   const loadPermission = async () => {
     const isPermissionGranted = await requestBluetoothPermissions()
@@ -41,17 +39,10 @@ function App(): React.JSX.Element {
 
   const getNavigationContainer = useCallback(() => {
     loadPermission()
-
     if (!isGranted) {
-      return <NoPermissionScreen />;
-    }
-
-    if (isConnected === false) {
-      return <NoInternetScreen />;
-    }
-
-    if (isBluetoothEnabled === false) {
-      return <NoBluetoothScreen />;
+      return (
+        <NoPermissionScreen />
+      );
     }
 
     if (user || storedUser) {
@@ -59,8 +50,13 @@ function App(): React.JSX.Element {
     } else {
       return UnauthenticatedNavigationStack.getContainer();
     }
-  }, [user, isGranted, storedUser, isConnected, isBluetoothEnabled]);
+  }, [user, isGranted, storedUser])
 
+  if (isConnected === false) {
+    return (
+      <NoInternetScreen />
+    );
+  }
 
   return (
     <PaperProvider>
@@ -69,5 +65,4 @@ function App(): React.JSX.Element {
     </PaperProvider>
   );
 }
-
 export default App;
