@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from './components/Toast';
 import { Provider as PaperProvider } from 'react-native-paper';

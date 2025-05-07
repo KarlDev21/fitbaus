@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { ScrollView } from 'react-native';
-import { Appbar } from 'react-native-paper';
 import { fetchAndLogBatteryInfo, fetchAndLogChargeControllerStatus, fetchAndLogInverterStatus } from '../services/InverterService';
 import { showToast, ToastType } from '../components/Toast';
 import { BatteryData, InverterState } from '../types/BleTypes';
@@ -14,9 +13,6 @@ import { getConnectedInverterDevice, getConnectedNodes } from '../helpers/Blueto
 import { InverterInfoCard } from '../components/Cards/InverterInfoCard';
 import { BatteryDetailsList } from '../components/Cards/BatteryDetailsList';
 import { Spacer } from '../components/Spacer';
-import { textStyles } from '../styles/components/textStyles';
-
-
 export default function DashboardScreen(props: NativeStackScreenProps<AuthenticatedScreenDefinitions, 'Dashboard'>) {
   const inverterId = props.route.params.inverter.id;
   const [isLoading, setIsLoading] = useState(true);

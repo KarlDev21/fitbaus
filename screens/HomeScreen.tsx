@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { Appbar } from 'react-native-paper';
 import { showToast, ToastType } from '../components/Toast';
 import { getScanErrorMessage, scanDevices } from '../services/BluetoothLowEnergyService';
 import { AppScreen } from '../components/AppScreen';
@@ -8,8 +7,6 @@ import { SavedInverterCard } from '../components/Cards/SavedInverterCard';
 import { saveToStorage, STORAGE_KEYS } from '../helpers/StorageHelper';
 import { Inverter } from '../types/DeviceType';
 import { BleManagerInstance, getConnectedInverter } from '../helpers/BluetoothHelper';
-
-import { textStyles } from '../styles/components/textStyles';
 import { useKeepAwake } from 'expo-keep-awake';
 import { navigationRefAuthenticated } from '../nav/ScreenDefinitions';
 import { AUTHENTICATION_SERVICE } from '../services/constants/BleUuids';

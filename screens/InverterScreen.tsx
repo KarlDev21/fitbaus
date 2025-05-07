@@ -1,14 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useState } from 'react';
 import { FlatList } from 'react-native';
-import { Appbar } from 'react-native-paper';
 import { showToast, ToastType } from '../components/Toast';
 import { Device } from 'react-native-ble-plx';
 import { connectToInverter } from '../services/InverterService';
 import { Inverter } from '../types/DeviceType';
 import { AppScreen } from '../components/AppScreen';
 import { GenericSize } from '../styles/properties/dimensions';
-import { textStyles } from '../styles/components/textStyles';
 import { navigationRefAuthenticated } from '../nav/ScreenDefinitions';
 import { getFromStorage, saveToStorage, STORAGE_KEYS } from '../helpers/StorageHelper';
 import { InverterListItem } from '../components/Cards/InverterListItem';

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { FlatList } from 'react-native';
-import { Appbar } from 'react-native-paper';
 import { showToast, ToastType } from '../components/Toast';
 import { Device } from 'react-native-ble-plx';
 import { authenticateNode } from '../services/NodeService';
@@ -9,7 +8,6 @@ import { Battery, Inverter } from '../types/DeviceType';
 import { LoadingIndicatorWithText } from '../components/LoadingIndicator';
 import { AppScreen } from '../components/AppScreen';
 import BatteryCard from '../components/Cards/BatteryCard';
-import { textStyles } from '../styles/components/textStyles';
 import { navigationRefAuthenticated } from '../nav/ScreenDefinitions';
 import { setConnectedInverter, setConnectedNodes } from '../helpers/BluetoothHelper';
 import { InverterListItem } from '../components/Cards/InverterListItem';
