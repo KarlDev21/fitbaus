@@ -22,6 +22,16 @@ export const layout = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
   },
+  content: {
+    flex: Flex.xsmall,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: Padding.medium,
+  },
+  container: {
+    flex: Flex.xsmall,
+    backgroundColor: Colours.backgroundPrimary,
+  },
 });
 
 export const Spacer = StyleSheet.create({
