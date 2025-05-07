@@ -6,4 +6,10 @@ export const Colours = {
   textPrimary: '#000000',
   primaryButtonText: '#ffffff',
   textError: '#ff0000',
+  batteryAuthenticatedBackground: '#E8F5E9',
+  batteryFailedBackground: '#FFEBEE',
+  Green: '#4CAF50',
+  inverterTempYellow: '#FFC107',
+  inverterTempOrange: '#FF9800',
+  Red: '#F44336',
 };

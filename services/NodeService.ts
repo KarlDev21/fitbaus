@@ -3,6 +3,7 @@ import {
   generateNodeDigest,
 } from '../helpers/BluetoothHelper';
 import {Buffer} from 'buffer';
+import { NODE_AUTHENTICATION_CHAR, NODE_AUTHENTICATION_SERVICE } from './constants/BleUuids';
 
 export const decodeManufacturerData = (base64Data: string): Uint8Array => {
   return new Uint8Array(Buffer.from(base64Data, 'base64'));
@@ -81,8 +82,8 @@ export async function authenticateNode(nodeId: string) {
     //Note: The UUIDs used here are placeholders. Replace them with the actual UUIDs for the device.
     await BleManagerInstance.writeCharacteristicWithResponseForDevice(
       nodeId,
-      'ffffffff-21b5-ec11-e214-000030452e68',
-      '669a0c20-0008-21b5-ec11-e214416c2e68',
+      NODE_AUTHENTICATION_SERVICE,
+      NODE_AUTHENTICATION_CHAR,
       Buffer.from(digest).toString('base64'),
     );
     return true;

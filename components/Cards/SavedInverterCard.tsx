@@ -1,12 +1,12 @@
 import React from 'react';
 import { Card, Text, Button } from 'react-native-paper';
-import { View, StyleSheet } from 'react-native';
+import { View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Inverter } from '../../types/DeviceType';
 import { LoadingIndicator } from '../LoadingIndicator';
 import { Colours } from '../../styles/properties/colours';
-import { buttonStyles } from '../../styles/components/buttonStyles';
-import { Flex } from '../../styles/properties/dimensions';
+import { cardStyles } from '../../styles/components/cardStyles';
+import { inverterRowStyles } from '../../styles/components/inverterRowStyles';
 
 interface SavedInverterCardProps {
     inverter: Inverter;
@@ -23,9 +23,9 @@ export const SavedInverterCard: React.FC<SavedInverterCardProps> = ({
     onConnect,
     handleInverter
 }) => (
-    <Card style={styles.card} onPress={handleInverter}>
+    <Card style={cardStyles.card} onPress={handleInverter}>
         <Card.Content>
-            <Text variant="titleMedium" style={styles.cardTitle}>
+            <Text variant="titleMedium" style={cardStyles.cardTitle}>
                 Saved Inverters
             </Text>
             <InverterRow
@@ -38,19 +38,6 @@ export const SavedInverterCard: React.FC<SavedInverterCardProps> = ({
         </Card.Content>
     </Card>
 );
-
-const styles = StyleSheet.create({
-    card: {
-        marginBottom: 16,
-        elevation: 2,
-        backgroundColor:'white'
-    },
-    cardTitle: {
-        marginBottom: 8,
-        fontWeight: 'bold',
-        color:'black'
-    },
-});
 
 //InverterRow component
 
@@ -93,35 +80,3 @@ export const InverterRow: React.FC<InverterRowProps> = ({
         </View>
     </View>
 );
-
-const inverterRowStyles = StyleSheet.create({
-    inverterRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 5,
-    },
-    iconContainer: {
-        padding: 12,
-        borderRadius: 50,
-        marginRight: 16,
-    },
-    inverterInfo: {
-        flex: Flex.xsmall,
-    },
-    inverterName: {
-        color:'black',
-        marginVertical: 4,
-        fontWeight: '500',
-    },
-    inverterStatus: {
-        marginBottom: 12,
-        color:'black'
-
-    },
-    button: buttonStyles.primaryButton,
-
-    buttonLabel: {
-        fontSize: 16,
-        color:'white'
-    },
-});
