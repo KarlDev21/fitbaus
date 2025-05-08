@@ -56,7 +56,7 @@ export const AuthenticatedStackScreen: NavStackScreenDefinitions<AuthenticatedSc
     Home: {
       name: 'Home',
       component: HomeScreen,
-      options: {headerShown: true, headerTitleAlign: 'center'},
+      options: {headerShown: true, headerTitleAlign: 'center', headerBackVisible: false},
     },
     Inverters: {
       name: 'Inverters',
@@ -71,7 +71,7 @@ export const AuthenticatedStackScreen: NavStackScreenDefinitions<AuthenticatedSc
     Finalizing: {
       name: 'Finalizing',
       component: FinalizingScreen,
-      options: {headerShown: true, headerTitleAlign: 'center'},
+      options: {headerShown: true, headerTitleAlign: 'center', headerBackVisible: false},
     },
     Dashboard: {
       name: 'Dashboard',

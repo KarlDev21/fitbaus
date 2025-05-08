@@ -13,14 +13,14 @@ export const statusScreenStyles = StyleSheet.create({
     paddingTop: Padding.large,
   },
   title: {
-    color: '#fff',
+    color: Colours.primary,
     fontSize: FontSize.large,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: Margin.medium,
   },
   subtitle: {
-    color: '#fff',
+    color: Colours.textPrimary,
     fontSize: FontSize.medium,
     textAlign: 'center',
     marginBottom: Margin.large,
