@@ -11,7 +11,7 @@ export const BatteryDetailsCard = ({ batteryInfo }: { batteryInfo: BatteryData }
             <Text variant="titleMedium" style={batteryDetailsCardStyles.sectionTitle}>
                 Battery Details {batteryInfo.deviceID}
             </Text>
-            <DataRow label="SoH (State of Health)" value={(batteryInfo.cycleLife / 2000) * 100} unit=" %" />
+            <DataRow label="SoH (State of Health)" value={Math.ceil(100 - ((batteryInfo.cycleLife / 2000) * 100))} unit=" %" />
             <Divider />
             <DataRow label="SoC (State of Consumption)" value={batteryInfo.rsoc} unit=" %" />
         </Card.Content>
