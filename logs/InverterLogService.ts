@@ -149,33 +149,30 @@ export class StowerInverter {
         // Send the GET command to request the file
         await this.sendFileCmd('GET', f);
 
-        // First response is the file size
-        const fileSizeBuffer = await this.waitFileResults();
-        const fileSize = fileSizeBuffer.readUInt32LE(0);
-        console.log(`File size: ${fileSize} bytes`);
+        const headerBuffer = await this.waitFileResults();
+        const fileSize = headerBuffer.readUInt32LE(0);
+        const chunkSize = headerBuffer.readUInt8(4); // Byte 5
 
-        // Buffer to accumulate all file parts
+        console.log(`File size: ${fileSize}, Chunk size: ${chunkSize}`);
+
         let contents = Buffer.alloc(0);
         let piece = 0;
-
-        // Print initial progress
         console.log('0%..');
 
         // Keep receiving chunks until we have the complete file
-        while (contents.length < fileSize) {
-          // Wait for next chunk of data
+        while (true) {
           const chunk = await this.waitFileResultsTimer();
-
-          // Add chunk to our buffer
           contents = Buffer.concat([contents, chunk]);
 
-          // Calculate progress percentage
           const percentage = Math.floor((contents.length / fileSize) * 100);
-
-          // Print progress at 10% intervals
           if (percentage >= (piece + 1) * 10) {
             piece = Math.floor(percentage / 10);
             console.log(`${piece * 10}%..`);
+          }
+
+          if (chunk.length < chunkSize) {
+            console.log('100%');
+            break;
           }
         }
 
