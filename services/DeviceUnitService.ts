@@ -8,7 +8,8 @@ import {
   UploadFileResponse,
 } from '../types/ApiResponse';
 import {BatteryData, InverterState} from '../types/BleTypes';
-import {API_BASE_URL, buildHeaders} from './UserProfileService';
+import {API_BASE_URL} from '../types/constants/constants';
+import {buildHeaders} from './UserProfileService';
 
 export async function createDeedOfRegistrationAsync(
   userID: string,
@@ -112,8 +113,6 @@ export async function uploadInverterAndBatteryDataAsync(
       ...inverter,
       deviceID: deviceID,
     };
-
-    console.log('DATA:: ', {inverterState: inverterData, batteries: batteries});
 
     const response = await fetch(`${API_BASE_URL}/device`, {
       method: 'POST',

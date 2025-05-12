@@ -31,16 +31,6 @@ export function getItem<T>(key: string): T | null {
   }
 }
 
-export async function removeItemAsync(key: string): Promise<boolean> {
-  try {
-    await SecureStore.deleteItemAsync(key);
-    return true;
-  } catch (error) {
-    console.error('Error removing item from secure storage', error);
-    return false;
-  }
-}
-
 export const SECURE_STORE_KEYS = {
   USER_PROFILE: 'UserProfile',
 };

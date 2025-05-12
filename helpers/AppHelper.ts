@@ -4,7 +4,6 @@ import NetInfo from '@react-native-community/netinfo';
 export async function requestBluetoothPermissions(): Promise<boolean> {
   if (Platform.OS === 'android') {
     try {
-      
       const granted = await PermissionsAndroid.requestMultiple([
         PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
         PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
@@ -26,7 +25,7 @@ export async function requestBluetoothPermissions(): Promise<boolean> {
         return true;
       }
 
-      console.log('Bluetooth permissions denied');
+      console.error('Bluetooth permissions denied');
       return false;
     } catch (err) {
       console.warn('Permission request error:', err);
@@ -46,8 +45,6 @@ export async function requestBluetoothPermissions(): Promise<boolean> {
 export async function isConnectedAsync(): Promise<boolean> {
   try {
     const state = await NetInfo.fetch();
-    console.log("--------------------------INTERNET STATE---------------------------")
-    console.log(state)
     return state.isConnected ?? false;
   } catch (error) {
     return false;

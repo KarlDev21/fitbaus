@@ -67,8 +67,7 @@ export default function DashboardScreen(props: NativeStackScreenProps<Authentica
               setNodeDataList(validBatteryInfo);
             }
 
-            const response = await uploadInverterAndBatteryDataAsync(inverterState, nodeDataList);
-            console.log('Battery data uploaded successfully:', response);
+            await uploadInverterAndBatteryDataAsync(inverterState, nodeDataList);
             setIsLoading(false);
           }
         }
@@ -88,10 +87,10 @@ export default function DashboardScreen(props: NativeStackScreenProps<Authentica
 
 
   const getInverterTemperatureColor = (rsoc: number) => {
-    if (rsoc >= 80) { return Colours.Green; }
-    if (rsoc >= 50) { return Colours.inverterTempYellow; }
+    if (rsoc >= 80) { return Colours.success; }
+    if (rsoc >= 50) { return Colours.primary; }
     if (rsoc >= 20) { return Colours.inverterTempOrange; }
-    return Colours.Red;
+    return Colours.error;
   };
 
   return (

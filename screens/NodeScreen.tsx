@@ -23,7 +23,6 @@ export default function NodeScreen() {
   const [nodes, setNodes] = useState<Battery[]>([]);
 
   useEffect(() => {
-    //Note: This has changed drastically. Need to check if this is correct
     const loadData = async () => {
       try {
         const inverterData = await getFromStorage('selectedInverter') as Inverter | null;
@@ -48,7 +47,6 @@ export default function NodeScreen() {
     );
   };
 
-  //Note this has changed drastically. Need to check if this is correct
   const handleAuthenticate = async () => {
     if (!selectedInverter) {
       showToast(ToastType.Error, 'No inverter selected.');

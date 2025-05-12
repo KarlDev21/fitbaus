@@ -1,8 +1,8 @@
-import { StyleSheet } from 'react-native';
-import { Colours } from '../properties/colours';
-import { Dimensions, Flex, Margin, Padding } from '../properties/dimensions';
-import { buttonStyles } from './buttonStyles';
-import { FontSize } from '../properties';
+import {StyleSheet} from 'react-native';
+import {Colours} from '../properties/colours';
+import {Dimensions, Flex, Margin, Padding} from '../properties/dimensions';
+import {buttonStyles} from './buttonStyles';
+import {FontSize} from '../properties';
 
 export const inverterRowStyles = StyleSheet.create({
   inverterRow: {
@@ -25,11 +25,11 @@ export const inverterRowStyles = StyleSheet.create({
   },
   inverterStatus: {
     marginBottom: Margin.medium,
-    color: Colours.textPrimary
+    color: Colours.textPrimary,
   },
   button: buttonStyles.primaryButton,
   buttonLabel: {
     fontSize: FontSize.medium,
-    color: Colours.primaryButtonText
+    color: Colours.white,
   },
-}); 
+});

@@ -18,7 +18,7 @@ export const FullScreenLoadingIndicator = () => {
 }
 export const LoadingIndicator = () => {
     return (
-        <ActivityIndicator animating={true} size={GenericSize.medium} color={Colours.backgroundPrimary} />
+        <ActivityIndicator animating={true} size={GenericSize.medium} color={Colours.white} />
     )
 }
 

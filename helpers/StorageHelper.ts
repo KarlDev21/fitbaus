@@ -36,16 +36,6 @@ export function getFromStorage<T>(key: string): T | null {
 }
 
 /**
- * Retrieves a string value from MMKV storage.
- *
- * @param {string} key - The key of the value to retrieve.
- * @returns {string} - The stored string value, or an empty string if not found.
- */
-export const getStringFromStorage = (key: string): string => {
-  return storage.getString(key) ?? '';
-};
-
-/**
  * Deletes a value from MMKV storage.
  *
  * @param {string} key - The key of the value to delete.

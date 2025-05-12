@@ -7,7 +7,7 @@ export const layout = StyleSheet.create({
     width: Width.full,
     height: Height.full,
     flex: Flex.xsmall,
-    backgroundColor: Colours.backgroundPrimary,
+    backgroundColor: Colours.white,
   },
   fill_flex: {
     flex: Flex.xsmall,
@@ -30,7 +30,7 @@ export const layout = StyleSheet.create({
   },
   container: {
     flex: Flex.xsmall,
-    backgroundColor: Colours.backgroundPrimary,
+    backgroundColor: Colours.white,
   },
 });
 

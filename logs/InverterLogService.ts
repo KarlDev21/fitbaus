@@ -4,32 +4,20 @@ import {Mutex} from 'async-mutex';
 import RNFS from 'react-native-fs';
 import {AsyncQueue} from './AsyncQueue';
 import {uploadFileToServerAsync} from '../services/DeviceUnitService';
-import {getItemAsync, SECURE_STORE_KEYS} from '../helpers/SecureStorageHelper';
-import {UserProfileResponse} from '../types/ApiResponse';
 import {
   getFromStorage,
   saveToStorage,
   STORAGE_KEYS,
 } from '../helpers/StorageHelper';
 import {Inverter} from '../types/DeviceType';
-import {UploadFileRequest} from '../types/ApiRequest';
 import {readLogFiles} from '../helpers/FileHelper';
+import {BleUuids} from '../types/constants/constants';
 
-// Stower Inverter class that handles BLE communication
 export class StowerInverter {
   private peripheral: Device;
   private queue: AsyncQueue<Buffer> = new AsyncQueue<Buffer>();
 
   private fileCmdMutex = new Mutex();
-
-  // Constants for characteristic UUIDs
-  private static FileCMDChar(): string {
-    return '669a0c20-0008-d690-ec11-e214466ccb95';
-  }
-
-  private static FileResultChar(): string {
-    return '669a0c20-0008-d690-ec11-e214476ccb95';
-  }
 
   constructor(peripheral: Device) {
     this.peripheral = peripheral;
@@ -40,8 +28,8 @@ export class StowerInverter {
   subscribe(): void {
     try {
       this.subscription = this.peripheral.monitorCharacteristicForService(
-        '669a0c20-0008-d690-ec11-e2143045cb95', // Using service ID as we don't have a specific service ID
-        StowerInverter.FileResultChar(),
+        BleUuids.FILE_CMD_SERVICE_UUID,
+        BleUuids.FILE_RESULT_CHAR_UUID,
         (error, characteristic) => {
           if (error) {
             console.error('Notification error:', error);
@@ -80,8 +68,8 @@ export class StowerInverter {
 
       try {
         await this.peripheral.writeCharacteristicWithResponseForService(
-          '669a0c20-0008-d690-ec11-e2143045cb95', // Using device ID as we don't have a specific service ID
-          StowerInverter.FileCMDChar(),
+          BleUuids.FILE_CMD_SERVICE_UUID,
+          BleUuids.FILE_CMD_CHAR_UUID,
           Buffer.from(data).toString('base64'),
         );
       } catch (error) {
@@ -91,11 +79,12 @@ export class StowerInverter {
     });
   }
 
+  //TODO: Double check that I can remove this function now
   async getFileResult(): Promise<Buffer> {
     try {
       const characteristic = await this.peripheral.readCharacteristicForService(
-        '669a0c20-0008-d690-ec11-e2143045cb95', // Using device ID as we don't have a specific service ID
-        StowerInverter.FileResultChar(),
+        BleUuids.FILE_CMD_SERVICE_UUID,
+        BleUuids.FILE_RESULT_CHAR_UUID,
       );
 
       if (characteristic?.value) {
@@ -110,14 +99,12 @@ export class StowerInverter {
   }
 
   fileResultNotify(data: Buffer): void {
-    // console.log(`Notification received: ${data.length} bytes`);
     this.queue.put(data).then(() => {
       //Do nothing
     });
   }
 
   async waitFileResults(): Promise<Buffer> {
-    // console.log("waitFileResults");
     return await this.queue.get();
   }
 
@@ -132,7 +119,7 @@ export class StowerInverter {
       ),
     ]);
   }
-
+  //TODO: Clean up this file once the upload is working
   async downloadFiles(fileList: string[]): Promise<void> {
     const dirPath = `${RNFS.DocumentDirectoryPath}/stower_files`;
 
@@ -192,14 +179,14 @@ export class StowerInverter {
       throw error;
     }
   }
-
+  //TODO: Clean up this file once the upload is working
   async uploadFiles(fileList: string[]): Promise<void> {
     try {
-      for (const f of fileList) {
-        console.log(`Starting download of file: ${f}`);
+      for (const logFile of fileList) {
+        console.log(`Starting download of file: ${logFile}`);
 
         // Send the GET command to request the file
-        await this.sendFileCmd('GET', f);
+        await this.sendFileCmd('GET', logFile);
 
         const headerBuffer = await this.waitFileResults();
         const fileSize = headerBuffer.readUInt32LE(0);
@@ -234,9 +221,9 @@ export class StowerInverter {
         // Convert the file contents to Base64
         const base64File = contents.toString('base64');
 
-        await this.uploadAndDeleteFile(f, base64File);
+        await this.uploadAndDeleteFile(logFile, base64File);
 
-        console.log(`File ${f} uploaded successfully`);
+        console.log(`File ${logFile} uploaded successfully`);
       }
 
       console.log('All files uploaded successfully');
@@ -258,10 +245,6 @@ export class StowerInverter {
 
   private async uploadAndDeleteFile(fileName: string, fileData: string) {
     try {
-      const user = await getItemAsync<UserProfileResponse>(
-        SECURE_STORE_KEYS.USER_PROFILE,
-      );
-
       const inverter: Inverter | null = await getFromStorage(
         STORAGE_KEYS.SELECTED_INVERTER,
       );

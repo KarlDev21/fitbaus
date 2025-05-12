@@ -1,8 +1,6 @@
 import {getItemAsync, SECURE_STORE_KEYS} from '../helpers/SecureStorageHelper';
 import {ApiResponse, UserProfileResponse} from '../types/ApiResponse';
-
-export const API_BASE_URL = 'http://192.168.182.121:3000/api/v1';
-// export const API_BASE_URL = 'http://188.166.168.206:3000/api/v1/';
+import {API_BASE_URL} from '../types/constants/constants';
 
 export async function loginAsync(
   email: string,

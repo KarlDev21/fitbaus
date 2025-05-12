@@ -26,14 +26,8 @@ export default function FinalizingScreen() {
         setConnectedInverter(selectedInverter);
       }
 
-      //issue here with the commison process
       try {
         const timer = setTimeout(async () => {
-
-          //might need to pass in inverter device from connected devices
-          // const selectedInverter = getSelectedInverter();
-          // const selectedNodes = getFromStorage(STORAGE_KEYS.SELECTED_NODES) as Battery[] | null;
-
           if (selectedInverter && selectedNodes) {
             await authenticateInverter(selectedInverter, selectedNodes);
 
@@ -65,7 +59,7 @@ export default function FinalizingScreen() {
     return (
       <AppScreen>
         <View style={layout.content}>
-          <ActivityIndicator size={GenericSize.large} color={Colours.primary} style={{marginBottom: Margin.large}} />
+          <ActivityIndicator size={GenericSize.large} color={Colours.primary} style={{ marginBottom: Margin.large }} />
           <Text variant="headlineSmall" style={textStyles.heading}>
             Finalizing Connection
           </Text>

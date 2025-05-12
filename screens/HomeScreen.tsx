@@ -7,18 +7,14 @@ import { SavedInverterCard } from '../components/Cards/SavedInverterCard';
 import { saveToStorage, STORAGE_KEYS } from '../helpers/StorageHelper';
 import { Inverter } from '../types/DeviceType';
 import { BleManagerInstance, getConnectedInverter } from '../helpers/BluetoothHelper';
-import { useKeepAwake } from 'expo-keep-awake';
 import { navigationRefAuthenticated } from '../nav/ScreenDefinitions';
-import { AUTHENTICATION_SERVICE } from '../services/constants/BleUuids';
+import { BleUuids } from '../types/constants/constants';
 
 export default function HomeScreen() {
   const [isScanning, setIsScanning] = useState(false);
   const savedInverter: Inverter | null = getConnectedInverter();
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-
-  // This hook is used to keep the screen awake for performing log-related operations
-  useKeepAwake();
 
   useEffect(() => {
     const checkConnection = async () => {
@@ -27,8 +23,7 @@ export default function HomeScreen() {
         return
       }
 
-      const connectedDevices = await BleManagerInstance.connectedDevices([AUTHENTICATION_SERVICE]);
-      console.log("Connected devices: ", connectedDevices);
+      const connectedDevices = await BleManagerInstance.connectedDevices([BleUuids.AUTHENTICATION_SERVICE_UUID]);
       if (connectedDevices.length === 0) {
         setIsConnected(false)
         return
@@ -48,7 +43,6 @@ export default function HomeScreen() {
 
     try {
       const { inverters, nodes } = await scanDevices();
-
       const errorMessage = getScanErrorMessage(nodes.length, inverters.length);
 
       if (errorMessage) {
@@ -68,13 +62,10 @@ export default function HomeScreen() {
 
   const handleConnect = async () => {
     if (!savedInverter) return;
-
     setIsConnecting(true);
 
     try {
-      const devices = await BleManagerInstance.discoverAllServicesAndCharacteristicsForDevice(savedInverter.id);
-      console.log("discover inverter: ", devices)
-      console.log(devices)
+      await BleManagerInstance.discoverAllServicesAndCharacteristicsForDevice(savedInverter.id);
 
       setIsConnected(true);
       showToast(ToastType.Success, 'Connected to Inverter');

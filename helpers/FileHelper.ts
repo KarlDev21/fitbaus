@@ -22,7 +22,7 @@ export function writeFiles(files: string[]): void {
  */
 export function readLogFiles(): string[] {
   try {
-    const fileData = getFromStorage(STORAGE_KEYS.LOG_FILES);
+    const fileData = getFromStorage<{files: string[]}>(STORAGE_KEYS.LOG_FILES);
     console.log('Retrieved file data:', fileData);
 
     if (fileData) {

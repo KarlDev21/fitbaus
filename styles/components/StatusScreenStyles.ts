@@ -1,7 +1,7 @@
-import { StyleSheet } from 'react-native';
-import { Colours } from '../properties/colours';
-import { Margin, Padding } from '../properties/dimensions';
-import { FontSize } from '../properties';
+import {StyleSheet} from 'react-native';
+import {Colours} from '../properties/colours';
+import {Margin, Padding} from '../properties/dimensions';
+import {FontSize} from '../properties';
 
 export const statusScreenStyles = StyleSheet.create({
   content: {
@@ -27,7 +27,7 @@ export const statusScreenStyles = StyleSheet.create({
   },
   topHalf: {
     top: 0,
-    backgroundColor: Colours.backgroundPrimary,
+    backgroundColor: Colours.white,
   },
   bottomHalf: {
     bottom: 0,

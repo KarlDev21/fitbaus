@@ -6,6 +6,7 @@ import {
 import {StowerInverter} from '../logs/InverterLogService';
 import {writeFiles, readLogFiles} from '../helpers/FileHelper';
 
+//TODO: Clean up this file once the upload is working
 export function useGlobalFileUploader() {
   useEffect(() => {
     const uploadFiles = async () => {
