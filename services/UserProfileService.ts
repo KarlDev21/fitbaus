@@ -1,7 +1,7 @@
 import {getItemAsync, SECURE_STORE_KEYS} from '../helpers/SecureStorageHelper';
 import {ApiResponse, UserProfileResponse} from '../types/ApiResponse';
 
-export const API_BASE_URL = 'http://192.168.10.141:3000/api/v1';
+export const API_BASE_URL = 'http://192.168.182.121:3000/api/v1';
 // export const API_BASE_URL = 'http://188.166.168.206:3000/api/v1/';
 
 export async function loginAsync(
@@ -9,8 +9,6 @@ export async function loginAsync(
   password: string,
 ): Promise<ApiResponse<UserProfileResponse>> {
   try {
-    console.log('Login request:', {email, password});
-
     const response = await fetch(`${API_BASE_URL}/login`, {
       method: 'POST',
       headers: {
@@ -19,11 +17,8 @@ export async function loginAsync(
       body: JSON.stringify({email, password}),
     });
 
-    console.log('RESPONSE:: ', response);
-
     if (!response.ok) {
       const errorResponse = await response.json();
-      console.error('Error during login:', errorResponse);
       return {
         success: errorResponse.success,
         error: errorResponse.errMessage,
@@ -41,8 +36,6 @@ export async function loginAsync(
       },
     };
   } catch (error: any) {
-    console.error('Error during login:', error.message);
-    console.error('Error during login:', error.response);
     return {success: false, error: 'Network error'};
   }
 }
