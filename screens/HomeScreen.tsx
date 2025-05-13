@@ -38,6 +38,16 @@ export default function HomeScreen() {
     checkConnection();
   }, []);
 
+  useEffect(() => {
+    if (!savedInverter) return;
+
+    const subscription = BleManagerInstance.onDeviceDisconnected(savedInverter.id, () => {
+      setIsConnected(false);
+    });
+
+    return () => subscription.remove();
+  }, [savedInverter]);
+
   const handleScan = async () => {
     setIsScanning(true);
 
@@ -107,9 +117,32 @@ export default function HomeScreen() {
       return;
     }
 
+
     if (!isConnected) {
-      showToast(ToastType.Error, 'Device is not connected. Please connect to the inverter first.');
-      return;
+      setIsConnecting(true);
+
+      try {
+        // Attempt to connect
+        await BleManagerInstance.connectToDevice(savedInverter.id);
+        await BleManagerInstance.discoverAllServicesAndCharacteristicsForDevice(savedInverter.id);
+
+        // Verify connection
+        const connectedDevices = await BleManagerInstance.connectedDevices([BleUuids.AUTHENTICATION_SERVICE_UUID]);
+        const isDeviceConnected = connectedDevices.some(device => device.id === savedInverter.id);
+
+        if (isDeviceConnected) {
+          setIsConnected(true);
+          showToast(ToastType.Success, 'Connected to the inverter.');
+        } else {
+          throw new Error('Failed to connect to the inverter.');
+        }
+      } catch (error) {
+        showToast(ToastType.Error, 'Unable to connect to the inverter.');
+        console.error(error);
+        return; // Exit if connection fails
+      } finally {
+        setIsConnecting(false);
+      }
     }
 
     // Navigate to the DashboardScreen with the connected inverter
