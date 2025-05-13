@@ -16,26 +16,42 @@ export default function HomeScreen() {
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
 
+  // Helper function to check connection status
+  const checkConnectionStatus = async () => {
+    if (!savedInverter) {
+      setIsConnected(false);
+      return false;
+    }
+
+    const connectedDevices = await BleManagerInstance.connectedDevices([BleUuids.AUTHENTICATION_SERVICE_UUID]);
+    const isDeviceConnected = connectedDevices.some(device => device.id === savedInverter.id);
+
+    setIsConnected(isDeviceConnected);
+    return isDeviceConnected;
+  };
+
+  // Helper function to connect to the inverter
+  const connectToInverter = async () => {
+    try {
+      await BleManagerInstance.connectToDevice(savedInverter!.id);
+      await BleManagerInstance.discoverAllServicesAndCharacteristicsForDevice(savedInverter!.id);
+
+      const isDeviceConnected = await checkConnectionStatus();
+      if (!isDeviceConnected) {
+        throw new Error('Failed to establish a connection with the inverter.');
+      }
+
+      showToast(ToastType.Success, 'Connected to the inverter.');
+    } catch (error) {
+      showToast(ToastType.Error, 'An error occurred while connecting to the inverter.');
+      console.error(error);
+      return false;
+    }
+    return true;
+  };
+
   useEffect(() => {
-    const checkConnection = async () => {
-      if (!savedInverter) {
-        setIsConnected(false)
-        return
-      }
-
-      const connectedDevices = await BleManagerInstance.connectedDevices([BleUuids.AUTHENTICATION_SERVICE_UUID]);
-      if (connectedDevices.length === 0) {
-        setIsConnected(false)
-        return
-      }
-      setIsConnected(true)
-      const connection = await savedInverter?.isConnected();
-      if (connection) {
-        setIsConnected(connection);
-      }
-    };
-
-    checkConnection();
+    checkConnectionStatus();
   }, []);
 
   useEffect(() => {
@@ -78,37 +94,15 @@ export default function HomeScreen() {
 
     setIsConnecting(true);
 
-    try {
-      // Check if the device is already connected
-      const connectedDevices = await BleManagerInstance.connectedDevices([BleUuids.AUTHENTICATION_SERVICE_UUID]);
-      const isDeviceConnected = connectedDevices.some(device => device.id === savedInverter.id);
-
-      if (isDeviceConnected) {
-        setIsConnected(true);
-        showToast(ToastType.Success, 'Already connected to the inverter.');
-        return;
-      }
-
-      // Attempt to connect and discover services/characteristics
-      await BleManagerInstance.connectToDevice(savedInverter.id);
-      await BleManagerInstance.discoverAllServicesAndCharacteristicsForDevice(savedInverter.id);
-
-      // Verify connection status again after discovery
-      const reconnectedDevices = await BleManagerInstance.connectedDevices([BleUuids.AUTHENTICATION_SERVICE_UUID]);
-      const isReconnected = reconnectedDevices.some(device => device.id === savedInverter.id);
-
-      if (isReconnected) {
-        setIsConnected(true);
-        showToast(ToastType.Success, 'Connected to Inverter');
-      } else {
-        throw new Error('Failed to establish a connection with the inverter.');
-      }
-    } catch (error) {
-      showToast(ToastType.Error, 'An error occurred while connecting to the inverter.');
-      console.error(error);
-    } finally {
+    const isDeviceConnected = await checkConnectionStatus();
+    if (isDeviceConnected) {
+      showToast(ToastType.Success, 'Already connected to the inverter.');
       setIsConnecting(false);
+      return;
     }
+
+    await connectToInverter();
+    setIsConnecting(false);
   };
 
   const handleInverter = async () => {
@@ -117,35 +111,15 @@ export default function HomeScreen() {
       return;
     }
 
-
     if (!isConnected) {
       setIsConnecting(true);
 
-      try {
-        // Attempt to connect
-        await BleManagerInstance.connectToDevice(savedInverter.id);
-        await BleManagerInstance.discoverAllServicesAndCharacteristicsForDevice(savedInverter.id);
+      const success = await connectToInverter();
+      setIsConnecting(false);
 
-        // Verify connection
-        const connectedDevices = await BleManagerInstance.connectedDevices([BleUuids.AUTHENTICATION_SERVICE_UUID]);
-        const isDeviceConnected = connectedDevices.some(device => device.id === savedInverter.id);
-
-        if (isDeviceConnected) {
-          setIsConnected(true);
-          showToast(ToastType.Success, 'Connected to the inverter.');
-        } else {
-          throw new Error('Failed to connect to the inverter.');
-        }
-      } catch (error) {
-        showToast(ToastType.Error, 'Unable to connect to the inverter.');
-        console.error(error);
-        return; // Exit if connection fails
-      } finally {
-        setIsConnecting(false);
-      }
+      if (!success) return;
     }
 
-    // Navigate to the DashboardScreen with the connected inverter
     navigationRefAuthenticated.navigate('Dashboard', { inverter: savedInverter });
   };
 
