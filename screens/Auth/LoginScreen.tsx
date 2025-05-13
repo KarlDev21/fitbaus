@@ -33,22 +33,7 @@ const LoginScreen = () => {
             return;
         }
 
-        //Will need to revert back to this on BE integration
         const response = await loginAsync(formState.values.email, formState.values.loginPassword);
-        //mocking this for now to get in 
-        // const response = {
-        //     success: true,
-        //     error: "an error occurred",
-        //     data: {
-        //         email: formState.values.email,
-        //         loginPassword: formState.values.loginPassword,
-        //         userID: 'mockUserID',
-        //         name: 'Mock User',
-        //         phone: '1234567890',
-        //         token: 'mockToken',
-        //         role: 'user',
-        //     },
-        // };
 
         if (!response.success) {
             showToast(ToastType.Error, response.error!);

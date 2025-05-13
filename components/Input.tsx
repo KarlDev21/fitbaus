@@ -48,6 +48,10 @@ export const PasswordInput: React.FC<TextInputProps> = ({
 }) => {
     const [showPassword, setShowPassword] = useState<boolean>(true);
 
+    function showOrHidePassword() {
+        setShowPassword(!showPassword);
+    }
+
     return (
         <View style={inputStyles.container}>
             <TextInput
@@ -60,7 +64,7 @@ export const PasswordInput: React.FC<TextInputProps> = ({
                 error={error}
                 style={inputStyles.input}
                 secureTextEntry={showPassword}
-                right={<TextInput.Icon icon="account" onPress={() => { setShowPassword(!showPassword) }} />}
+                right={showPassword ? <TextInput.Icon icon="eye" onPress={showOrHidePassword} /> : <TextInput.Icon icon="eye-off" onPress={showOrHidePassword} />}
             />
             {error && errorText ? <Text style={inputStyles.errorText}>{errorText}</Text> : null}
         </View>

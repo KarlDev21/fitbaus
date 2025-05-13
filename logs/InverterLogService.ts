@@ -124,58 +124,70 @@ export class StowerInverter {
     const dirPath = `${RNFS.DocumentDirectoryPath}/stower_files`;
 
     try {
-      // Create directory if it doesn't exist
-      const dirExists = await RNFS.exists(dirPath);
-      if (!dirExists) {
+      if (!(await RNFS.exists(dirPath))) {
         await RNFS.mkdir(dirPath);
       }
 
-      for (const f of fileList) {
-        console.log(`Starting download of file: ${f}`);
+      for (const filename of fileList) {
+        console.log(`Starting download of file: ${filename}`);
 
-        // Send the GET command to request the file
-        await this.sendFileCmd('GET', f);
+        await this.sendFileCmd('GET', filename);
 
         const headerBuffer = await this.waitFileResults();
         const fileSize = headerBuffer.readUInt32LE(0);
-        const chunkSize = headerBuffer.readUInt8(4); // Byte 5
+        const chunkSize = headerBuffer.readUInt8(4);
 
         console.log(`File size: ${fileSize}, Chunk size: ${chunkSize}`);
 
-        let contents = Buffer.alloc(0);
-        let piece = 0;
-        console.log('0%..');
+        const buffer = Buffer.alloc(fileSize); // Preallocate full buffer
+        let offset = 0;
+        let lastLogged = 0;
 
-        // Keep receiving chunks until we have the complete file
-        while (true) {
-          const chunk = await this.waitFileResultsTimer();
-          contents = Buffer.concat([contents, chunk]);
+        while (offset < fileSize) {
+          let chunk: Buffer;
 
-          const percentage = Math.floor((contents.length / fileSize) * 100);
-          if (percentage >= (piece + 1) * 10) {
-            piece = Math.floor(percentage / 10);
-            console.log(`${piece * 10}%..`);
+          try {
+            chunk = await this.waitFileResultsTimer(5000); // 5s timeout per chunk
+          } catch (e) {
+            console.error(`Timeout while receiving chunk for ${filename}`);
+            throw e;
+          }
+
+          chunk.copy(buffer, offset);
+          offset += chunk.length;
+
+          const progress = Math.floor((offset / fileSize) * 100);
+          if (progress >= lastLogged + 10) {
+            lastLogged = progress;
+            console.log(`${progress}%..`);
           }
 
           if (chunk.length < chunkSize) {
-            console.log('100%');
+            console.log('Received final chunk (shorter than chunkSize)');
             break;
           }
         }
 
-        console.log('100%');
-        console.log(`Downloaded ${contents.length} bytes`);
+        console.log(`100% - Downloaded ${offset} bytes`);
 
-        // Save the file
-        const filePath = `${dirPath}/${f}`;
-        await RNFS.writeFile(filePath, contents.toString('base64'), 'base64');
-        console.log(`File saved to: ${filePath}`);
+        const filePath = `${dirPath}/${filename}`;
+        try {
+          await RNFS.writeFile(
+            filePath,
+            buffer.slice(0, offset).toString('base64'),
+            'base64',
+          );
+          console.log(`File saved to: ${filePath}`);
+        } catch (e) {
+          console.error(`Failed to write file ${filename}:`, e);
+          throw e;
+        }
       }
 
       console.log('All files downloaded successfully');
     } catch (error) {
-      console.error('Error in getFiles:', error);
-      this.unsubscribe();
+      console.error('Error in downloadFiles:', error);
+      this.unsubscribe(); // Stop BLE notifications
       throw error;
     }
   }

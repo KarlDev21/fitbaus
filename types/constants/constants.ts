@@ -27,5 +27,5 @@ export const BleUuids = {
 };
 
 export const API_BASE_URL = __DEV__
-  ? 'http://192.168.182.121:3000/api/v1'
+  ? 'http://192.168.182.104:3000/api/v1'
   : 'http://188.166.168.206:3000/api/v1/';
