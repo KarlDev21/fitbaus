@@ -41,15 +41,11 @@ export default function DashboardScreen(props: NativeStackScreenProps<Authentica
 
     const loadData = async () => {
       try {
-        console.log("loaded inverter")
-        console.log(inverter)
-
         if (inverter) {
           const chargeControllerInfo = await fetchAndLogChargeControllerStatus(inverter);
           const inverterState = await fetchAndLogInverterStatus(inverter);
 
           if (chargeControllerInfo && inverterState) {
-
             setInverterState(inverterState);
 
             const nodes = getConnectedNodes(inverter);
@@ -69,6 +65,9 @@ export default function DashboardScreen(props: NativeStackScreenProps<Authentica
 
             await uploadInverterAndBatteryDataAsync(inverterState, nodeDataList);
             setIsLoading(false);
+          } else {
+            showToast(ToastType.Error, 'Inverter has been disconnected.');
+            navigationRefAuthenticated.navigate('Home');
           }
         }
         else {

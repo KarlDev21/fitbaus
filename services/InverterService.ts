@@ -216,7 +216,7 @@ export async function getInverterStatus(
     return inverterState;
   } catch (error) {
     console.error('Error reading inverter status:', error);
-    return null;
+    throw error;
   }
 }
 

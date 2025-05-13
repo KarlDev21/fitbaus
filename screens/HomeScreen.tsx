@@ -61,25 +61,59 @@ export default function HomeScreen() {
   };
 
   const handleConnect = async () => {
-    if (!savedInverter) return;
+    if (!savedInverter) {
+      showToast(ToastType.Error, 'No inverter is saved. Please scan and select an inverter.');
+      return;
+    }
+
     setIsConnecting(true);
 
     try {
+      // Check if the device is already connected
+      const connectedDevices = await BleManagerInstance.connectedDevices([BleUuids.AUTHENTICATION_SERVICE_UUID]);
+      const isDeviceConnected = connectedDevices.some(device => device.id === savedInverter.id);
+
+      if (isDeviceConnected) {
+        setIsConnected(true);
+        showToast(ToastType.Success, 'Already connected to the inverter.');
+        return;
+      }
+
+      // Attempt to connect and discover services/characteristics
+      await BleManagerInstance.connectToDevice(savedInverter.id);
       await BleManagerInstance.discoverAllServicesAndCharacteristicsForDevice(savedInverter.id);
 
-      setIsConnected(true);
-      showToast(ToastType.Success, 'Connected to Inverter');
+      // Verify connection status again after discovery
+      const reconnectedDevices = await BleManagerInstance.connectedDevices([BleUuids.AUTHENTICATION_SERVICE_UUID]);
+      const isReconnected = reconnectedDevices.some(device => device.id === savedInverter.id);
+
+      if (isReconnected) {
+        setIsConnected(true);
+        showToast(ToastType.Success, 'Connected to Inverter');
+      } else {
+        throw new Error('Failed to establish a connection with the inverter.');
+      }
     } catch (error) {
       showToast(ToastType.Error, 'An error occurred while connecting to the inverter.');
+      console.error(error);
     } finally {
       setIsConnecting(false);
     }
   };
 
-  const handleInverter = () => {
-    if (savedInverter) {
-      navigationRefAuthenticated.navigate('Dashboard', { inverter: savedInverter });
+  const handleInverter = async () => {
+    if (!savedInverter) {
+      showToast(ToastType.Error, 'No inverter is saved. Please scan and connect to an inverter.');
+      return;
     }
+
+    if (!isConnected) {
+      showToast(ToastType.Error, 'Device is not connected. Please connect to the inverter first.');
+      return;
+    }
+
+    // Navigate to the DashboardScreen with the connected inverter
+    navigationRefAuthenticated.navigate('Dashboard', { inverter: savedInverter });
   };
 
   return (
