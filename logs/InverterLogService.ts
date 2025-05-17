@@ -25,36 +25,36 @@ export class StowerInverter {
 
   private subscription: Subscription | null = null;
 
-  subscribe(): void {
-    try {
-      this.subscription = this.peripheral.monitorCharacteristicForService(
-        BleUuids.FILE_CMD_SERVICE_UUID,
-        BleUuids.FILE_RESULT_CHAR_UUID,
-        (error, characteristic) => {
-          if (error) {
-            console.error('Notification error:', error);
-            return;
-          }
+  // subscribe(): void {
+  //   try {
+  //     this.subscription = this.peripheral.monitorCharacteristicForService(
+  //       BleUuids.FILE_CMD_SERVICE_UUID,
+  //       BleUuids.FILE_RESULT_CHAR_UUID,
+  //       (error, characteristic) => {
+  //         if (error) {
+  //           console.error('Notification error:', error);
+  //           return;
+  //         }
 
-          if (characteristic?.value) {
-            const data = Buffer.from(characteristic.value, 'base64');
-            this.fileResultNotify(data);
-          }
-        },
-      );
-    } catch (error) {
-      console.error('Error subscribing to notifications:', error);
-    }
-  }
+  //         if (characteristic?.value) {
+  //           const data = Buffer.from(characteristic.value, 'base64');
+  //           this.fileResultNotify(data);
+  //         }
+  //       },
+  //     );
+  //   } catch (error) {
+  //     console.error('Error subscribing to notifications:', error);
+  //   }
+  // }
 
-  unsubscribe(): void {
-    try {
-      // Stop monitoring the characteristic
-      this.subscription?.remove();
-    } catch (error) {
-      console.error('Error unsubscribing from notifications:', error);
-    }
-  }
+  // unsubscribe(): void {
+  //   try {
+  //     // Stop monitoring the characteristic
+  //     this.subscription?.remove();
+  //   } catch (error) {
+  //     console.error('Error unsubscribing from notifications:', error);
+  //   }
+  // }
 
   async sendFileCmd(cmd: string, filename: string = ''): Promise<void> {
     // Use a mutex to ensure commands don't overlap
@@ -133,7 +133,7 @@ export class StowerInverter {
 
         await this.sendFileCmd('GET', filename);
 
-        const headerBuffer = await this.waitFileResults();
+        const headerBuffer = await this.getFileResult();
         const fileSize = headerBuffer.readUInt32LE(0);
         const chunkSize = headerBuffer.readUInt8(4);
 
@@ -147,7 +147,7 @@ export class StowerInverter {
           let chunk: Buffer;
 
           try {
-            chunk = await this.waitFileResultsTimer(5000); // 5s timeout per chunk
+            chunk = await this.getFileResult();
           } catch (e) {
             console.error(`Timeout while receiving chunk for ${filename}`);
             throw e;
@@ -187,7 +187,7 @@ export class StowerInverter {
       console.log('All files downloaded successfully');
     } catch (error) {
       console.error('Error in downloadFiles:', error);
-      this.unsubscribe(); // Stop BLE notifications
+      // this.unsubscribe(); // Stop BLE notifications
       throw error;
     }
   }

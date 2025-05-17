@@ -23,14 +23,14 @@ export function useGlobalFileUploader() {
           console.log('Connected to device: ', connectedDevice.mtu);
 
           const inverter = new StowerInverter(connectedDevice);
-          inverter.subscribe();
+          // inverter.subscribe();
 
           console.log('Get list of files');
           await inverter.sendFileCmd('LS');
           const files: string[] = [];
 
           while (true) {
-            const filenameBuffer = await inverter.waitFileResults();
+            const filenameBuffer = await inverter.getFileResult();
             const filename = filenameBuffer.toString().replace(/\0.*$/, '');
             console.log(filename);
 
@@ -52,7 +52,7 @@ export function useGlobalFileUploader() {
           await inverter.uploadFiles(filteredList);
 
           // Unsubscribe when done
-          inverter.unsubscribe();
+          // inverter.unsubscribe();
           console.log('Done');
         } catch (error) {
           console.error('Error uploading files:', error);
