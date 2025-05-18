@@ -25,31 +25,33 @@ export function useGlobalFileUploader() {
           const inverter = new StowerInverter(connectedDevice);
           // inverter.subscribe();
 
-          console.log('Get list of files');
-          await inverter.sendFileCmd('LS');
-          const files: string[] = [];
+          // console.log('Get list of files');
+          // await inverter.sendFileCmd('LS');
+          // const files: string[] = [];
 
-          while (true) {
-            const filenameBuffer = await inverter.getFileResult();
-            const filename = filenameBuffer.toString().replace(/\0.*$/, '');
-            console.log(filename);
+          // while (true) {
+          //   const filenameBuffer = await inverter.waitFileResults();
+          //   console.log(filenameBuffer);
+          //   const filename = filenameBuffer.toString().replace(/\0.*$/, '');
+          //   console.log(filename);
 
-            if (filename.length > 0) {
-              files.push(filename);
-            } else {
-              break;
-            }
-          }
+          //   if (filename.length > 0) {
+          //     files.push(filename);
+          //   } else {
+          //     break;
+          //   }
+          // }
 
-          console.log(`Files: ${files}`);
-          writeFiles(files);
+          // console.log(`Files: ${files}`);
+          // writeFiles(files);
 
-          const fileslist = readLogFiles();
-          const filteredList = fileslist.filter(
-            (file: string) => file !== 'config.json' && file !== '20250107.log',
-          );
+          // const fileslist = readLogFiles();
+          // const filteredList = fileslist.filter(
+          //   (file: string) => file !== 'config.json' && file !== '20250107.log',
+          // );
+          const filteredList = ['config.json', '20250107.log'];
           console.log('FileList: ' + filteredList);
-          await inverter.uploadFiles(filteredList);
+          await inverter.downloadFiles(filteredList);
 
           // Unsubscribe when done
           // inverter.unsubscribe();

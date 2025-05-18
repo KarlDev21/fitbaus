@@ -15,71 +15,33 @@ import {BleUuids} from '../types/constants/constants';
 
 export class StowerInverter {
   private peripheral: Device;
-  private queue: AsyncQueue<Buffer> = new AsyncQueue<Buffer>();
-
-  private fileCmdMutex = new Mutex();
+  // private queue: AsyncQueue<Buffer> = new AsyncQueue<Buffer>();
 
   constructor(peripheral: Device) {
     this.peripheral = peripheral;
   }
 
-  private subscription: Subscription | null = null;
-
-  // subscribe(): void {
-  //   try {
-  //     this.subscription = this.peripheral.monitorCharacteristicForService(
-  //       BleUuids.FILE_CMD_SERVICE_UUID,
-  //       BleUuids.FILE_RESULT_CHAR_UUID,
-  //       (error, characteristic) => {
-  //         if (error) {
-  //           console.error('Notification error:', error);
-  //           return;
-  //         }
-
-  //         if (characteristic?.value) {
-  //           const data = Buffer.from(characteristic.value, 'base64');
-  //           this.fileResultNotify(data);
-  //         }
-  //       },
-  //     );
-  //   } catch (error) {
-  //     console.error('Error subscribing to notifications:', error);
-  //   }
-  // }
-
-  // unsubscribe(): void {
-  //   try {
-  //     // Stop monitoring the characteristic
-  //     this.subscription?.remove();
-  //   } catch (error) {
-  //     console.error('Error unsubscribing from notifications:', error);
-  //   }
-  // }
-
-  async sendFileCmd(cmd: string, filename: string = ''): Promise<void> {
+  async sendFileCmd(cmd: string, filename: string = '') {
     // Use a mutex to ensure commands don't overlap
-    return this.fileCmdMutex.runExclusive(async () => {
-      if (cmd === 'GET' || cmd === 'RM') {
-        cmd = cmd + ' ' + filename;
-      }
-      console.log(`send Cmd ${cmd}`);
+    if (cmd === 'GET' || cmd === 'RM') {
+      cmd = cmd + ' ' + filename;
+    }
+    console.log(`send Cmd ${cmd}`);
 
-      const data = Buffer.from(cmd, 'utf-8');
+    const data = Buffer.from(cmd, 'utf-8');
 
-      try {
-        await this.peripheral.writeCharacteristicWithResponseForService(
-          BleUuids.FILE_CMD_SERVICE_UUID,
-          BleUuids.FILE_CMD_CHAR_UUID,
-          Buffer.from(data).toString('base64'),
-        );
-      } catch (error) {
-        console.error('Error writing characteristic:', error);
-        throw error;
-      }
-    });
+    try {
+      await this.peripheral.writeCharacteristicWithResponseForService(
+        BleUuids.FILE_CMD_SERVICE_UUID,
+        BleUuids.FILE_CMD_CHAR_UUID,
+        Buffer.from(data).toString('base64'),
+      );
+    } catch (error) {
+      console.error('Error writing characteristic:', error);
+      throw error;
+    }
   }
 
-  //TODO: Double check that I can remove this function now
   async getFileResult(): Promise<Buffer> {
     try {
       const characteristic = await this.peripheral.readCharacteristicForService(
@@ -87,7 +49,10 @@ export class StowerInverter {
         BleUuids.FILE_RESULT_CHAR_UUID,
       );
 
+      // console.log('Characteristic:', characteristic);
+
       if (characteristic?.value) {
+        console.log('Characteristic value:', characteristic.value);
         return Buffer.from(characteristic.value, 'base64');
       }
 
@@ -98,27 +63,6 @@ export class StowerInverter {
     }
   }
 
-  fileResultNotify(data: Buffer): void {
-    this.queue.put(data).then(() => {
-      //Do nothing
-    });
-  }
-
-  async waitFileResults(): Promise<Buffer> {
-    return await this.queue.get();
-  }
-
-  async waitFileResultsTimer(timeoutMs = 10000): Promise<Buffer> {
-    return Promise.race([
-      this.queue.get(),
-      new Promise<Buffer>((_, reject) =>
-        setTimeout(
-          () => reject(new Error('Timeout waiting for BLE data')),
-          timeoutMs,
-        ),
-      ),
-    ]);
-  }
   //TODO: Clean up this file once the upload is working
   async downloadFiles(fileList: string[]): Promise<void> {
     const dirPath = `${RNFS.DocumentDirectoryPath}/stower_files`;
@@ -128,69 +72,67 @@ export class StowerInverter {
         await RNFS.mkdir(dirPath);
       }
 
-      for (const filename of fileList) {
-        console.log(`Starting download of file: ${filename}`);
+      for (const f of fileList) {
+        // Send GET command
+        await this.sendFileCmd('GET', f);
 
-        await this.sendFileCmd('GET', filename);
+        // Wait for file size result
+        const sizeResult: Uint8Array = await this.getFileResult();
+        const sizeBuffer = Buffer.from(sizeResult);
 
-        const headerBuffer = await this.getFileResult();
-        const fileSize = headerBuffer.readUInt32LE(0);
-        const chunkSize = headerBuffer.readUInt8(4);
+        // Unpack 4-byte filesize (LE uint32) and 1-byte chunkSize (LE uint8)
+        const filesize = sizeBuffer.readUInt32LE(0);
+        const chunkSize = sizeBuffer.readUInt8(4);
 
-        console.log(`File size: ${fileSize}, Chunk size: ${chunkSize}`);
+        let contents = new Uint8Array(0);
+        let piece = 0;
 
-        const buffer = Buffer.alloc(fileSize); // Preallocate full buffer
-        let offset = 0;
-        let lastLogged = 0;
+        if (filesize === 0) {
+          console.warn(`File ${f} has filesize 0 – skipping`);
+          continue;
+        }
 
-        while (offset < fileSize) {
-          let chunk: Buffer;
+        while (true) {
+          const lenRF: Uint8Array = await this.getFileResult();
 
-          try {
-            chunk = await this.getFileResult();
-          } catch (e) {
-            console.error(`Timeout while receiving chunk for ${filename}`);
-            throw e;
+          // Append new data to contents
+          const combined = new Uint8Array(contents.length + lenRF.length);
+          combined.set(contents);
+          combined.set(lenRF, contents.length);
+          contents = combined;
+
+          if ((contents.length / filesize) * 100 > piece * 10) {
+            console.log(`${piece * 10}..`);
+            piece += 1;
           }
 
-          chunk.copy(buffer, offset);
-          offset += chunk.length;
-
-          const progress = Math.floor((offset / fileSize) * 100);
-          if (progress >= lastLogged + 10) {
-            lastLogged = progress;
-            console.log(`${progress}%..`);
-          }
-
-          if (chunk.length < chunkSize) {
-            console.log('Received final chunk (shorter than chunkSize)');
+          if (lenRF.length < chunkSize) {
+            console.log('100');
             break;
           }
         }
 
-        console.log(`100% - Downloaded ${offset} bytes`);
+        // Get checksum
+        const chksumResult: Uint8Array = await this.getFileResult();
+        const chksumBuffer = Buffer.from(chksumResult);
+        const chksum = chksumBuffer.readUInt32LE(0);
 
-        const filePath = `${dirPath}/${filename}`;
-        try {
-          await RNFS.writeFile(
-            filePath,
-            buffer.slice(0, offset).toString('base64'),
-            'base64',
-          );
-          console.log(`File saved to: ${filePath}`);
-        } catch (e) {
-          console.error(`Failed to write file ${filename}:`, e);
-          throw e;
+        const calcChecksum =
+          contents.reduce((acc, val) => acc + val, 0) & 0xffff;
+
+        if (chksum === calcChecksum) {
+          console.log('File checksum passed');
+        } else {
+          console.log(`File ${f} checksum FAILED`);
         }
       }
-
-      console.log('All files downloaded successfully');
     } catch (error) {
       console.error('Error in downloadFiles:', error);
       // this.unsubscribe(); // Stop BLE notifications
       throw error;
     }
   }
+
   //TODO: Clean up this file once the upload is working
   async uploadFiles(fileList: string[]): Promise<void> {
     try {
@@ -241,7 +183,7 @@ export class StowerInverter {
       console.log('All files uploaded successfully');
     } catch (error) {
       console.error('Error in getFiles:', error);
-      this.unsubscribe();
+      // this.unsubscribe();
       throw error;
     }
   }
