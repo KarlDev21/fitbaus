@@ -1,12 +1,13 @@
 import React from 'react';
 import Toast, { BaseToast, BaseToastProps, ErrorToast as ErrorToastBase, ToastConfig, ToastShowParams } from 'react-native-toast-message';
+import { FontSize } from '../styles/properties';
 
 const SuccessToast = (props: BaseToastProps) => (
     <BaseToast
         {...props}
 
         style={{ borderLeftColor: 'green' }}
-        text1Style={{ fontSize: 16, fontWeight: 'bold', color: 'green' }}
+        text1Style={{ fontSize: FontSize.medium, fontWeight: 'bold', color: 'green' }}
     />
 );
 
@@ -14,7 +15,7 @@ const ErrorToast = (props: BaseToastProps) => (
     <ErrorToastBase
         {...props}
         style={{ borderLeftColor: 'red', backgroundColor: '#f8d7da' }}
-        text1Style={{ fontSize: 16, fontWeight: 'bold', color: 'red' }}
+        text1Style={{ fontSize: FontSize.medium, fontWeight: 'bold', color: 'red' }}
     />
 );
 

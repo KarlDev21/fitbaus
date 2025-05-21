@@ -1,404 +1,151 @@
-'use client';
-
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, FlatList } from 'react-native';
-import { Card, Text, ActivityIndicator, IconButton, Checkbox, Button, useTheme } from 'react-native-paper';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import type { RootStackParamList } from '../nav/CreateStackNavigation';
+import { FlatList } from 'react-native';
 import { showToast, ToastType } from '../components/Toast';
 import { Device } from 'react-native-ble-plx';
-import { getNodes, getSelectedInverter, setConnectedInverter, setConnectedNodes, setSelectedNodes } from '../services/storage';
 import { authenticateNode } from '../services/NodeService';
+import { getFromStorage, saveToStorage, STORAGE_KEYS } from '../helpers/StorageHelper';
+import { Battery, Inverter } from '../types/DeviceType';
+import { LoadingIndicatorWithText } from '../components/LoadingIndicator';
+import { AppScreen } from '../components/AppScreen';
+import BatteryCard from '../components/Cards/BatteryCard';
+import { navigationRefAuthenticated } from '../nav/ScreenDefinitions';
+import { setConnectedInverter, setConnectedNodes } from '../helpers/BluetoothHelper';
+import { InverterListItem } from '../components/Cards/InverterListItem';
+import { NodeScreenButtons } from '../components/NodeScreen/NodeScreenButtons';
 
-type NodeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Nodes'>
-
-interface NodeScreenProps {
-  navigation: NodeScreenNavigationProp,
-}
-
-export default function NodeScreen({ navigation }: NodeScreenProps) {
-
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticating, setIsAuthenticating] = useState(false);
+export default function NodeScreen() {
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
   const [selectedBatteries, setSelectedBatteries] = useState<string[]>([]);
   const [authenticatedBatteries, setAuthenticatedBatteries] = useState<Record<string, boolean>>({});
   const [showResults, setShowResults] = useState(false);
-  const [selectedInverter, setSelectedInverter] = useState<Device | null>(null);
-  const [nodes, setNodes] = useState<Device[]>([]);
-  const theme = useTheme();
+  const [selectedInverter, setSelectedInverter] = useState<Inverter | null>(null);
+  const [nodes, setNodes] = useState<Battery[]>([]);
 
   useEffect(() => {
-    // Get selected inverter from AsyncStorage
-    const loadSelectedInverter = async () => {
+    const loadData = async () => {
       try {
+        const inverterData = await getFromStorage('selectedInverter') as Inverter | null;
+        if (inverterData) setSelectedInverter(inverterData);
 
-        const inverterData = getSelectedInverter();
-        if (inverterData) {
-          setSelectedInverter(inverterData);
-        }
-
-        // Simulate loading time for batteries
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 1000);
+        const nodeData = await getFromStorage('nodes') as Battery[];
+        if (nodeData) setNodes(nodeData);
       } catch (error) {
-        console.error('Failed to load selected inverter', error);
+        console.error('Failed to load data', error);
+        showToast(ToastType.Error, 'Failed to load data');
+      } finally {
         setIsLoading(false);
       }
     };
 
-    const loadNodes = async () => {
-      try {
-
-        const NodeData = getNodes();
-        if (NodeData) {
-          setNodes(NodeData);
-        }
-
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 1000);
-      } catch (error) {
-        showToast(ToastType.Error, 'Failed to load Batteries inverter');
-        setIsLoading(false);
-      }
-    };
-
-    loadSelectedInverter();
-    loadNodes();
+    loadData();
   }, []);
 
   const handleToggleNode = (nodeId: string) => {
-    setSelectedBatteries((prev) => {
-      if (prev.includes(nodeId)) {
-        return prev.filter((id) => id !== nodeId);
-      } else {
-        return [...prev, nodeId];
-      }
-    });
+    setSelectedBatteries((prev) =>
+      prev.includes(nodeId) ? prev.filter((id) => id !== nodeId) : [...prev, nodeId]
+    );
   };
 
-  const handleAuthenticate = () => {
+  const handleAuthenticate = async () => {
+    if (!selectedInverter) {
+      showToast(ToastType.Error, 'No inverter selected.');
+      return;
+    }
 
     setIsAuthenticating(true);
 
+    try {
       const results: Record<string, boolean> = {};
 
-        selectedBatteries.forEach( async (nodeId) => {
-            console.log('Selected Inverter:', selectedInverter);
-            if (selectedInverter) {
-              console.log('Authenticating Node:', nodeId);
-              const response = await authenticateNode(nodeId);
-              console.log('Authentication response:', response);
-              if(response){
-                results[nodeId] = response;
-              }
-              console.log(results);
-            }
-          });
+      for (const nodeId of selectedBatteries) {
+        const isAuthenticated = await authenticateNode(nodeId);
+        results[nodeId] = isAuthenticated;
+      }
 
-        setTimeout(() => {
-          setAuthenticatedBatteries(results);
-          console.log('Authenticated Batteries:', results);
-          console.log(Object.keys(authenticatedBatteries).length);
-          console.log(selectedBatteries.length);
+      setAuthenticatedBatteries(results);
 
-          if(Object.keys(results).length === selectedBatteries.length){
-            showToast(ToastType.Success, 'All Batteries authenticated successfully!');
-          }
-          else if (Object.keys(results).length) {
-            showToast(ToastType.Error, 'No Batteries authenticated successfully!');
-          }
-          else{
-            showToast(ToastType.Error, 'Some Batteries failed authentication!');
-          }
-          setIsAuthenticating(false);
-          setShowResults(true);
-      }, 3000);
+      const successCount = Object.values(results).filter(Boolean).length;
+      const failureCount = selectedBatteries.length - successCount;
 
-
+      if (successCount === selectedBatteries.length) {
+        showToast(ToastType.Success, 'All Batteries authenticated successfully!');
+      } else if (failureCount === selectedBatteries.length) {
+        showToast(ToastType.Error, 'No Batteries authenticated successfully!');
+      } else {
+        showToast(ToastType.Error, 'Some Batteries failed authentication!');
+      }
+    } catch (error) {
+      showToast(ToastType.Error, 'An error occurred during authentication.');
+    } finally {
+      setIsAuthenticating(false);
+      setShowResults(true);
+    }
   };
 
   const handleContinue = async () => {
-    // Store authenticated batteries in AsyncStorage
-    const authenticatednodeIds = Object.entries(authenticatedBatteries)
+    const authenticatedNodeIds = Object.entries(authenticatedBatteries)
       .filter(([_, isAuthenticated]) => isAuthenticated)
       .map(([id]) => id);
 
-      if(authenticatednodeIds.length !== selectedBatteries.length){
-        showToast(ToastType.Error, 'Please Authenticate All Batteries before continuing!');
-        return;
-      }
+    // Ensure all selected batteries are authenticated
+    if (authenticatedNodeIds.length !== selectedBatteries.length) {
+      showToast(ToastType.Error, 'Please authenticate all batteries before continuing');
+      return;
+    }
 
     try {
-      setSelectedNodes(authenticatednodeIds.map((id) => nodes.find((node) => node.id === id)).filter((node): node is Device => node !== undefined));
+      // Map authenticated node IDs to their corresponding node objects
+      const authenticatedNodes = authenticatedNodeIds
+        .map((id) => nodes.find((node) => node.id === id))
+        .filter((node): node is Device => node !== undefined);
 
-      //will handle this better as well
+      saveToStorage(STORAGE_KEYS.SELECTED_NODES, JSON.stringify(authenticatedNodes));
+
       if (selectedInverter) {
-        setSelectedInverter(selectedInverter);
         setConnectedInverter(selectedInverter);
-        setConnectedNodes(authenticatednodeIds.map((id) => nodes.find((node) => node.id === id))
-        .filter((node): node is Device => node !== undefined), selectedInverter);
+        setConnectedNodes(authenticatedNodes, selectedInverter);
       }
 
-      // Navigate to final authentication screen for inverter auth and node enrollment
-      navigation.navigate('Finalizing');
+      navigationRefAuthenticated.navigate('Finalizing');
     } catch (error) {
-      console.error('Failed to save authenticated batteries', error);
+      showToast(ToastType.Error, 'An error occurred while saving authenticated batteries.');
     }
   };
 
-  const renderBatteryItem = ({ item }: { item: Device }) => {
-    console.log('Selected Battery:', item.id);
-    const isSelected = selectedBatteries.includes(item.id);
-    const isAuthenticated = authenticatedBatteries[item.id];
-    const showAuthResult = showResults && isSelected;
-
-    const cardStyle = [styles.batteryCard];
-    let statusIcon = null;
-
-    if (showAuthResult) {
-      if (isAuthenticated) {
-        cardStyle.push( styles.authenticatedCard);
-        statusIcon = <MaterialCommunityIcons name="check-circle" size={20} color="#4CAF50" style={styles.statusIcon} />
-      } else {
-        cardStyle.push(styles.failedCard);
-        statusIcon = <MaterialCommunityIcons name="close-circle" size={20} color="#F44336" style={styles.statusIcon} />
-      }
-    } else if (isSelected) {
-      cardStyle.push({
-          borderColor: theme.colors.primary,
-          marginBottom: 0,
-          borderWidth: 0,
-      });
-    }
-
-    return (
-      <Card style={cardStyle}>
-        <Card.Content style={styles.batteryContent}>
-          <View style={styles.batteryRow}>
-            <View style={[styles.iconContainer, { backgroundColor: theme.colors.primary + '20' }]}>
-              <MaterialCommunityIcons name="battery" size={20} color={theme.colors.primary} />
-            </View>
-            <View style={styles.batteryInfo}>
-              <Text variant="bodyLarge" style={styles.batteryName}>
-                {item.name + ' ' + item.id}
-              </Text>
-            </View>
-
-            {statusIcon}
-
-            <Checkbox
-              status={isSelected ? 'checked' : 'unchecked'}
-              onPress={() => handleToggleNode(item.id)}
-              color={theme.colors.secondary}
-            />
-          </View>
-        </Card.Content>
-      </Card>
-    )
-  };
+  if (isLoading) {
+    return <LoadingIndicatorWithText text={'Loading batteries...'} />;
+  }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <IconButton icon="account-arrow-left-outline" size={24} onPress={() => navigation.goBack()} />
-        <Text variant="titleLarge" style={styles.headerTitle}>
-          Select Batteries
-        </Text>
-      </View>
+    <AppScreen>
+      {/* Display the selected inverter */}
+      {selectedInverter && <InverterListItem item={selectedInverter} />}
 
-      {selectedInverter && (
-        <Card style={styles.inverterCard}>
-          <Card.Content style={styles.inverterContent}>
-            <View style={[styles.smallIconContainer, { backgroundColor: theme.colors.primary + '20' }]}>
-              <MaterialCommunityIcons name="lightning-bolt" size={16} color={theme.colors.primary} />
-            </View>
-            <View>
-              <Text variant="bodySmall" style={styles.inverterLabel}>
-                Selected Inverter
-              </Text>
-              <Text variant="bodyMedium">{selectedInverter.name + ' '+ selectedInverter.id}</Text>
-            </View>
-          </Card.Content>
-        </Card>
-      )}
-
-      {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size={32} color={theme.colors.primary} style={styles.loader} />
-          <Text variant="bodyMedium" style={styles.loadingText}>
-            Loading batteries...
-          </Text>
-        </View>
-      ) : (
-        <>
-          <FlatList
-            data={nodes}
-            renderItem={renderBatteryItem}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.listContent}
+      {/* List of batteries with selection and authentication status */}
+      <FlatList
+        data={nodes}
+        renderItem={({ item }) => (
+          <BatteryCard
+            battery={item}
+            isSelected={selectedBatteries.includes(item.id)}
+            isAuthenticated={authenticatedBatteries[item.id]}
+            showAuthResult={showResults}
+            onToggle={() => handleToggleNode(item.id)}
           />
+        )}
+        keyExtractor={(item) => item.id}
+      />
 
-          <View style={styles.buttonContainer}>
-            {!showResults ? (
-              <Button
-                mode="contained"
-                onPress={handleAuthenticate}
-                disabled={selectedBatteries.length === 0 || isAuthenticating}
-                style={styles.button}
-                labelStyle={styles.buttonLabel}
-              >
-                {isAuthenticating ? 'Authenticating...' : 'Authenticate Batteries'}
-                {isAuthenticating && <ActivityIndicator size={16} color="#fff" style={{ marginLeft: 8 }} />}
-              </Button>
-            ) : (
-              <View style={styles.buttonRow}>
-                <Button
-                  mode="outlined"
-                  onPress={() => {
-                    setShowResults(false);
-                  }}
-                  style={[styles.button, styles.outlineButton]}
-                >
-                  Change Selection
-                </Button>
-                <Button
-                  mode="contained"
-                  onPress={handleContinue}
-                  disabled={Object.values(authenticatedBatteries).filter(Boolean).length === 0}
-                  style={[styles.button, styles.primaryButton]}
-                >
-                  Continue
-                </Button>
-              </View>
-            )}
-          </View>
-        </>
-      )}
-    </SafeAreaView>
+      {/* Buttons for authentication and continuation */}
+      <NodeScreenButtons
+        showResults={showResults}
+        onAuthenticate={handleAuthenticate}
+        onChangeSelection={() => setShowResults(false)}
+        onContinue={handleContinue}
+        isAuthenticating={isAuthenticating}
+      />
+
+    </AppScreen >
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 8,
-  },
-  headerTitle: {
-    fontWeight: 'bold',
-    marginLeft: 8,
-  },
-  inverterCard: {
-    marginHorizontal: 16,
-    marginBottom: 16,
-    elevation: 1,
-  },
-  inverterContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-  },
-  inverterLabel: {
-    color: '#666',
-    fontWeight: '500',
-  },
-  smallIconContainer: {
-    padding: 8,
-    borderRadius: 50,
-    marginRight: 12,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
-  },
-  loader: {
-    marginBottom: 16,
-  },
-  loadingText: {
-    color: '#666',
-  },
-  listContent: {
-    padding: 16,
-    paddingBottom: 80, // Extra padding for button at bottom
-  },
-  batteryCard: {
-    marginBottom: 12,
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  authenticatedCard: {
-    marginBottom: 12,
-    borderWidth: 2,
-    borderColor: '#4CAF50',
-    backgroundColor: '#E8F5E9',
-  },
-  failedCard: {
-    marginBottom: 12,
-    borderWidth: 2,
-    borderColor: '#F44336',
-    backgroundColor: '#FFEBEE',
-  },
-  batteryContent: {
-    padding: 8,
-  },
-  batteryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  iconContainer: {
-    padding: 10,
-    borderRadius: 50,
-    marginRight: 12,
-  },
-  batteryInfo: {
-    flex: 1,
-  },
-  batteryName: {
-    fontWeight: '500',
-  },
-  batteryLevel: {
-    color: '#666',
-  },
-  statusIcon: {
-    marginRight: 8,
-  },
-  buttonContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 16,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-  },
-  button: {
-    paddingVertical: 6,
-  },
-  buttonLabel: {
-    fontSize: 16,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  outlineButton: {
-    flex: 1,
-  },
-  primaryButton: {
-    flex: 1,
-  },
-});
-

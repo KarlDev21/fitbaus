@@ -1,86 +1,76 @@
-"use client"
+import React, { useEffect, useState } from 'react';
+import { View } from 'react-native';
+import { Text, ActivityIndicator } from 'react-native-paper';
+import { authenticateInverter } from '../services/InverterService';
+import { Colours } from '../styles/properties/colours';
+import { GenericSize, Margin, Padding } from '../styles/properties/dimensions';
+import { textStyles } from '../styles/components/textStyles';
+import { navigationRefAuthenticated } from '../nav/ScreenDefinitions';
+import { getSelectedInverter, setConnectedInverter, setConnectedInverterDevice } from '../helpers/BluetoothHelper';
+import { getFromStorage, STORAGE_KEYS } from '../helpers/StorageHelper';
+import { Battery } from '../types/DeviceType';
+import { layout } from '../styles/base';
+import { AppScreen } from '../components/AppScreen';
 
-import React, { useEffect } from "react"
-import { View, StyleSheet } from "react-native"
-import { Text, ActivityIndicator, useTheme } from "react-native-paper"
-import { SafeAreaView } from "react-native-safe-area-context"
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
-import type { RootStackParamList } from "../nav/CreateStackNavigation"
-import { authenticateInverter } from "../services/InverterService"
-import { getSelectedInverter, getSelectedNodes, setConnectedInverter, setConnectedInverterDevice } from "../services/storage"
-
-type FinalizingScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "Finalizing">
-
-interface FinalizingScreenProps {
-  navigation: FinalizingScreenNavigationProp
-}
-
-export default function FinalizingScreen({ navigation }: FinalizingScreenProps) {
-  const theme = useTheme()
+export default function FinalizingScreen() {
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    // Simulate final authentication and setup process
-    const timer = setTimeout(() => {
-      // Navigate back to home page after completion
+    const finalizeConnection = async () => {
 
       const selectedInverter = getSelectedInverter();
-      const selectedNodes = getSelectedNodes();
+      const selectedNodes = getFromStorage(STORAGE_KEYS.SELECTED_NODES) as Battery[] | null;
 
       if (selectedInverter && selectedNodes) {
-        console.log('Inverter Authing');
-        authenticateInverter(selectedInverter, selectedNodes);
-        setConnectedInverterDevice(selectedInverter);//difference is that this one needs and id when getting
-        setConnectedInverter(selectedInverter); // this only saves one inverter currently
+        setConnectedInverterDevice(selectedInverter);
+        setConnectedInverter(selectedInverter);
       }
 
+      try {
+        const timer = setTimeout(async () => {
+          if (selectedInverter && selectedNodes) {
+            await authenticateInverter(selectedInverter, selectedNodes);
 
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "Home" }],
-      })
-    }, 5000)
+            setConnectedInverterDevice(selectedInverter);
+            setConnectedInverter(selectedInverter);
+          }
 
-    return () => clearTimeout(timer)
-  }, [navigation])
+          setIsLoading(false);
+        }, 3000)
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <ActivityIndicator size={48} color={theme.colors.primary} style={styles.loader} />
-        <Text variant="headlineSmall" style={styles.title}>
-          Finalizing Connection
-        </Text>
-        <Text variant="bodyMedium" style={styles.description}>
-          Please wait while we complete the authentication process and establish the connection...
-        </Text>
-      </View>
-    </SafeAreaView>
-  )
+        return () => clearTimeout(timer)
+
+      } catch (error) {
+        console.error('Error during finalizing connection:', error);
+        setIsLoading(false);
+      }
+    };
+
+    finalizeConnection();
+  }, []);
+
+  useEffect(() => {
+    if (!isLoading) {
+      navigationRefAuthenticated.navigate('Home')
+    }
+  }, [isLoading, navigationRefAuthenticated]);
+
+  if (isLoading) {
+    return (
+      <AppScreen>
+        <View style={layout.content}>
+          <ActivityIndicator size={GenericSize.large} color={Colours.primary} style={{ marginBottom: Margin.large }} />
+          <Text variant="headlineSmall" style={textStyles.heading}>
+            Finalizing Connection
+          </Text>
+          <Text variant="bodyMedium" style={textStyles.title}>
+            Please wait while we complete the authentication process and establish the connection...
+          </Text>
+        </View>
+      </AppScreen>
+    );
+  }
+
+  return null; // This will never render because navigation happens when `isLoading` is false
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  content: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-  },
-  loader: {
-    marginBottom: 24,
-  },
-  title: {
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 12,
-  },
-  description: {
-    textAlign: "center",
-    color: "#666",
-    maxWidth: 300,
-  },
-})
 

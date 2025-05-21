@@ -1,48 +1,73 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useState } from 'react';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from './components/Toast';
-import { initBootstrapper } from './bootstrap/bootstrapper';
+import { Provider as PaperProvider } from 'react-native-paper';
+import { StackNavigationContainer } from './nav/StackNavigationContainer';
+import { useAtomValue } from 'jotai';
+import { UnauthenticatedScreenDefinitions, AuthenticatedScreenDefinitions, UnauthenticatedStackScreens, AuthenticatedStackScreen, navigationRefAuthenticated, navigationRefUnauthenticated } from './nav/ScreenDefinitions';
+import { userAtom } from './state/atom/userAtom';
+import { useNetInfo } from "@react-native-community/netinfo";
+import NoInternetScreen from './screens/NoInternetScreen';
+import NoBluetoothScreen from './screens/NoBluetoothScreen';
+import { useGlobalFileUploader } from './hooks/useGlobalFileUploader';
 import { requestBluetoothPermissions } from './helpers/AppHelper';
-import { NavigationContainer } from '@react-navigation/native';
-import CreateDrawerNavigation from './nav/CreateDrawerNavigation';
-import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
+import NoPermissionScreen from './screens/NoPermissionScreen';
+import { getItem, SECURE_STORE_KEYS } from './helpers/SecureStorageHelper';
+import { useBluetoothConnection } from './hooks/useBluetoothConnection';
 
-const theme = {
-  ...MD3LightTheme,
-  colors: {
-    ...MD3LightTheme.colors,
-    primary: '#FFC107', // Blue
-    secondary: '#2196F3', // Yellow
-    secondaryContainer: '#FFF8E1',
-    background: '#FFFFFF',
-    surface: '#FFFFFF',
-  },
-};
+export const UnauthenticatedNavigationStack = new StackNavigationContainer<UnauthenticatedScreenDefinitions>(
+  UnauthenticatedStackScreens,
+  navigationRefUnauthenticated
+)
+
+export const AuthenticatedNavigationStack = new StackNavigationContainer<AuthenticatedScreenDefinitions>(
+  AuthenticatedStackScreen,
+  navigationRefAuthenticated
+)
 
 function App(): React.JSX.Element {
-  const bootstrap = useCallback(async () => {
-    async function init() {
-      const isBluetoothEnabled = await requestBluetoothPermissions();
-      if (isBluetoothEnabled) {
-        await initBootstrapper();
-      }
+  const user = useAtomValue(userAtom);
+  const storedUser = getItem(SECURE_STORE_KEYS.USER_PROFILE);
+  const { isConnected } = useNetInfo();
+  const [isGranted, setIsGranted] = useState(true);
+  const { isBluetoothEnabled } = useBluetoothConnection();
+
+  const loadPermission = async () => {
+    const isPermissionGranted = await requestBluetoothPermissions()
+    setIsGranted(isPermissionGranted)
+  }
+
+  useGlobalFileUploader();
+
+  const getNavigationContainer = useCallback(() => {
+    loadPermission()
+
+    if (!isGranted) {
+      return <NoPermissionScreen />;
     }
 
-    init();
-  }, []);
+    if (isConnected === false) {
+      return <NoInternetScreen />;
+    }
 
-  useEffect(() => {
-    bootstrap();
-  }, [bootstrap]);
+    if (isBluetoothEnabled === false) {
+      return <NoBluetoothScreen />;
+    }
+
+    if (user || storedUser) {
+      return AuthenticatedNavigationStack.getContainer();
+    } else {
+      return UnauthenticatedNavigationStack.getContainer();
+    }
+  }, [user, isGranted, storedUser, isConnected, isBluetoothEnabled]);
+
 
   return (
-    <PaperProvider theme={theme}>
-      <NavigationContainer>
-        <CreateDrawerNavigation />
-        <Toast config={toastConfig} topOffset={80} />
-      </NavigationContainer>
+    <PaperProvider>
+      {getNavigationContainer()}
+      <Toast config={toastConfig} topOffset={80} />
     </PaperProvider>
   );
 }
-export default App;
 
+export default App;
