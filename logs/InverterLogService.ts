@@ -15,10 +15,45 @@ import {BleUuids} from '../types/constants/constants';
 
 export class StowerInverter {
   private peripheral: Device;
-  // private queue: AsyncQueue<Buffer> = new AsyncQueue<Buffer>();
+  private queue: AsyncQueue<Buffer> = new AsyncQueue<Buffer>();
+
+  private fileCmdMutex = new Mutex();
 
   constructor(peripheral: Device) {
     this.peripheral = peripheral;
+  }
+
+  private subscription: Subscription | null = null;
+
+  subscribe(): void {
+    try {
+      this.subscription = this.peripheral.monitorCharacteristicForService(
+        BleUuids.FILE_CMD_SERVICE_UUID,
+        BleUuids.FILE_RESULT_CHAR_UUID,
+        (error, characteristic) => {
+          if (error) {
+            console.error('Notification error:', error);
+            return;
+          }
+
+          if (characteristic?.value) {
+            const data = Buffer.from(characteristic.value, 'base64');
+            this.fileResultNotify(data);
+          }
+        },
+      );
+    } catch (error) {
+      console.error('Error subscribing to notifications:', error);
+    }
+  }
+
+  unsubscribe(): void {
+    try {
+      // Stop monitoring the characteristic
+      this.subscription?.remove();
+    } catch (error) {
+      console.error('Error unsubscribing from notifications:', error);
+    }
   }
 
   async sendFileCmd(cmd: string, filename: string = '') {
@@ -40,6 +75,28 @@ export class StowerInverter {
       console.error('Error writing characteristic:', error);
       throw error;
     }
+  }
+
+  fileResultNotify(data: Buffer): void {
+    this.queue.put(data).then(() => {
+      //Do nothing
+    });
+  }
+
+  async waitFileResults(): Promise<Buffer> {
+    return await this.queue.get();
+  }
+
+  async waitFileResultsTimer(timeoutMs = 10000): Promise<Buffer> {
+    return Promise.race([
+      this.queue.get(),
+      new Promise<Buffer>((_, reject) =>
+        setTimeout(
+          () => reject(new Error('Timeout waiting for BLE data')),
+          timeoutMs,
+        ),
+      ),
+    ]);
   }
 
   async getFileResult(): Promise<Buffer> {
