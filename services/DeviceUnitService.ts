@@ -1,4 +1,5 @@
 import {getSelectedInverter} from '../helpers/BluetoothHelper';
+import {getItemAsync, SECURE_STORE_KEYS} from '../helpers/SecureStorageHelper';
 import {UploadFileRequest} from '../types/ApiRequest';
 import {
   ApiResponse,
@@ -6,6 +7,7 @@ import {
   DeviceRegistrationResponse,
   FetchAllDeviceUnitsResponse,
   UploadFileResponse,
+  UserProfileResponse,
 } from '../types/ApiResponse';
 import {BatteryData, InverterState} from '../types/BleTypes';
 import {API_BASE_URL} from '../types/constants/constants';
@@ -74,15 +76,21 @@ export async function fetchAllDeviceUnitsAsync(
 }
 
 export async function uploadFileToServerAsync(
-  request: UploadFileRequest,
+  request: FormData,
 ): Promise<ApiResponse<UploadFileResponse>> {
   try {
-    const headers = await buildHeaders();
+    const userProfile = await getItemAsync<UserProfileResponse>(
+      SECURE_STORE_KEYS.USER_PROFILE,
+    );
 
     const response = await fetch(`${API_BASE_URL}/device/log/upload`, {
       method: 'POST',
-      headers,
-      body: JSON.stringify(request),
+      headers: {
+        Authorization: userProfile?.token ?? '',
+        'Content-Type': 'multipart/form-data',
+        'inverter-id': getSelectedInverter()?.id ?? '',
+      },
+      body: request,
     });
 
     if (!response.ok) {

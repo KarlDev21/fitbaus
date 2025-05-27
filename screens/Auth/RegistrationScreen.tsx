@@ -71,7 +71,7 @@ const RegistrationScreen = () => {
         <AppScreen>
             <ScrollView style={{ flex: Flex.xsmall, width: Width.full, height: Height.full }}>
                 <View style={{ flex: Flex.xsmall, justifyContent: 'center', alignItems: 'center' }}>
-                    <Image source={require('../../assets/logo-placeholder.png')} style={Logo.logo_container} />
+                    <Image source={require('../../assets/stower_logo.png')} style={Logo.logo_container} />
                     <Text style={textStyles.heading}>{'Register Now'}</Text>
                     <Text style={textStyles.subtitle}>{'Please register to continue using our app'}</Text>
                 </View>

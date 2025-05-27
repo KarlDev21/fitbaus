@@ -10,11 +10,11 @@ import { Logo } from '../styles/images';
  */
 interface LogoComponentProps {
     containerStyle?: ViewStyle;
-  }
-  
+}
+
 const LogoComponent: React.FC<LogoComponentProps> = ({ containerStyle }) => (
     <View style={[containerStyle, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Image source={require('../assets/logo-placeholder.png')} style={Logo.logo_container} />
+        <Image source={require('../assets/stower_logo.png')} style={Logo.logo_container} />
     </View>
 );
 

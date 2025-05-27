@@ -8,7 +8,7 @@ export interface UploadFileResponse {
   userID: string;
   inverterID: string;
   fileName: string;
-  fileData: string;
+  filePath: string;
   uploadedAt: string;
 }
 

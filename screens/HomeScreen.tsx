@@ -9,12 +9,15 @@ import { Inverter } from '../types/DeviceType';
 import { BleManagerInstance, getConnectedInverter } from '../helpers/BluetoothHelper';
 import { navigationRefAuthenticated } from '../nav/ScreenDefinitions';
 import { BleUuids } from '../types/constants/constants';
+import { useKeepAwake } from 'expo-keep-awake';
 
 export default function HomeScreen() {
   const [isScanning, setIsScanning] = useState(false);
   const savedInverter: Inverter | null = getConnectedInverter();
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+
+  useKeepAwake();
 
   // Helper function to check connection status
   const checkConnectionStatus = async () => {
@@ -96,7 +99,6 @@ export default function HomeScreen() {
 
     const isDeviceConnected = await checkConnectionStatus();
     if (isDeviceConnected) {
-      showToast(ToastType.Success, 'Already connected to the inverter.');
       setIsConnecting(false);
       return;
     }
@@ -122,6 +124,14 @@ export default function HomeScreen() {
 
     navigationRefAuthenticated.navigate('Dashboard', { inverter: savedInverter });
   };
+
+  useEffect(() => {
+    const delayCheck = setTimeout(() => {
+      checkConnectionStatus();
+    }, 2000); // wait 2 seconds to allow App.tsx to finish connecting
+
+    return () => clearTimeout(delayCheck);
+  }, []);
 
   return (
     <AppScreen>

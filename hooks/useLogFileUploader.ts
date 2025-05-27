@@ -46,7 +46,7 @@ export function useLogFileUploader() {
             (file: string) => file !== 'config.json',
           );
           console.log('filteredList', filteredList);
-          await inverter.downloadFiles(filteredList);
+          await inverter.uploadLogFiles(filteredList);
 
           inverter.unsubscribe();
         }
