@@ -26,6 +26,8 @@ export const BleUuids = {
   FILE_CMD_SERVICE_UUID: '669a0c20-0008-d690-ec11-e2143045cb95', // File command for Service
 };
 
-export const API_BASE_URL = __DEV__
-  ? 'http://192.168.182.104:3000/api/v1'
-  : 'http://188.166.168.206:3000/api/v1/';
+// export const API_BASE_URL = __DEV__
+//   ? 'http://192.168.10.141:3000/api/v1'
+//   : 'http://188.166.168.206:3000/api/v1/';
+
+export const API_BASE_URL = 'http://188.166.168.206:3000/api/v1/';

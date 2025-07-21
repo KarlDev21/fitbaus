@@ -6,33 +6,31 @@ import {
 import {StowerInverter} from '../logs/InverterLogService';
 import {writeFiles, readLogFiles} from '../helpers/FileHelper';
 
-//TODO: Clean up this file once the upload is working
-export function useGlobalFileUploader() {
+export function useLogFileUploader() {
   useEffect(() => {
     const uploadFiles = async () => {
-      const savedInverter = getConnectedInverter();
-      if (savedInverter) {
-        console.log('Got Saved Inverter: ', savedInverter);
-        try {
+      try {
+        const savedInverter = getConnectedInverter();
+        const files: string[] = [];
+        const NULL_TERMINATOR_REGEX = /\0.*$/;
+
+        if (savedInverter) {
           const connectedDevice = await BleManagerInstance.connectToDevice(
             savedInverter.id,
           );
           connectedDevice.requestMTU(255);
           await connectedDevice.discoverAllServicesAndCharacteristics();
 
-          console.log('Connected to device: ', connectedDevice.mtu);
-
           const inverter = new StowerInverter(connectedDevice);
           inverter.subscribe();
 
-          console.log('Get list of files');
           await inverter.sendFileCmd('LS');
-          const files: string[] = [];
 
           while (true) {
             const filenameBuffer = await inverter.waitFileResults();
-            const filename = filenameBuffer.toString().replace(/\0.*$/, '');
-            console.log(filename);
+            const filename = filenameBuffer
+              .toString()
+              .replace(NULL_TERMINATOR_REGEX, '');
 
             if (filename.length > 0) {
               files.push(filename);
@@ -41,22 +39,19 @@ export function useGlobalFileUploader() {
             }
           }
 
-          console.log(`Files: ${files}`);
           writeFiles(files);
 
           const fileslist = readLogFiles();
           const filteredList = fileslist.filter(
-            (file: string) => file !== 'config.json' && file !== '20250107.log',
+            (file: string) => file !== 'config.json',
           );
-          console.log('FileList: ' + filteredList);
-          await inverter.uploadFiles(filteredList);
+          console.log('filteredList', filteredList);
+          await inverter.uploadLogFiles(filteredList);
 
-          // Unsubscribe when done
           inverter.unsubscribe();
-          console.log('Done');
-        } catch (error) {
-          console.error('Error uploading files:', error);
         }
+      } catch (error) {
+        console.error('Error uploading files:', error);
       }
     };
 

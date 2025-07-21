@@ -9,7 +9,7 @@ import { userAtom } from './state/atom/userAtom';
 import { useNetInfo } from "@react-native-community/netinfo";
 import NoInternetScreen from './screens/NoInternetScreen';
 import NoBluetoothScreen from './screens/NoBluetoothScreen';
-import { useGlobalFileUploader } from './hooks/useGlobalFileUploader';
+import { useLogFileUploader } from './hooks/useLogFileUploader';
 import { requestBluetoothPermissions } from './helpers/AppHelper';
 import NoPermissionScreen from './screens/NoPermissionScreen';
 import { getItem, SECURE_STORE_KEYS } from './helpers/SecureStorageHelper';
@@ -37,7 +37,7 @@ function App(): React.JSX.Element {
     setIsGranted(isPermissionGranted)
   }
 
-  useGlobalFileUploader();
+  useLogFileUploader();
 
   const getNavigationContainer = useCallback(() => {
     loadPermission()

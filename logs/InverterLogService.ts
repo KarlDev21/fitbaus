@@ -56,17 +56,16 @@ export class StowerInverter {
     }
   }
 
-  async sendFileCmd(cmd: string, filename: string = ''): Promise<void> {
+  async sendFileCmd(cmd: string, filename: string = '') {
     // Use a mutex to ensure commands don't overlap
     return this.fileCmdMutex.runExclusive(async () => {
       if (cmd === 'GET' || cmd === 'RM') {
         cmd = cmd + ' ' + filename;
       }
-      console.log(`send Cmd ${cmd}`);
-
-      const data = Buffer.from(cmd, 'utf-8');
 
       try {
+        const data = Buffer.from(cmd, 'utf-8');
+
         await this.peripheral.writeCharacteristicWithResponseForService(
           BleUuids.FILE_CMD_SERVICE_UUID,
           BleUuids.FILE_CMD_CHAR_UUID,
@@ -77,25 +76,6 @@ export class StowerInverter {
         throw error;
       }
     });
-  }
-
-  //TODO: Double check that I can remove this function now
-  async getFileResult(): Promise<Buffer> {
-    try {
-      const characteristic = await this.peripheral.readCharacteristicForService(
-        BleUuids.FILE_CMD_SERVICE_UUID,
-        BleUuids.FILE_RESULT_CHAR_UUID,
-      );
-
-      if (characteristic?.value) {
-        return Buffer.from(characteristic.value, 'base64');
-      }
-
-      throw new Error('Failed to read characteristic value');
-    } catch (error) {
-      console.error('Error reading characteristic:', error);
-      throw error;
-    }
   }
 
   fileResultNotify(data: Buffer): void {
@@ -119,7 +99,105 @@ export class StowerInverter {
       ),
     ]);
   }
-  //TODO: Clean up this file once the upload is working
+
+  async getFileResult(): Promise<Buffer> {
+    try {
+      const characteristic = await this.peripheral.readCharacteristicForService(
+        BleUuids.FILE_CMD_SERVICE_UUID,
+        BleUuids.FILE_RESULT_CHAR_UUID,
+      );
+
+      if (characteristic?.value) {
+        // console.log('Characteristic value:', characteristic.value);
+        return Buffer.from(characteristic.value, 'base64');
+      }
+
+      throw new Error('Failed to read characteristic value');
+    } catch (error) {
+      console.error('Error reading characteristic:', error);
+      throw error;
+    }
+  }
+  private async retrieveFileContents(
+    filename: string,
+  ): Promise<Uint8Array | null> {
+    await this.sendFileCmd('GET', filename);
+
+    const {filesize, chunkSize} = this.parseFileSize(
+      await this.getFileResult(),
+    );
+    if (filesize === 0) {
+      console.warn(`File ${filename} has filesize 0 – skipping`);
+      return null;
+    }
+
+    const contents = await this.readChunks(filesize, chunkSize);
+    const isValid = this.validateChecksum(contents, await this.getFileResult());
+
+    if (!isValid) {
+      console.warn(`File ${filename} checksum FAILED`);
+      return null;
+    }
+
+    console.log(`File ${filename} checksum passed`);
+    return contents;
+  }
+
+  private parseFileSize(data: Uint8Array): {
+    filesize: number;
+    chunkSize: number;
+  } {
+    if (data.length < 5) {
+      throw new Error(
+        `Invalid file size response: expected 5 bytes, got ${data.length}`,
+      );
+    }
+
+    const buffer = Buffer.from(data);
+    const filesize = buffer.readUInt32LE(0); // 4 bytes
+    const chunkSize = buffer.readUInt8(4); // 1 byte
+
+    return {filesize, chunkSize};
+  }
+
+  private async readChunks(
+    filesize: number,
+    chunkSize: number,
+  ): Promise<Uint8Array> {
+    let contents = new Uint8Array(0);
+    let piece = 0;
+
+    while (true) {
+      const chunk = await this.getFileResult();
+      const combined = new Uint8Array(contents.length + chunk.length);
+      combined.set(contents);
+      combined.set(chunk, contents.length);
+      contents = combined;
+
+      const progress = (contents.length / filesize) * 100;
+      if (progress > piece * 10) {
+        console.log(`${piece * 10}%`);
+        piece += 1;
+      }
+
+      if (chunk.length < chunkSize) {
+        console.log(`100%`);
+        break;
+      }
+    }
+
+    return contents;
+  }
+
+  private validateChecksum(
+    data: Uint8Array,
+    checksumResult: Uint8Array,
+  ): boolean {
+    const expected = Buffer.from(checksumResult).readUInt32LE(0);
+    const actual = data.reduce((sum, byte) => sum + byte, 0) & 0xffff;
+    return expected === actual;
+  }
+
   async downloadFiles(fileList: string[]): Promise<void> {
     const dirPath = `${RNFS.DocumentDirectoryPath}/stower_files`;
 
@@ -129,151 +207,80 @@ export class StowerInverter {
       }
 
       for (const filename of fileList) {
-        console.log(`Starting download of file: ${filename}`);
-
-        await this.sendFileCmd('GET', filename);
-
-        const headerBuffer = await this.waitFileResults();
-        const fileSize = headerBuffer.readUInt32LE(0);
-        const chunkSize = headerBuffer.readUInt8(4);
-
-        console.log(`File size: ${fileSize}, Chunk size: ${chunkSize}`);
-
-        const buffer = Buffer.alloc(fileSize); // Preallocate full buffer
-        let offset = 0;
-        let lastLogged = 0;
-
-        while (offset < fileSize) {
-          let chunk: Buffer;
-
-          try {
-            chunk = await this.waitFileResultsTimer(5000); // 5s timeout per chunk
-          } catch (e) {
-            console.error(`Timeout while receiving chunk for ${filename}`);
-            throw e;
-          }
-
-          chunk.copy(buffer, offset);
-          offset += chunk.length;
-
-          const progress = Math.floor((offset / fileSize) * 100);
-          if (progress >= lastLogged + 10) {
-            lastLogged = progress;
-            console.log(`${progress}%..`);
-          }
-
-          if (chunk.length < chunkSize) {
-            console.log('Received final chunk (shorter than chunkSize)');
-            break;
-          }
-        }
-
-        console.log(`100% - Downloaded ${offset} bytes`);
+        const contents = await this.retrieveFileContents(filename);
+        if (!contents) continue;
 
         const filePath = `${dirPath}/${filename}`;
-        try {
-          await RNFS.writeFile(
-            filePath,
-            buffer.slice(0, offset).toString('base64'),
-            'base64',
-          );
-          console.log(`File saved to: ${filePath}`);
-        } catch (e) {
-          console.error(`Failed to write file ${filename}:`, e);
-          throw e;
-        }
+        await RNFS.writeFile(
+          filePath,
+          Buffer.from(contents).toString('base64'),
+          'base64',
+        );
+        console.log(`Saved ${filename} to ${filePath}`);
       }
-
-      console.log('All files downloaded successfully');
     } catch (error) {
       console.error('Error in downloadFiles:', error);
-      this.unsubscribe(); // Stop BLE notifications
-      throw error;
-    }
-  }
-  //TODO: Clean up this file once the upload is working
-  async uploadFiles(fileList: string[]): Promise<void> {
-    try {
-      for (const logFile of fileList) {
-        console.log(`Starting download of file: ${logFile}`);
-
-        // Send the GET command to request the file
-        await this.sendFileCmd('GET', logFile);
-
-        const headerBuffer = await this.waitFileResults();
-        const fileSize = headerBuffer.readUInt32LE(0);
-        const chunkSize = headerBuffer.readUInt8(4); // Byte 5
-
-        console.log(`File size: ${fileSize}, Chunk size: ${chunkSize}`);
-
-        let contents = Buffer.alloc(0);
-        let piece = 0;
-        console.log('0%..');
-
-        // Keep receiving chunks until we have the complete file
-        while (true) {
-          const chunk = await this.waitFileResultsTimer();
-          contents = Buffer.concat([contents, chunk]);
-
-          const percentage = Math.floor((contents.length / fileSize) * 100);
-          if (percentage >= (piece + 1) * 10) {
-            piece = Math.floor(percentage / 10);
-            console.log(`${piece * 10}%..`);
-          }
-
-          if (chunk.length < chunkSize) {
-            console.log('100%');
-            break;
-          }
-        }
-
-        console.log('100%');
-        console.log(`Downloaded ${contents.length} bytes`);
-
-        // Convert the file contents to Base64
-        const base64File = contents.toString('base64');
-
-        await this.uploadAndDeleteFile(logFile, base64File);
-
-        console.log(`File ${logFile} uploaded successfully`);
-      }
-
-      console.log('All files uploaded successfully');
-    } catch (error) {
-      console.error('Error in getFiles:', error);
       this.unsubscribe();
       throw error;
     }
   }
 
-  async deleteFile(file: string): Promise<void> {
+  async uploadLogFiles(fileList: string[]): Promise<void> {
+    try {
+      for (const filename of fileList) {
+        const contents = await this.retrieveFileContents(filename);
+        if (!contents) continue;
+
+        const base64Data = Buffer.from(contents).toString('base64');
+        const filePath = `${RNFS.TemporaryDirectoryPath}/${filename}`;
+
+        await RNFS.writeFile(filePath, base64Data, 'base64');
+
+        const formData = new FormData();
+        formData.append('logFile', {
+          uri: `file://${filePath}`,
+          type: 'application/octet-stream',
+          name: filename,
+        });
+
+        await this.uploadAndDeleteFile(formData, filename);
+        console.log(`Uploaded ${filename} successfully`);
+      }
+    } catch (error) {
+      console.error('Error in uploadLogFiles:', error);
+      this.unsubscribe();
+      throw error;
+    }
+  }
+
+  private async deleteFile(file: string): Promise<void> {
     await this.sendFileCmd('RM', file);
 
-    const resultBuffer = await this.waitFileResults();
-    const result = resultBuffer.readUInt32LE(0);
+    const result = await this.getFileResult();
 
     console.log(`Delete ${file} result ${result}`);
   }
 
-  private async uploadAndDeleteFile(fileName: string, fileData: string) {
+  private async uploadAndDeleteFile(formData: FormData, fileName: string) {
     try {
       const inverter: Inverter | null = await getFromStorage(
         STORAGE_KEYS.SELECTED_INVERTER,
       );
+      formData.append('inverterID', inverter?.id);
+      formData.append('fileName', fileName);
 
-      const response = await uploadFileToServerAsync({
-        inverterID: inverter?.id ?? '',
-        fileName: fileName,
-        fileData: fileData,
-      });
+      const response = await uploadFileToServerAsync(formData);
 
       if (response.success) {
-        //TODO: Uncomment this when the inverter issue is fixed
-        // this.deleteFile(fileName);
+        this.deleteFile(fileName);
 
         removeFileFromStorage(fileName);
+
+        await RNFS.unlink(`${RNFS.TemporaryDirectoryPath}/${fileName}`);
       } else {
-        console.error(`Failed to upload file ${fileName}.`);
+        console.error(
+          `Failed to upload file ${fileName}. Error: ${response.error}`,
+        );
       }
     } catch (err) {
       console.error('Error: Uploading FIle and deleting it');
