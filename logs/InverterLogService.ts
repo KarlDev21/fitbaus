@@ -108,7 +108,7 @@ export class StowerInverter {
       );
 
       if (characteristic?.value) {
-        console.log('Characteristic value:', characteristic.value);
+        // console.log('Characteristic value:', characteristic.value);
         return Buffer.from(characteristic.value, 'base64');
       }
 
@@ -147,11 +147,17 @@ export class StowerInverter {
     filesize: number;
     chunkSize: number;
   } {
+    if (data.length < 5) {
+      throw new Error(
+        `Invalid file size response: expected 5 bytes, got ${data.length}`,
+      );
+    }
+
     const buffer = Buffer.from(data);
-    return {
-      filesize: buffer.readUInt32LE(0),
-      chunkSize: buffer.readUInt8(4),
-    };
+    const filesize = buffer.readUInt32LE(0); // 4 bytes
+    const chunkSize = buffer.readUInt8(4); // 1 byte
+
+    return {filesize, chunkSize};
   }
 
   private async readChunks(
@@ -250,8 +256,7 @@ export class StowerInverter {
   private async deleteFile(file: string): Promise<void> {
     await this.sendFileCmd('RM', file);
 
-    const resultBuffer = await this.waitFileResults();
-    const result = resultBuffer.readUInt32LE(0);
+    const result = await this.getFileResult();
 
     console.log(`Delete ${file} result ${result}`);
   }
@@ -267,10 +272,9 @@ export class StowerInverter {
       const response = await uploadFileToServerAsync(formData);
 
       if (response.success) {
-        //TODO: Uncomment this when the inverter issue is fixed
-        // this.deleteFile(fileName);
+        this.deleteFile(fileName);
 
-        // removeFileFromStorage(fileName);
+        removeFileFromStorage(fileName);
 
         await RNFS.unlink(`${RNFS.TemporaryDirectoryPath}/${fileName}`);
       } else {
