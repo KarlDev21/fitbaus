@@ -35,7 +35,7 @@ export async function createDeedOfRegistrationAsync(
       const errorResponse = await response.json();
       return {
         success: errorResponse.success,
-        error: errorResponse.errMessage,
+        error: errorResponse.message,
       };
     }
 
@@ -62,7 +62,7 @@ export async function fetchAllDeviceUnitsAsync(
       const errorResponse = await response.json();
       return {
         success: errorResponse.success,
-        error: errorResponse.errMessage,
+        error: errorResponse.message,
       };
     }
 
@@ -97,7 +97,7 @@ export async function uploadFileToServerAsync(
       const errorResponse = await response.json();
       return {
         success: errorResponse.success,
-        error: errorResponse.errMessage,
+        error: errorResponse.message,
       };
     }
 
@@ -132,7 +132,7 @@ export async function uploadInverterAndBatteryDataAsync(
       const errorResponse = await response.json();
       return {
         success: errorResponse.success,
-        error: errorResponse.errMessage,
+        error: errorResponse.message,
       };
     }
 

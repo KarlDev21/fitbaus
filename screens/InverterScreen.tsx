@@ -48,7 +48,7 @@ export default function InverterScreen() {
   };
 
   const renderInverterItem = ({ item }: { item: Device }) => (
-    <InverterListItem item={item} selectInverter={true} onPress={handleSelectInverter} />
+    <InverterListItem item={item} selectInverter={true} onPress={handleSelectInverter} key={item.id} />
   );
 
   return (
@@ -58,6 +58,7 @@ export default function InverterScreen() {
         renderItem={renderInverterItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ padding: GenericSize.medium }}
+        removeClippedSubviews={false}
       />
     </AppScreen>
   );

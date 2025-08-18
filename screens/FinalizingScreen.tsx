@@ -71,6 +71,6 @@ export default function FinalizingScreen() {
     );
   }
 
-  return null; // This will never render because navigation happens when `isLoading` is false
+  return <View />; // This will never render because navigation happens when `isLoading` is false
 }
 

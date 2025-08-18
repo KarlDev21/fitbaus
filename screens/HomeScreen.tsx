@@ -10,6 +10,7 @@ import { BleManagerInstance, getConnectedInverter } from '../helpers/BluetoothHe
 import { navigationRefAuthenticated } from '../nav/ScreenDefinitions';
 import { BleUuids } from '../types/constants/constants';
 import { useKeepAwake } from 'expo-keep-awake';
+import { updateInverterTime } from '../services/InverterService';
 
 export default function HomeScreen() {
   const [isScanning, setIsScanning] = useState(false);
@@ -38,6 +39,7 @@ export default function HomeScreen() {
     try {
       await BleManagerInstance.connectToDevice(savedInverter!.id);
       await BleManagerInstance.discoverAllServicesAndCharacteristicsForDevice(savedInverter!.id);
+      await updateInverterTime(savedInverter!);
 
       const isDeviceConnected = await checkConnectionStatus();
       if (!isDeviceConnected) {

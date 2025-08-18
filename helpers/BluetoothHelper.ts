@@ -1,10 +1,10 @@
 /* eslint-disable no-bitwise */
-import {BleManager} from 'react-native-ble-plx';
+import {BleManager, Device} from 'react-native-ble-plx';
 import {Buffer} from 'buffer';
 import CryptoJS from 'crypto-js';
 import {getFromStorage, saveToStorage, STORAGE_KEYS} from './StorageHelper';
 import {Battery, Inverter} from '../types/DeviceType';
-
+import {Device as ApiDevice} from '../types/ApiResponse';
 export const BleManagerInstance = new BleManager();
 
 export const SALT = 'StowerBatteryNode-Inventech';
@@ -38,27 +38,6 @@ export function generateNodeDigest(address: string): Buffer<ArrayBuffer> {
 
   const digest = md5Hasher.finalize();
   return Buffer.from(digest.toString(), 'hex');
-}
-
-/**
- * Generates an authentication payload for the specified inverter.
- *
- * This function performs the following steps:
- * 1. Retrieves the current timestamp as the expiration time.
- * 2. Generates a digest using the inverter's ID and the expiration time.
- * 3. Packs the expiration time into a 64-bit little-endian format.
- * 4. Concatenates the digest and the packed expiration time to form the final payload.
- *
- * @param {string} inverterId - The unique identifier of the inverter.
- */
-export function generateDigest(inverterId: string): Uint8Array {
-  const expireTime = Date.now();
-  const digest = generateInverterDigest(inverterId, expireTime);
-
-  const etime = packInt64LE(expireTime);
-  const badigest = concatBytes(digest, etime);
-
-  return badigest;
 }
 
 /**
@@ -197,7 +176,7 @@ export function createPaddedPayload(
  *
  * @returns {Uint8Array} - A `Uint8Array` containing the byte representation of the hex string.
  */
-function hexStringToUint8Array(hex: string): Uint8Array {
+export function hexStringToUint8Array(hex: string): Uint8Array {
   if (hex.length % 2 !== 0) {
     throw new Error('Invalid hex string');
   }
@@ -242,3 +221,12 @@ export const getConnectedInverterDevice = (inverterId: string) => {
   const key = `Device ${inverterId}`;
   return getFromStorage<Inverter>(key) ?? null;
 };
+
+export function convertBleDevicesToApiDevices(
+  bleDevices: Device[],
+): ApiDevice[] {
+  return bleDevices.map(bleDevice => ({
+    deviceID: bleDevice.id,
+    deviceType: bleDevice.name?.includes('Invert') ? 'Inverter' : 'Battery',
+  }));
+}

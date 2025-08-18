@@ -11,6 +11,7 @@ export const BleUuids = {
 
   // UUIDs for reading inverter state
   INVERTER_STATE_CHAR_UUID: '669a0c20-0008-d690-ec11-e214406ccb95', // Characteristic for reading inverter state
+  RTC_CHAR_UUID: '669a0c20-0008-d690-ec11-e214456ccb95', // Characteristic for reading real-time clock
 
   // UUIDs for reading battery controller state
   CHARGE_CONTROLLER_STATE_CHAR_UUID: '669a0c20-0008-d690-ec11-e214486ccb95', // Characteristic for reading charge controller state

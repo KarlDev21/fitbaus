@@ -135,6 +135,7 @@ export default function NodeScreen() {
           />
         )}
         keyExtractor={(item) => item.id}
+        removeClippedSubviews={false}
       />
 
       {/* Buttons for authentication and continuation */}

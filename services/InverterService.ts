@@ -1,10 +1,10 @@
 import {
   BleManagerInstance,
-  createPaddedPayload,
-  convertMacToBytes,
-  generateInverterDigest,
   packInt64LE,
   concatBytes,
+  hexStringToUint8Array,
+  convertBleDevicesToApiDevices,
+  generateInverterDigest,
 } from '../helpers/BluetoothHelper';
 import {Characteristic, Device} from 'react-native-ble-plx';
 import {
@@ -22,7 +22,6 @@ import {Buffer} from 'buffer';
 import {createDeedOfRegistrationAsync} from './DeviceUnitService';
 import {getItemAsync} from '../helpers/SecureStorageHelper';
 import {UserProfileResponse} from '../types/ApiResponse';
-import {Device as ApiDevice} from '../types/ApiResponse';
 import {showToast, ToastType} from '../components/Toast';
 import {BleUuids} from '../types/constants/constants';
 
@@ -41,61 +40,46 @@ import {BleUuids} from '../types/constants/constants';
  * @returns {Promise<void>} - Resolves when the authentication and enrollment process is complete.
  */
 export async function authenticateInverter(
-  selectedInverter: Inverter,
-  selectedNodes: Battery[],
+  selectedInverter: Device,
+  selectedNodes: Device[],
 ): Promise<void> {
   try {
     await BleManagerInstance.discoverAllServicesAndCharacteristicsForDevice(
       selectedInverter.id,
     );
     const authPayload = generateAuthPayload(selectedInverter.id);
+    const responses: Record<string, boolean> = {};
+
     await sendAuthPayload(selectedInverter, authPayload);
 
-    let response = await enrollBatteriesToInverter(
-      selectedInverter,
-      selectedNodes,
-      0,
-    );
+    selectedNodes.forEach(async node => {
+      let response = await enrollBatteries(selectedInverter, node, 0);
+      responses[node.id] = response !== null;
+    });
 
-    if (response) {
-      const user = await getItemAsync<UserProfileResponse>('UserProfile');
-      if (user) {
-        const devices = convertBleDevicesToApiDevices([
-          selectedInverter,
-          ...selectedNodes,
-        ]);
-        await createDeedOfRegistrationAsync(user.userID, devices);
-      }
+    // if (responses) {
+    //   console.log('Enrollment responses:', responses);
+    const user = await getItemAsync<UserProfileResponse>('UserProfile');
+    if (user) {
+      const devices = convertBleDevicesToApiDevices([
+        selectedInverter,
+        ...selectedNodes,
+      ]);
+      await createDeedOfRegistrationAsync(user.userID, devices);
+      // }
     }
   } catch (error: any) {
     console.error('Error authenticating:', error);
-    showToast(ToastType.Error, 'Authentication Failed');
   }
 }
 
 function generateAuthPayload(inverterId: string): Uint8Array {
-  const extime = Date.now();
+  const extime = Math.floor(Date.now() / 1000 + 5 * 60);
   const digest = generateInverterDigest(inverterId, extime);
-  console.log(`Authenticate len digest ${digest.length}`);
-
-  console.log(
-    'Digest in hex:',
-    Array.from(digest)
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join(' '),
-  );
-
-  const etime = packInt64LE(extime);
-  const badigest = concatBytes(digest, etime);
-
-  console.log(
-    'Badigest in hex:',
-    Array.from(badigest)
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join(' '),
-  );
-
-  return badigest;
+  const etime = Buffer.alloc(8);
+  etime.writeBigUInt64LE(BigInt(extime), 0);
+  const badigest = Buffer.concat([Buffer.from(digest), etime]);
+  return Uint8Array.from(badigest);
 }
 
 async function sendAuthPayload(
@@ -113,13 +97,6 @@ async function sendAuthPayload(
     console.error('Error authenticating:', error);
     showToast(ToastType.Error, 'Auth Failed');
   }
-}
-
-function convertBleDevicesToApiDevices(bleDevices: Device[]): ApiDevice[] {
-  return bleDevices.map(bleDevice => ({
-    deviceID: bleDevice.id,
-    deviceType: bleDevice.name?.includes('Invert') ? 'Inverter' : 'Battery',
-  }));
 }
 
 /**
@@ -161,30 +138,53 @@ export async function connectToInverter(
  *
  * @returns {Promise<Characteristic | null>} - Resolves with the BLE characteristic response if successful, or `null` if an error occurs.
  */
-async function enrollBatteriesToInverter(
-  inverter: Inverter,
-  nodes: Battery[],
+async function enrollBatteries(
+  inverter: Device,
+  node: Device,
   logInterval = 0,
-): Promise<Characteristic | null> {
+): Promise<void> {
   try {
-    const macAddresses = nodes.map(node => node.id);
-    const macBytesArray = macAddresses.map(convertMacToBytes);
+    const batts = [node.id];
+    // Number of batteries
+    const num = batts.length;
 
-    const payload = createPaddedPayload(macBytesArray, logInterval);
+    // Create header: first byte is num, second is logInterval.
+    const header = new Uint8Array([num, logInterval]);
+
+    // Process each MAC address.
+    const macBytesArray: Uint8Array[] = batts.map(mac => {
+      // Remove any colons from the MAC address.
+      const cleanMac = mac.replace(/:/g, '');
+      // Convert the clean hex string into 6 bytes.
+      return hexStringToUint8Array(cleanMac);
+    });
+
+    // Concatenate all battery MAC addresses.
+    const batteryMacs =
+      macBytesArray.length > 0
+        ? concatBytes(...macBytesArray)
+        : new Uint8Array();
+
+    // Calculate the padding length: Total entries must be 16, each 6 bytes.
+    const paddingLength = (16 - num) * 6;
+    // Create padding zeros.
+    const padding = new Uint8Array(paddingLength);
+
+    // Final payload: header + battery MACs + padding.
+    const payload = concatBytes(header, batteryMacs, padding);
+
+    // Convert the payload into a base64 string for rn-ble-plx.
     const base64Payload = Buffer.from(payload).toString('base64');
 
-    const response =
-      await BleManagerInstance.writeCharacteristicWithoutResponseForDevice(
-        inverter.id,
-        inverter?.serviceUUIDs?.[0] ?? '',
-        BleUuids.BATTERY_CHAR_UUID,
-        base64Payload,
-      );
-
-    return response;
-  } catch (error) {
+    // Write the payload to the BLE device using rn-ble-plx.
+    await BleManagerInstance.writeCharacteristicWithoutResponseForDevice(
+      inverter.id,
+      inverter?.serviceUUIDs?.[0] ?? '',
+      BleUuids.BATTERY_CHAR_UUID,
+      base64Payload,
+    );
+  } catch (error: any) {
     console.error('Error enrolling batteries:', error);
-    return null;
   }
 }
 
@@ -350,5 +350,42 @@ async function fetchAndLog<T>(
   } catch (error) {
     console.error(`Error fetching ${description}:`, error);
     return null;
+  }
+}
+
+/**
+ * Reads the RTC time from the inverter and updates it if the offset is greater than 30 seconds.
+ * @param inverter The inverter BLE device.
+ */
+export async function updateInverterTime(inverter: Inverter): Promise<void> {
+  try {
+    // Read RTC characteristic (returns base64 string)
+    const base64Data = await BleManagerInstance.readCharacteristicForDevice(
+      inverter.id,
+      inverter?.serviceUUIDs?.[0] ?? '',
+      BleUuids.RTC_CHAR_UUID,
+    );
+    // Convert base64 to Buffer
+    const rtcBuffer = Buffer.from(base64Data.value ?? '', 'base64');
+    // Unpack little-endian 64-bit integer
+    const deviceTs = rtcBuffer.readBigInt64LE(0);
+    const now = BigInt(Math.floor(Date.now() / 1000));
+    console.log(`Device ts ${deviceTs} - now ${now}`);
+
+    if (deviceTs < now - 30n || deviceTs > now + 30n) {
+      console.log(`Time offset ${deviceTs - now} resetting clock`);
+      // Pack current time as little-endian 64-bit integer
+      const nowBuffer = Buffer.alloc(8);
+      nowBuffer.writeBigInt64LE(now, 0);
+      // Write new time to RTC characteristic
+      await BleManagerInstance.writeCharacteristicWithResponseForDevice(
+        inverter.id,
+        inverter?.serviceUUIDs?.[0] ?? '',
+        BleUuids.RTC_CHAR_UUID,
+        nowBuffer.toString('base64'),
+      );
+    }
+  } catch (error) {
+    console.error('Error updating inverter time:', error);
   }
 }

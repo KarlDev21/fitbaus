@@ -19,7 +19,7 @@ export async function loginAsync(
       const errorResponse = await response.json();
       return {
         success: errorResponse.success,
-        error: errorResponse.errMessage,
+        error: errorResponse.message,
       };
     }
 
@@ -57,7 +57,7 @@ export async function registerAsync(
       const errorResponse = await response.json();
       return {
         success: errorResponse.success,
-        error: errorResponse.errMessage,
+        error: errorResponse.message,
       };
     }
 
